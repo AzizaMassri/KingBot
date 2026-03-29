@@ -77,7 +77,7 @@ class GlobalChat(commands.Cog):
                                     words = ", ".join([f"'{w}'" for w in exclusion_list])
                                     exclusion_str = f" CRITICAL INSTRUCTION: Do NOT translate or alter these specific keywords under any circumstances: {words}."
 
-                                prompt = f"Context: {context_str}\nProvide a strictly literal and accurate translation to {target_language} while sounding natural. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present. Output ONLY translation: \"{content}\"{exclusion_str}"
+                                prompt = f"Context: {context_str}\nProvide a strictly literal and accurate translation to {target_language} while sounding natural. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present. CRITICAL INSTRUCTION: If the original text is already primarily in {target_language}, output EXACTLY 'SAME_LANGUAGE_DETECTED' and nothing else. Otherwise, output ONLY the translation: \"{content}\"{exclusion_str}"
                                 
                                 def fetch_global_translation():
                                     response = self.client.models.generate_content(
@@ -88,6 +88,10 @@ class GlobalChat(commands.Cog):
                                 
                                 translation = await self.bot.loop.run_in_executor(None, fetch_global_translation)
                                 await cache.setex(cache_key, 86400, translation)
+
+                            if "SAME_LANGUAGE_DETECTED" in translation:
+                                print(f"Skipping DM for user {user_id}: language is already {target_language}")
+                                continue
 
                             user = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
                             if user:

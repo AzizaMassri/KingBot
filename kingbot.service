@@ -1,0 +1,28 @@
+[Unit]
+Description=KingBot Discord Service
+After=network.target network-online.target redis-server.service rabbitmq-server.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Update the User to the username on your Linux VM (e.g., ubuntu, root, or kingbot)
+User=root
+
+# Update WorkingDirectory to the directory where KingBot is located on your VM
+WorkingDirectory=/opt/KingBot
+
+# Update the ExecStart path to point to your Python executable and bot.py
+# If using a virtual environment, use /opt/KingBot/venv/bin/python
+ExecStart=/usr/bin/python3 /opt/KingBot/bot.py
+
+# Automatically restart the bot if it crashes
+Restart=always
+# Wait 5 seconds before restarting
+RestartSec=5
+
+# Standard output and error logging (viewable via `journalctl -u kingbot`)
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

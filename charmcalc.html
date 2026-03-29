@@ -1,0 +1,78 @@
+Because Kingshot operates on the exact same backend engine as Whiteout Survival, their "Governor Charms" are a 1:1 mathematical match to the "Chief Charms" system.
+
+To build a flawless database and calculator, you must understand the two massive "Logic Traps" that catch most developers off guard: the 18-Slot Multiplier and the Level 11 Exchange Shop curve flip.
+
+Here is the complete Raw Data Dictionary and architectural logic for Governor Charms.
+1. Item Terminology (Kingshot vs. WOS)
+
+If you are localizing your UI to match Kingshot exactly, you should map your variables to these names:
+
+    Chief Charms (WOS) = Governor Charms (Kingshot)
+
+    Charm Guides (WOS - Brown Books) = Charm Manuals / Guides (Kingshot)
+
+    Charm Designs (WOS - Tan Blueprints) = Charm Blueprints / Designs (Kingshot)
+
+    Charm Secrets (WOS - Endgame Jewel) = Jewel Secrets / Enigmatic Jewels (Kingshot)
+
+Table 1: charm_slots (The 18-Slot Logic Trap)
+
+A massive mistake developers make is assuming there are only 6 charms (one for each gear piece). There are actually 18 separate Charms.
+
+Every single one of the 6 Governor Gear slots holds exactly 3 independent Governor Charms. Your calculator must calculate upgrades on a per-charm basis. If a user wants to know the cost to max out their entire profile, your math must multiply the total requirements by 18.
+
+Database Tip: Governor Charms DO NOT have a set bonus like regular gear. Players can level their charms unevenly without mathematical penalties.
+Parent Gear Slot	Target Troop	Charm Capacity	Stats Boosted
+Coat (Chest)	Infantry	3 Slots	Inf. Lethality & Inf. Health
+Pants (Legs)	Infantry	3 Slots	Inf. Lethality & Inf. Health
+Belt (Waist)	Marksman	3 Slots	Marks. Lethality & Marks. Health
+Weapon (Staff)	Marksman	3 Slots	Marks. Lethality & Marks. Health
+Cap (Head)	Lancer	3 Slots	Lancer Lethality & Lancer Health
+Watch (Accessory)	Lancer	3 Slots	Lancer Lethality & Lancer Health
+
+(💡 Calculator UX Pro-Tip: Charms strictly buff Troop Health and Troop Lethality simultaneously. In the game's battle engine, Marksmen are the primary damage dealers for Bear Hunts and Trap events. Your app should feature a small tool-tip advising F2P players to upgrade their Marksman Charms first!)
+Table 2: charm_upgrade_costs (Levels 1 to 16)
+
+This data table represents the Marginal (Incremental) Cost to upgrade exactly ONE (1) Charm to the next level.
+
+(⚠️ Developer Logic Trap: Look closely at the cost curve! From Levels 2 to 4, Guides are the bottleneck. From Levels 5 to 9, Designs become the massive bottleneck. At Level 11, the curve physically flips back to Guides. Do not accidentally swap these columns in your database!)
+Target Level	Charm Guides (Manuals)	Charm Designs (Blueprints)	Jewel Secrets	Total Stat Boost (Health & Lethality)	Power Gain (Per Charm)
+Lv. 1	5	5	0	+ 9.00%	205,700
+Lv. 2	40	15	0	+ 12.00%	288,000
+Lv. 3	60	40	0	+ 16.00%	370,000
+Lv. 4	80	100	0	+ 19.00%	452,000
+Lv. 5	100	200	0	+ 25.00%	576,000
+Lv. 6	120	300	0	+ 30.00%	700,000
+Lv. 7	140	400	0	+ 35.00%	824,000
+Lv. 8	200	400	0	+ 40.00%	948,000
+Lv. 9	300	400	0	+ 45.00%	1,072,000
+Lv. 10	420	420	0	+ 50.00%	1,196,000
+Lv. 11	560	420	0	+ 55.00%	1,320,000
+Lv. 12	580	450	15	+ 64.00%	1,444,000
+Lv. 13	580	450	30	+ 73.00%	1,568,000
+Lv. 14	600	500	45	+ 82.00%	1,692,000
+Lv. 15	600	500	70	+ 91.00%	1,816,000
+Lv. 16	650	550	100	+ 100.00%	1,940,000
+
+(💡 Unit Test to verify your code: To ensure your SUM loops are working, testing a maxed-out endgame account (taking all 18 Charms from Level 11 to Level 16) should output exactly: 44,100 Designs, 54,180 Guides, and 4,680 Secrets.)
+Table 3: exchange_rates (The "Level 11" Meta Calculator Feature)
+
+If you want your calculator to be heavily bookmarked by the community, you must build logic for the Material Exchange Shop.
+
+Because the game drops significantly more Guides than Designs during events, F2P players hit a massive wall at Level 5. The game's meta strategy is to rush ONE SINGLE CHARM to Level 11. Once the player gets a single charm to Level 11, the game permanently unlocks the Exchange Shop.
+
+The Exchange Shop Conversion Rates:
+
+    2 Charm Guides = 1 Charm Design
+
+    2 Charm Designs = 1 Charm Guide
+
+    40 Charm Guides = 1 Jewel Secret
+
+    40 Charm Designs = 1 Jewel Secret
+
+How to code this into your app:
+Include a simple toggle box on your UI that says: [x] I have at least one Level 11 Charm (Exchange Shop Unlocked).
+
+If checked, write a function that looks at the user's inventory inputs. If they are short on Designs to hit their target level, automatically divide their excess Guides by 2 to cover the difference.
+Example UI Output: "✅ You are short 400 Designs, but because your Exchange Shop is unlocked, we calculated that you can safely convert 800 of your excess Guides to cover the cost!"

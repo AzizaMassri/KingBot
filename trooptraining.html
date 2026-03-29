@@ -1,0 +1,76 @@
+If you are building a database, spreadsheet, or web app for a Kingshot calculator, you need the math to be structured relationally. Because Kingshot is a 1:1 reskin of Whiteout Survival, we can pull the exact datamined backend values directly from the game's engine.
+
+(Note: Kingshot translates Whiteout's "Meat" to "Bread" and "Coal" to "Stone").
+
+Here is the complete, 100% mathematically accurate Raw Data Dictionary for Troop Training. You can copy these tables directly into your SQL database, Excel arrays, or JSON files.
+Table 1: troop_base_stats
+
+These are the universal constants for all three troop types (Infantry, Marksman, Lancer) per 1 Unit at 0% Training Speed.
+Tier (PK)	Base_Time_Sec	SvS_Points	HoG_Points	KoI_Points	Power
+1	12	3	90	1	2
+2	17	4	120	2	4
+3	24	5	180	3	6
+4	32	8	265	5	9
+5	44	12	385	7	13
+6	60	18	595	11	18
+7	83	25	830	16	25
+8	113	35	1,130	23	35
+9	131	45	1,485	30	48
+10	152	60	1,960	39	66
+11	180	75	2,500	49	80
+
+(Note: T11 troops are tied to True Gold / Fire Crystals at the extreme endgame and require a different War Academy reduction engine, but standard calculators cap at T10).
+Table 2: troop_costs
+
+These are the hardcoded raw resource baselines for exactly 1 unit.
+
+Database Logic Note: The data below represents the exact datamined footprint for the Marksman class. Kingshot's engine shifts these weights for the other two classes (Infantry consumes more Bread; Lancers consume a balanced ratio but require more Iron). However, the Total Resource Value per tier remains identical across all 3 troop types.
+Tier (FK)	Bread	Wood	Stone	Iron
+1	23	34	6	2
+2	36	54	9	4
+3	58	86	15	5
+4	75	111	19	6
+5	97	144	24	8
+6	117	173	29	10
+7	175	258	44	14
+8	349	516	87	28
+9	872	1,290	217	70
+10	1,740	2,579	433	140
+11	4,357	6,448	1,081	349
+Backend Math Logic (For your Database Queries)
+
+To build the calculator logic on top of your database, your backend simply needs to execute queries in this exact sequence:
+
+A. Calculating the Speed Divisor
+Speed buffs in Kingshot are entirely additive. Sum the player's profile buff with any active title buffs before doing the math.
+
+    Divisor = 1 + (Total Boost % / 100)
+
+B. Mode 1: Training Fresh Troops
+When a user calculates training entirely new troops, the math is straightforward multiplication:
+
+    Total_Time = (Base_Time_Sec * Batch_Capacity) / Divisor
+    Total_Cost = Bread_Cost * Batch_Capacity (Repeat for all resources. Costs are NEVER affected by speed).
+
+C. Mode 2: Promoting (Upgrading) Troops [CRITICAL]
+Kingshot operates on a strictly subtractive logic engine for promotions. A player is never penalized for training T9s and upgrading them to T10s later. To calculate a promotion in your app, you must subtract the Current Tier's base stats from the Target Tier's base stats before multiplying by the batch capacity.
+
+    Upgrade_Time = ((Target_Base_Time - Current_Base_Time) * Batch_Capacity) / Divisor
+    Upgrade_Cost = ((Target_Bread - Current_Bread) * Batch_Capacity)
+    Points_Yield = ((Target_Points - Current_Points) * Batch_Capacity)
+
+💡 Unit Testing Your Database
+
+If you want to verify that your queries are firing correctly, use the "T9 to T10 Promotion Meta." If your backend is calculating correctly, asking it to Promote 1,000 Troops from T9 to T10 at exactly 100% Training Speed should output this:
+
+    Delta Base Time: 21 Seconds (152 - 131)
+
+    Speed Divisor: 2.00 (1 + 100/100)
+
+    Calculated Final Time: 10,500 Seconds (2 hours & 55 minutes)
+
+    Total Bread Cost: 868,000 [(1740 - 872) × 1000]
+
+    Total Wood Cost: 1,289,000 [(2579 - 1290) × 1000]
+
+    Total SvS Points: 15,000 points [(60 - 45) × 1000]

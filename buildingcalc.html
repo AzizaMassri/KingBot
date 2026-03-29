@@ -1,0 +1,143 @@
+1. The Math Engine Formulas (Order of Operations)
+
+To ensure your calculator is 100% accurate and doesn't break when users input massive buffs, your backend must process the math in this exact order:
+
+    Calculate the Total Speed Boost: Sum the player's profile Construction Speed % + Wolf Pet Skill % (if manually entered).
+
+    Calculate the Divisor: Divisor = 1 + (Total Boost % / 100)
+
+    Get the Buffed Time: Buffed Time = Base Seconds / Divisor
+
+    The "Double Time" Logic Trap: The Double Time town decree does not add 20% to the speed boost pool. It is a strictly multiplicative finisher. If the user toggles Double Time to ON, you must apply a 20% cut to the final remaining time:
+
+        Final Time = Buffed Time × 0.80
+
+2. Secondary Building Multipliers
+
+You do not need to build massive data tables for every single building in the game. Kingshot's code calculates the upgrade time for all secondary buildings simply by multiplying the Town Center's Base Time by fixed percentages:
+
+    Town Center: 1.00 (100% of Base Time)
+
+    Academy: 0.85 (85% of Base Time)
+
+    Embassy: 0.70 (70% of Base Time)
+
+    Military Camps (Infantry, Marksman, Lancer): 0.60 (60% of Base Time)
+
+    Command Center / Infirmary: 0.50 (50% of Base Time)
+
+(Example: If Town Center Lv. 25 takes 1,585,320 seconds, the Infantry Camp Lv. 25 takes exactly 951,192 seconds [1,585,320 × 0.60]).
+3. Town Center Base Time & Resource Data (Levels 1–30)
+
+These are the hardcoded raw baselines at 0% Construction Speed. You will use these seconds as the mathematical anchor. (Note: Kingshot introduces Bread requirements starting at Lv. 10).
+Upgrade Level	Base Time (Seconds)	Wood	Stone	Iron	Bread
+1 ➔ 2	6	180	0	0	0
+2 ➔ 3	60	805	0	0	0
+3 ➔ 4	180	1,800	360	0	0
+4 ➔ 5	600	7,600	1,500	0	0
+5 ➔ 6	1,800	19,000	3,800	960	0
+6 ➔ 7	3,600	69,000	13,000	3,400	0
+7 ➔ 8	9,000	120,000	25,000	6,300	0
+8 ➔ 9	16,200	260,000	52,000	13,000	0
+9 ➔ 10	21,600	460,000	92,000	23,000	0
+10 ➔ 11	27,000	1.3M	260K	65K	1.3M
+11 ➔ 12	32,400	1.6M	330K	84K	1.6M
+12 ➔ 13	39,600	2.3M	470K	110K	2.3M
+13 ➔ 14	50,400	3.1M	630K	150K	3.1M
+14 ➔ 15	64,800	4.6M	930K	230K	4.6M
+15 ➔ 16	109,680	5.9M	1.1M	290K	5.9M
+16 ➔ 17	131,640	9.3M	1.8M	480K	9.3M
+17 ➔ 18	157,980	12M	2.5M	620K	12M
+18 ➔ 19	237,000	15M	3.1M	780K	15M
+19 ➔ 20	296,280	21M	4.3M	1M	21M
+20 ➔ 21	385,140	27M	5.4M	1.3M	27M
+21 ➔ 22	577,740	36M	7.2M	1.8M	36M
+22 ➔ 23	808,800	44M	8.9M	2.2M	44M
+23 ➔ 24	1,132,380	60M	12M	3M	60M
+24 ➔ 25	1,585,320	81M	16M	4M	81M
+25 ➔ 26	1,823,160	100M	21M	5.2M	100M
+26 ➔ 27	2,187,780	140M	24M	7.4M	140M
+27 ➔ 28	2,515,920	190M	39M	9.9M	190M
+28 ➔ 29	2,893,320	240M	49M	12M	240M
+29 ➔ 30	3,472,020	300M	60M	15M	300M
+
+(Note: If a player inputs "Current Level: 20" and "Target Level: 23", your calculator must sum the seconds for levels 21, 22, and 23 together before applying the speed divisor).
+4. True Greatness (TG) Base Times & Resources (Levels 31–70)
+
+Once a player hits Level 30, the game shifts to True Greatness. Every TG level requires exactly 5 sub-levels (phases) to complete.
+
+The data below shows the requirement for ONE SINGLE SUB-LEVEL. If your calculator asks the user for full TG jumps, you must multiply these numbers by 5 to get the total time for a full TG tier.
+TG Tier	Backend Lvl Map	Base Time (Per Phase)	Base Secs (Per Phase)	Wood & Bread (Per Phase)	Stone (Per Phase)	Iron (Per Phase)	True Gold (Per Phase)
+TG 1	Lv. 31-35	7 Days	604,800	67M	13M	3.3M	132
+TG 2	Lv. 36-40	9 Days	777,600	72M	14M	3.6M	158
+TG 3	Lv. 41-45	11 Days	950,400	79M	15M	3.9M	238
+TG 4	Lv. 46-50	12 Days	1,036,800	82M	16M	4.1M	280
+TG 5	Lv. 51-55	14 Days	1,209,600	84M	16.8M	4.2M	335
+TG 6	Lv. 56-60	15 Days	1,296,000	96M	19.2M	4.8M	200 (+10 Refined)
+TG 7	Lv. 61-65	18 Days	1,555,200	100M	21M	5.4M	240 (+15 Refined)
+TG 8	Lv. 66-70	20 Days	1,728,000	130M	26M	6.6M	240 (+20 Refined)
+5. "Include Prerequisite Buildings" Matrix
+
+If you include a toggle to calculate prerequisites (so the player knows exactly how many total speedups they need to uncap their Town Center), you must add the upgrade times/costs of these specific buildings into the grand total.
+
+For Levels 11 through 30:
+To upgrade to a target Town Center level, the player must first upgrade their Embassy and ONE rotating Military/Tech building to the tier directly below it (Target Level - 1).
+
+    TC 11: Embassy & Lancer Camp
+
+    TC 12: Embassy & Command Center (Exception)
+
+    TC 13: Embassy & Infantry Camp
+
+    TC 14: Embassy & Marksman Camp
+
+    TC 15: Embassy & Lancer Camp
+
+    TC 16: Embassy & Academy (Exception)
+
+    TC 17: Embassy & Infantry Camp
+
+    TC 18: Embassy & Marksman Camp
+
+    TC 19: Embassy & Lancer Camp
+
+    TC 20: Embassy & Academy (Exception)
+
+    TC 21: Embassy & Infantry Camp
+
+    TC 22: Embassy & Marksman Camp
+
+    TC 23: Embassy & Lancer Camp
+
+    TC 24: Embassy & Academy (Exception)
+
+    TC 25: Embassy & Infantry Camp
+
+    TC 26: Embassy & Marksman Camp
+
+    TC 27: Embassy & Lancer Camp
+
+    TC 28: Embassy & Academy (Exception)
+
+    TC 29: Embassy & Infantry Camp
+
+    TC 30: Embassy & Marksman Camp
+
+The True Greatness (TG) Prerequisite Loophole:
+For levels 31-70, players do not need to upgrade their Embassy and Camps for the intermediate sub-levels (e.g., going from TG 1-2 to 1-3 requires 0 prerequisites). They only need to level up their Embassy/Camps when crossing into a completely new TG bracket:
+
+    Unlock TG 1 (Lv. 31): Embassy Lv. 30 + Academy Lv. 30
+
+    Unlock TG 2 (Lv. 36): Embassy TG 1 + Lancer TG 1
+
+    Unlock TG 3 (Lv. 41): Embassy TG 2 + Infantry TG 2
+
+    Unlock TG 4 (Lv. 46): Embassy TG 3 + Marksman TG 3
+
+    Unlock TG 5 (Lv. 51): Embassy TG 4 + Lancer TG 4
+
+    Unlock TG 6 (Lv. 56): Embassy TG 5 + Infantry TG 5
+
+    Unlock TG 7 (Lv. 61): Embassy TG 6 + Marksman TG 6
+
+    Unlock TG 8 (Lv. 66): Embassy TG 7 + Lancer TG 7

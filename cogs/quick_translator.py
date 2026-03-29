@@ -164,7 +164,6 @@ class QuickTranslator(commands.Cog):
         self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
 
     @commands.command(aliases=['qt'])
-    @commands.has_permissions(administrator=True)
     async def qtranslate(self, ctx, target_language: str = None, *, text_to_translate: str = None):
         """Instantly translates the provided text into the target language."""
         if not target_language or not text_to_translate:

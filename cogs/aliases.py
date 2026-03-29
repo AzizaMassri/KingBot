@@ -33,6 +33,7 @@ class Aliases(commands.Cog):
         await ctx.send(f"✅ Created alias! Typing `{display_alias}` will now execute `!{original_command}`.")
 
     @commands.command(name="aliases")
+    @commands.has_permissions(administrator=True)
     async def list_aliases(self, ctx):
         """Displays all active aliases for this server in two columns."""
         aliases_data = await self.db.hgetall(f"aliases:{ctx.guild.id}")

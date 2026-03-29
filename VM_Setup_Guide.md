@@ -61,12 +61,16 @@ git push
 git clone https://ROCKETexecdevs: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@github.com/ROCKETexecdevs/KingBot.git
 ```
 
+> [!NOTE]
+> **Getting an error?** If your terminal says `fatal: destination path 'KingBot' already exists`, this means the code is already on your VM! You do not need to clone it again. Instead, jump down to **Step 5** and use `git pull` to simply pull the new updates. 
+> To completely wipe the VM's code and start fresh with a new clone, run `rm -rf ~/KingBot` first, then try the `git clone` command again.
+
 > [!WARNING]
 > Because GitHub ignores sensitive files like `.env`, you **must** manually recreate it on the VM before KingBot will launch!
 > Navigate into the cloned folder (`cd KingBot`), type `nano .env`, and paste your Discord Token and Gemini API Keys exactly as they appear on your local machine. Press `Ctrl+X`, then `Y`, then `Enter` to save it!
 
 ## Step 3.5: Clear Out Conflicting Ports (Optional but recommended!)
-If you ever installed PostgreSQL or RabbitMQ natively on this VM in the past, those old background services are still clinging to ports `5672` (RabbitMQ) and `5432` (Postgres). Docker will throw an `"address already in use"` error if we don't clear them out.
+If you ever installed PostgreSQL or RabbitMQ natively on this VM in the past, those old background services are still clinging to ports `5672` and `15672` (RabbitMQ), as well as `5432` (Postgres). Docker will throw an `"address already in use"` error if we don't clear them out.
 
 Run these commands to permanently stop and disable those old native services so Docker can claim the ports:
 ```bash
@@ -80,6 +84,7 @@ sudo systemctl disable postgresql
 
 # Force-kill anything else stubbornly holding onto the exact network ports:
 sudo fuser -k 5672/tcp
+sudo fuser -k 15672/tcp
 sudo fuser -k 5432/tcp
 ```
 

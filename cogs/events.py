@@ -54,17 +54,16 @@ class EventsDropdown(discord.ui.Select):
              for f in embed.fields:
                  prompt += f"\n{f.name}: {f.value}"
                  
-             def fetch_translation():
-                 response = view.bot.gemini_client.models.generate_content(
+             try:
+                 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                 response = await client.aio.models.generate_content(
                      model='gemini-2.5-flash',
                      contents=prompt
                  )
-                 return response.text.strip() if response.text else None
-                 
-             try:
-                 translation = await view.bot.loop.run_in_executor(None, fetch_translation)
-                 if not translation:
+                 if not response.text:
                      raise ValueError("Translation returned None")
+                 translation = response.text.strip()
+                 
                  t_embed = discord.Embed(
                      title=f"🏰 {self.title_prefix} Info ({target_lang.capitalize()}) 🏰",
                      description=translation,
@@ -135,17 +134,16 @@ class EventsCog(commands.Cog):
         if target_lang:
              prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
              
-             def fetch_translation():
-                 response = self.bot.gemini_client.models.generate_content(
+             try:
+                 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                 response = await client.aio.models.generate_content(
                      model='gemini-2.5-flash',
                      contents=prompt
                  )
-                 return response.text.strip() if response.text else None
-                 
-             try:
-                 translation = await self.bot.loop.run_in_executor(None, fetch_translation)
-                 if not translation:
+                 if not response.text:
                      raise ValueError("Translation returned None")
+                 translation = response.text.strip()
+                 
                  t_embed = discord.Embed(
                      title=f"🗺️ Kingshot Event Guides ({target_lang.capitalize()}) 🗺️",
                      description=translation,
@@ -191,17 +189,16 @@ class EventsCog(commands.Cog):
         if target_lang:
              prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
              
-             def fetch_translation():
-                 response = self.bot.gemini_client.models.generate_content(
+             try:
+                 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                 response = await client.aio.models.generate_content(
                      model='gemini-2.5-flash',
                      contents=prompt
                  )
-                 return response.text.strip() if response.text else None
-                 
-             try:
-                 translation = await self.bot.loop.run_in_executor(None, fetch_translation)
-                 if not translation:
+                 if not response.text:
                      raise ValueError("Translation returned None")
+                 translation = response.text.strip()
+                 
                  t_embed = discord.Embed(
                      title=f"🗺️ Kingshot KvK & Castle Battle ({target_lang.capitalize()}) 🗺️",
                      description=translation,
@@ -237,17 +234,16 @@ class EventsCog(commands.Cog):
         if target_lang:
              prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
              
-             def fetch_translation():
-                 response = self.bot.gemini_client.models.generate_content(
+             try:
+                 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                 response = await client.aio.models.generate_content(
                      model='gemini-2.5-flash',
                      contents=prompt
                  )
-                 return response.text.strip() if response.text else None
-                 
-             try:
-                 translation = await self.bot.loop.run_in_executor(None, fetch_translation)
-                 if not translation:
+                 if not response.text:
                      raise ValueError("Translation returned None")
+                 translation = response.text.strip()
+                 
                  t_embed = discord.Embed(
                      title=f"🏭 Kingshot Sanctuaries, Outposts & Fortresses ({target_lang.capitalize()}) 🏭",
                      description=translation,
@@ -285,17 +281,16 @@ class EventsCog(commands.Cog):
         if target_lang:
              prompt = f"Translate the following to {target_lang}. Output only the translation, strictly literal and concise without AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
              
-             def fetch_translation():
-                 response = self.bot.gemini_client.models.generate_content(
+             try:
+                 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                 response = await client.aio.models.generate_content(
                      model='gemini-2.5-flash',
                      contents=prompt
                  )
-                 return response.text.strip() if response.text else None
-                 
-             try:
-                 translation = await self.bot.loop.run_in_executor(None, fetch_translation)
-                 if not translation:
+                 if not response.text:
                      raise ValueError("Translation returned None")
+                 translation = response.text.strip()
+                 
                  t_embed = discord.Embed(
                      title=f"🗄️ Castle Store DB Status ({target_lang.capitalize()})",
                      description=translation,
@@ -334,17 +329,16 @@ class EventsCog(commands.Cog):
         if target_lang:
              prompt = f"Translate the following to {target_lang}. Output only the translation, strictly literal and concise without AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
              
-             def fetch_translation():
-                 response = self.bot.gemini_client.models.generate_content(
+             try:
+                 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                 response = await client.aio.models.generate_content(
                      model='gemini-2.5-flash',
                      contents=prompt
                  )
-                 return response.text.strip() if response.text else None
-                 
-             try:
-                 translation = await self.bot.loop.run_in_executor(None, fetch_translation)
-                 if not translation:
+                 if not response.text:
                      raise ValueError("Translation returned None")
+                 translation = response.text.strip()
+                 
                  t_embed = discord.Embed(
                      title=f"🗄️ Facility Store DB Status ({target_lang.capitalize()})",
                      description=translation,

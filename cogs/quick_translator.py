@@ -12,10 +12,9 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
         max_length=50
     )
 
-    def __init__(self, message_to_translate: discord.Message, gemini_client, bot):
+    def __init__(self, message_to_translate: discord.Message, bot):
         super().__init__()
         self.message_to_translate = message_to_translate
-        self.gemini_client = gemini_client
         self.bot = bot
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -34,17 +33,15 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
 
         prompt = f"Translate the following text to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
         
-        def fetch():
-            response = self.gemini_client.models.generate_content(
+        try:
+            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            response = await client.aio.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt
             )
             if not response.text:
                 raise ValueError("Empty response from AI")
-            return response.text.strip()
-            
-        try:
-            translation = await self.bot.loop.run_in_executor(None, fetch)
+            translation = response.text.strip()
             
             # Save language to the per-server synced background translation engine
             try:
@@ -60,6 +57,8 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
             embed.set_author(name=self.message_to_translate.author.display_name, icon_url=self.message_to_translate.author.display_avatar.url if self.message_to_translate.author.display_avatar else None)
             await interaction.followup.send(embed=embed, ephemeral=True)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             await interaction.followup.send(f"❌ Translation failed. ({str(e)[:50]})", ephemeral=True)
 
 class TransChannelSelect(discord.ui.ChannelSelect):
@@ -97,8 +96,6 @@ class TransConfigView(discord.ui.View):
 class QuickTranslator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # Synchronous client for quick on-demand tasks
-        self.gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
         
         # Register the context menu command natively
         self.ctx_menu = app_commands.ContextMenu(
@@ -132,17 +129,16 @@ class QuickTranslator(commands.Cog):
 
             prompt = f"Translate the following text to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
             
-            def fetch():
-                response = self.gemini_client.models.generate_content(
+            try:
+                client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                response = await client.aio.models.generate_content(
                     model='gemini-2.5-flash',
                     contents=prompt
                 )
                 if not response.text:
                     raise ValueError("Empty response from AI")
-                return response.text.strip()
+                translation = response.text.strip()
                 
-            try:
-                translation = await self.bot.loop.run_in_executor(None, fetch)
                 embed = discord.Embed(
                     title=f"🌍 Translated to {target.capitalize()}",
                     description=translation,
@@ -151,10 +147,12 @@ class QuickTranslator(commands.Cog):
                 embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url if message.author.display_avatar else None)
                 await interaction.followup.send(embed=embed, ephemeral=True)
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 await interaction.followup.send(f"❌ Translation failed. ({str(e)[:50]})", ephemeral=True)
         else:
             # Fallback: Open a modal to ask for language
-            await interaction.response.send_modal(TranslateModal(message, self.gemini_client, self.bot))
+            await interaction.response.send_modal(TranslateModal(message, self.bot))
 
     async def cog_load(self):
         from cogs.utils.ui import PersistentLanguageView
@@ -170,7 +168,13 @@ class QuickTranslator(commands.Cog):
             return await ctx.send("❌ Usage: `!qtranslate <Language> <Text...>`\nExample: `!qtranslate Spanish That clutch was insane!`")
             
         from cogs.utils.ui import LANGUAGES
-        valid_langs = {k.lower(): k for k in LANGUAGES.keys() if k != "Off"}
+        valid_langs = {}
+        for key, data in LANGUAGES.items():
+            if key == "Off": continue
+            valid_langs[key.lower()] = key
+            if "code" in data:
+                valid_langs[data["code"].lower()] = key
+        
         if target_language.lower() not in valid_langs:
             return await ctx.send(f"❌ \"{target_language}\" isn't a valid translation choice, unless you speak Elvish or Klingon! Please stick to Earth languages.")
         target_language = valid_langs[target_language.lower()]
@@ -189,16 +193,19 @@ class QuickTranslator(commands.Cog):
 
                 prompt = f"Translate the following text to {target_language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text_to_translate}\"{exclusion_str}"
                 
-                def fetch_translation():
-                    response = self.gemini_client.models.generate_content(
+                try:
+                    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                    response = await client.aio.models.generate_content(
                         model='gemini-2.5-flash',
                         contents=prompt
                     )
                     if not response.text:
                         raise ValueError("Empty response from AI")
-                    return response.text.strip()
-
-                translation = await self.bot.loop.run_in_executor(None, fetch_translation)
+                    translation = response.text.strip()
+                except Exception as api_err:
+                    import traceback
+                    traceback.print_exc()
+                    raise api_err
                 
                 try:
                     await self.bot.db.hset(f"translator_subs:{ctx.guild.id}", str(ctx.author.id), target_language)
@@ -209,6 +216,8 @@ class QuickTranslator(commands.Cog):
                 await ctx.send(f"🌍 **{target_language.capitalize()}:** {translation}")
 
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 await ctx.send(f"❌ Quick Translation failed. Please try again later. ({str(e)[:50]})")
 
     @app_commands.command(name="translate", description="Instantly translate text to a targeted language")
@@ -217,7 +226,13 @@ class QuickTranslator(commands.Cog):
     async def slash_translate(self, interaction: discord.Interaction, language: str, text: str):
         """Instantly parses text via slash command and translates it into another language."""
         from cogs.utils.ui import LANGUAGES
-        valid_langs = {k.lower(): k for k in LANGUAGES.keys() if k != "Off"}
+        valid_langs = {}
+        for key, data in LANGUAGES.items():
+            if key == "Off": continue
+            valid_langs[key.lower()] = key
+            if "code" in data:
+                valid_langs[data["code"].lower()] = key
+                
         if language.lower() not in valid_langs:
             return await interaction.response.send_message(f"❌ \"{language}\" isn't a valid translation choice, unless you speak Elvish or Klingon! Please stick to Earth languages.", ephemeral=True)
         language = valid_langs[language.lower()]
@@ -237,26 +252,31 @@ class QuickTranslator(commands.Cog):
 
             prompt = f"Translate the following text to {language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
             
-            def fetch_translation():
-                response = self.gemini_client.models.generate_content(
+            try:
+                client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                response = await client.aio.models.generate_content(
                     model='gemini-2.5-flash',
                     contents=prompt
                 )
                 if not response.text:
                     raise ValueError("Empty response from AI")
-                return response.text.strip()
-
-            translation = await self.bot.loop.run_in_executor(None, fetch_translation)
+                translation = response.text.strip()
+            except Exception as api_err:
+                import traceback
+                traceback.print_exc()
+                raise api_err
             
             try:
                 await self.bot.db.hset(f"translator_subs:{interaction.guild_id}", str(interaction.user.id), language)
             except:
                 pass
             
-            await interaction.followup.send(f"🌍 **{language.capitalize()}:** {translation}", ephemeral=True)
+            await interaction.followup.send(f"🌍 **{language.capitalize()}:** {translation}")
 
         except Exception as e:
-            await interaction.followup.send(f"❌ Translation failed. ({str(e)[:50]})", ephemeral=True)
+            import traceback
+            traceback.print_exc()
+            await interaction.followup.send(f"❌ Translation failed. ({str(e)[:50]})")
 
     @commands.command()
     async def translate(self, ctx, member: discord.Member = None):

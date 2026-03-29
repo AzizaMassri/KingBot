@@ -64,8 +64,17 @@ class LanguageDropdown(discord.ui.Select):
         # So we restrict interaction to the person who triggered the command (the admin).
         
         target_id = self.target_user_id if self.target_user_id else interaction.user.id
-        target_member = interaction.guild.get_member(target_id)
         
+        if self.target_user_id:
+            target_member = interaction.guild.get_member(target_id)
+            if not target_member and interaction.guild:
+                try:
+                    target_member = await interaction.guild.fetch_member(target_id)
+                except discord.HTTPException:
+                    target_member = None
+        else:
+            target_member = interaction.user
+            
         if not target_member:
              return await interaction.followup.send("⚠️ The user to update could not be found in this server.", ephemeral=True)
 

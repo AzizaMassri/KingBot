@@ -3,7 +3,7 @@ import hashlib
 import os
 from google import genai
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
 
 # Local helper to reconstruct cache keys properly
 def get_cache_key(text: str, language: str) -> str:
@@ -42,18 +42,13 @@ async def translate_content(text: str, target_locale: discord.Locale, bot=None) 
 
     prompt = f"Translate the following to {target_language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard. Keep exact formatting/emojis, and output ONLY the raw translation with no preamble.{exclusion_str}\n\n\"{text}\""
 
-    def fetch_global_translation():
-        response = client.models.generate_content(
+    try:
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        response = await client.aio.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt
         )
-        return response.text.strip() if response.text else text
-    
-    # We require the bot loop to run this async executor
-    import asyncio
-    try:
-        loop = asyncio.get_running_loop()
-        translation = await loop.run_in_executor(None, fetch_global_translation)
+        translation = response.text.strip() if response.text else text
         
         # Save to redis, expire in 86400 (1 day)
         await cache.setex(cache_key, 86400, translation)

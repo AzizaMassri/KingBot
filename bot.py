@@ -159,6 +159,7 @@ bot = MyBot(command_prefix='!', intents=intents, help_command=None, chunk_guilds
 
 # --- NEW GEMINI SDK SETUP (2026) ---
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+bot.gemini_client = client
 
 # --- DATABASE CONNECTIONS ---
 cache = PostgresCache()

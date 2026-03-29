@@ -70,3 +70,37 @@ RABBITMQ_HOST=localhost
     ```
 
 *Alternatively, the bot can be deployed entirely using its Docker infrastructure setup (e.g., `docker-compose up -d`).*
+
+### Updating the Bot
+
+When an update is pushed to the repository, you can easily pull the new changes and restart the bot to apply them.
+
+1. Navigate to your bot's directory and pull the latest changes:
+    ```bash
+    git pull origin main
+    ```
+
+2. If any new dependencies were added, install them:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3. Restart the bot depending on your deployment method:
+
+    **If using Systemd (`kingbot.service`):**
+    ```bash
+    sudo systemctl restart kingbot
+    ```
+
+    **If using Docker:**
+    ```bash
+    docker-compose restart
+    # Or if you need to rebuild the image
+    docker-compose up -d --build
+    ```
+
+    **If running manually in a terminal:**
+    Stop the script using `Ctrl+C` and restart it:
+    ```bash
+    python bot.py
+    ```

@@ -130,7 +130,7 @@ SSH into your VM and pull the new updates down from GitHub. Depending on how you
 
 ```bash
 cd ~/KingBot
-git pull origin main
+git pull origin master
 ```
 
 **If you added any new dependencies, make sure to install them (for non-Docker setups):**

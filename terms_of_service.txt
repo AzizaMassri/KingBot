@@ -1,0 +1,39 @@
+Terms of Service for KingBot
+
+Last Updated: March 30, 2026
+
+Welcome to KingBot! These Terms of Service ("Terms") outline the rules and regulations for the use of the KingBot application ("the Bot") on the Discord platform. By inviting, configuring, or interacting with KingBot, you agree to comply with these Terms. If you disagree with any part of these Terms, please remove KingBot from your server and discontinue use of its features.
+
+1. Acceptance of Terms
+By accessing or using KingBot, you agree to be bound by these Terms and our Privacy Policy. Since KingBot operates on Discord, you must also be in full compliance with Discord's Terms of Service and Community Guidelines while using this Bot.
+
+2. Description of Service
+KingBot is a translation and utility bot that allows users to translate text across multiple languages using third-party artificial intelligence services (such as Google Gemini API). 
+
+3. Acceptable Use
+You agree not to use KingBot to:
+- Translate, generate, or distribute illegal, abusive, harassing, or otherwise malicious content.
+- Spam commands, exploit bugs, or intentionally overwhelm the Bot's infrastructure for the purpose of denial of service.
+- Attempt to bypass Discord's rate limits or the API limits set by our third-party translation providers.
+- Use the Bot in any way that violates Discord's Terms of Service.
+
+4. Translation Accuracy & Liability
+KingBot utilizes AI models to provide translations. While we strive for accuracy, translations are provided "as is" and without warranty. We do not guarantee that any translation will be 100% accurate or contextually perfect. By using KingBot, you acknowledge that you rely on these translations at your own risk. The developer(s) of KingBot shall not be held liable for any misunderstandings, damages, or losses resulting from the use of its translations.
+
+5. Service Availability & Modifications
+We reserve the right to modify, suspend, or discontinue any feature or the entirety of KingBot at any time, with or without notice. We do not guarantee complete uptime or availability of the Bot's services.
+
+6. Termination & Blacklisting
+The developer(s) and administrator(s) of KingBot reserve the right to restrict, suspend, or permanently ban (blacklist) any User or Server (Guild) from accessing KingBot’s features at any time and for any reason, particularly in cases of abuse, spam, or violation of these Terms.
+
+7. Data and Privacy
+Your privacy is important to us. Please review our Privacy Policy, which explains how we collect, use, and store data (such as User IDs, Server Settings, and message content for translation processing). By using KingBot, you consent to our data practices.
+
+8. Changes to the Terms
+We may revise these Terms occasionally to reflect feature updates, legal requirements, or changes in third-party services. Continued use of KingBot following any changes constitutes your acceptance of the revised Terms.
+
+9. Contact
+If you have any questions or require support concerning these Terms, please contact the KingBot developer team or join our dedicated support server on Discord.
+
+---
+By using KingBot, you acknowledge that you have read, understood, and agreed to these Terms of Service.

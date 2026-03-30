@@ -1,0 +1,40 @@
+Privacy Policy for KingBot
+
+Last Updated: March 30, 2026
+
+KingBot ("the Bot") is a Discord bot designed to provide translation and utility services. This Privacy Policy outlines what data the Bot collects, how it is used, and how you can manage your data. By adding KingBot to your server or using its features, you agree to the terms outlined below.
+
+1. Data Collection
+In order to function properly, KingBot may collect and store the following data:
+- Discord User IDs: To track user-specific settings, language preferences, and feature configurations (like Auto-Translate).
+- Discord Server (Guild) IDs: To store server-specific configurations, command toggles, and administrator preferences.
+- Message Content: KingBot reads message content when a command is invoked or when Auto-Translate is active. 
+
+2. How Data is Used
+The data collected is used strictly for providing the Bot's core functionality:
+- User Context: To remember your preferred translation languages and settings across different servers.
+- Translation Processing: Message content requested for translation is temporarily processed and sent to our third-party AI provider (Google Gemini API) to generate the translation. 
+- Server Management: To ensure server administrators can customize their KingBot experience and toggle features on or off.
+
+3. Data Retention
+- Setting & Preferences: User and Server IDs, alongside their associated configuration settings, are stored securely in our database (PostgreSQL) until explicitly removed.
+- Message Content: KingBot does NOT permanently store, log, or database the contents of ordinary user messages. Message content is only processed ephemerally during the act of translation and is discarded immediately after the translated response is generated.
+
+4. Third-Party Services
+KingBot connects to the following third-party services to function:
+- Google Gemini API: Message text that you explicitly request to be translated (via commands, UI apps, or Auto-Translate) is sent to Google's Gemini API for processing. Please refer to Google's Privacy Policy for information on how they handle API requests.
+- Discord: The bot operates on the Discord platform and is subject to Discord's Terms of Service and Privacy Policy.
+
+5. Data Security
+Data is stored securely on our private Virtual Machine (VM) and database. We take reasonable measures to protect your information and prevent unauthorized access.
+
+6. User Rights & Data Deletion
+You have the right to request the deletion of any data KingBot has collected about you or your server.
+- If you remove KingBot from your server, you may request that all associated server configurations be purged.
+- If you are a user who wishes to have your language preferences or translation profiles deleted, you may contact the bot developer(s) or use provided bot commands (if applicable) to clear your data.
+
+7. Contact
+If you have any questions or concerns regarding this Privacy Policy or wish to request data deletion, please contact the bot developer or join our official support server.
+
+---
+By continuing to use KingBot, you acknowledge that you have read and consent to this Privacy Policy.

@@ -147,7 +147,7 @@ class Leveling(commands.Cog):
         progress_bar = f"[{filled_blocks}{empty_blocks}] **{int(progress * 100)}%**"
 
         embed = discord.Embed(
-            title=f"🏰 {member.name}'s Royal War Record 🏰",
+            title=f"🏰 {member.display_name}'s Royal War Record 🏰",
             color=await self._get_user_color(member.id)
         )
         embed.set_thumbnail(url=member.display_avatar.url)
@@ -175,8 +175,17 @@ class Leveling(commands.Cog):
         leaderboard_data = []
         for user_id_b, xp in all_data:
             user_id = int(user_id_b)
-            if ctx.guild.get_member(user_id):
-                leaderboard_data.append((user_id, xp))
+            member = ctx.guild.get_member(user_id)
+            
+            if not member:
+                try:
+                    # In case chunking is off, manually fetch to verify they are still in server
+                    member = await ctx.guild.fetch_member(user_id)
+                except discord.NotFound:
+                    continue
+                    
+            if member:
+                leaderboard_data.append((member, xp))
                 if len(leaderboard_data) >= 10:
                     break
         
@@ -190,13 +199,12 @@ class Leveling(commands.Cog):
         )
 
         desc = ""
-        for index, (user_id, xp) in enumerate(leaderboard_data):
-            # Use Discord's mention syntax to resolve the name dynamically
-            name = f"<@{user_id}>"
+        for index, (member, xp) in enumerate(leaderboard_data):
+            name = member.display_name
             level = self._get_level_from_xp(int(xp))
             
             medal = "👑" if index == 0 else "🦁" if index == 1 else "🐺" if index == 2 else "⚔️"
-            desc += f"{medal} **#{index + 1}** • {name} — **Lv {level}** *( {int(xp):,} Glory )*\n"
+            desc += f"{medal} **#{index + 1}** • **{name}** — **Lv {level}** *( {int(xp):,} Glory )*\n"
 
         embed.description += desc
         await ctx.send(embed=embed)

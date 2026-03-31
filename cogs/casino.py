@@ -7,7 +7,10 @@ from cogs.utils.views import TranslatedView
 class Casino(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.eco = Economy(bot)
+        
+    @property
+    def eco(self):
+        return self.bot.get_cog("Economy")
 
     @commands.group(invoke_without_command=True, aliases=["bet"])
     async def casino(self, ctx):
@@ -241,7 +244,7 @@ class BlackjackView(TranslatedView):
         title = "🃏 Blackjack"
         
         if not game_over:
-            desc = f"**{self.ctx.author.name}'s Hand** (Score: {p_score})\n{self._format_hand(self.player_hand)}\n\n**Dealer's Hand**\n{self._format_hand(self.dealer_hand, True)}"
+            desc = f"**{self.ctx.author.display_name}'s Hand** (Score: {p_score})\n{self._format_hand(self.player_hand)}\n\n**Dealer's Hand**\n{self._format_hand(self.dealer_hand, True)}"
         else:
             if draw:
                 title = "🃏 Blackjack: PUSH (Tie)"
@@ -260,7 +263,7 @@ class BlackjackView(TranslatedView):
                 desc = f"You lost your bet of **{self.bet} 💰**.\nRemaining Balance: **{remaining_bal} 💰**\n\n"
                 color = discord.Color.red()
                 
-            desc += f"**{self.ctx.author.name}'s Hand** (Score: {p_score})\n{self._format_hand(self.player_hand)}\n\n"
+            desc += f"**{self.ctx.author.display_name}'s Hand** (Score: {p_score})\n{self._format_hand(self.player_hand)}\n\n"
             desc += f"**Dealer's Hand** (Score: {d_score})\n{self._format_hand(self.dealer_hand)}"
             
         embed = discord.Embed(title=title, description=desc, color=color)

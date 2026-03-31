@@ -15,7 +15,7 @@ class RaceLobbyView(TranslatedView):
         
         self.players = [host]
         self.racers = [initial_animal]
-        self.player_names = [host.name]
+        self.player_names = [host.display_name]
         
     @discord.ui.button(label="Join Race", style=discord.ButtonStyle.success, emoji="🏇")
     async def join_race(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -39,7 +39,7 @@ class RaceLobbyView(TranslatedView):
         self.racers.append(chosen)
         
         embed = interaction.message.embeds[0]
-        desc = f"**Host:** {self.host.name}\n**Bet:** {self.bet} 💰\n\n**Racers ({len(self.players)}/4):**\n"
+        desc = f"**Host:** {self.host.display_name}\n**Bet:** {self.bet} 💰\n\n**Racers ({len(self.players)}/4):**\n"
         for i in range(len(self.players)):
             desc += f"{self.racers[i]} {self.player_names[i]}\n"
         embed.description = desc
@@ -69,7 +69,7 @@ class HeistLobbyView(TranslatedView):
         self.title = title
         
         self.players = [host]
-        self.player_names = [host.name]
+        self.player_names = [host.display_name]
         
     @discord.ui.button(label="Join Heist", style=discord.ButtonStyle.danger, emoji="🐻")
     async def join_heist(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -89,7 +89,7 @@ class HeistLobbyView(TranslatedView):
         self.player_names.append(interaction.user.display_name)
         
         embed = interaction.message.embeds[0]
-        desc = f"**Host:** {self.host.name}\n**Entry Cost:** {self.cost} 💰\n\n**Squad ({len(self.players)}/5):**\n"
+        desc = f"**Host:** {self.host.display_name}\n**Entry Cost:** {self.cost} 💰\n\n**Squad ({len(self.players)}/5):**\n"
         for name in self.player_names:
             desc += f"🐻 {name}\n"
         embed.description = desc
@@ -169,7 +169,7 @@ class RussianRouletteLobbyView(TranslatedView):
         self.players.append(interaction.user)
         
         embed = interaction.message.embeds[0]
-        desc = f"**Host:** {self.host.name}\n**Buy-in:** {self.bet} 💰\n\n**Players ({len(self.players)}/5):**\n"
+        desc = f"**Host:** {self.host.display_name}\n**Buy-in:** {self.bet} 💰\n\n**Players ({len(self.players)}/5):**\n"
         for p in self.players:
             desc += f"👤 {p.display_name}\n"
         embed.description = desc
@@ -230,9 +230,9 @@ class RussianRouletteGameView(TranslatedView):
             winner = self.players[0]
             if self.bet > 0:
                 await self.eco.add_balance(winner.id, self.prize_pool)
-                extra_text += f"\n\n🏆 **{winner.name}** is the last one bleeding! They win the pot of **{self.prize_pool} 💰**!"
+                extra_text += f"\n\n🏆 **{winner.display_name}** is the last one bleeding! They win the pot of **{self.prize_pool} 💰**!"
             else:
-                extra_text += f"\n\n🏆 **{winner.name}** is the last one bleeding! They win absolutely nothing out of pure boredom!"
+                extra_text += f"\n\n🏆 **{winner.display_name}** is the last one bleeding! They win absolutely nothing out of pure boredom!"
                 
             embed = discord.Embed(
                 title="🔫 Game Over",
@@ -245,7 +245,7 @@ class RussianRouletteGameView(TranslatedView):
         self.current_turn = self.current_turn % len(self.players)
         current_player = self.players[self.current_turn]
         
-        desc = extra_text + f"\n\nIt is **{current_player.name}'s** turn to pull the trigger!\n*(You have 30 seconds)*"
+        desc = extra_text + f"\n\nIt is **{current_player.display_name}'s** turn to pull the trigger!\n*(You have 30 seconds)*"
         embed = discord.Embed(
             title="🔫 Russian Roulette",
             description=desc,
@@ -270,11 +270,11 @@ class RussianRouletteGameView(TranslatedView):
             self.bullet_chamber = random.randint(0, 5)
             self.current_chamber = 0
             
-            result_text = f"**{dead_player.name}** puts the gun to their head and pulls...\n{flavor}\n*(The cylinder has been spun again...)*"
+            result_text = f"**{dead_player.display_name}** puts the gun to their head and pulls...\n{flavor}\n*(The cylinder has been spun again...)*"
         else:
             # Player lives
             flavor = random.choice(self.survive_lines)
-            result_text = f"**{current_player.name}** puts the gun to their head and pulls...\n{flavor}"
+            result_text = f"**{current_player.display_name}** puts the gun to their head and pulls...\n{flavor}"
             
             self.current_chamber += 1
             self.current_turn += 1
@@ -284,7 +284,10 @@ class RussianRouletteGameView(TranslatedView):
 class Games(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.eco = Economy(bot)
+        
+    @property
+    def eco(self):
+        return self.bot.get_cog("Economy")
         self.animals = [
             "🚀", "🛸", "🛰️", "☄️", "🌌", "👨‍🚀", "👽", "🔭", "🪐", "🌠", 
             "🌑", "🌒", "🌓", "🌔", "🌕", "🌖", "🌗", "🌘", "⭐", "🌟",
@@ -345,7 +348,7 @@ class Games(commands.Cog):
 
         embed = discord.Embed(
             title="🏁 Multiplayer Race Lobby 🏁",
-            description=f"**Host:** {ctx.author.name}\n**Bet:** {bet} 💰\n\n⏳ *Waiting for others to join! Click the button! (60s)*\n\n**Racers (1/4):**\n{my_animal} {ctx.author.name}\n",
+            description=f"**Host:** {ctx.author.display_name}\n**Bet:** {bet} 💰\n\n⏳ *Waiting for others to join! Click the button! (60s)*\n\n**Racers (1/4):**\n{my_animal} {ctx.author.display_name}\n",
             color=discord.Color.green()
         )
         
@@ -397,7 +400,7 @@ class Games(commands.Cog):
         # Handle payouts
         if bet > 0:
             if winner_idx < len(players): # A real player won
-                winnings = bet * len(players) # Winner takes all pool
+                winnings = bet * num_racers # Winner takes all pool (including bots!)
                 winner_id = players[winner_idx].id
                 new_bal = await self.eco.add_balance(winner_id, winnings)
                 win_msg += f"\n💰 **{winner_name}** won the prize pool and earned **{winnings} Bucks**! (New Balance: {new_bal})"
@@ -524,7 +527,7 @@ class Games(commands.Cog):
 
         embed = discord.Embed(
             title=f"🐻 Multiplayer Heist Lobby: {level['title']}",
-            description=f"**Host:** {ctx.author.name}\n**Entry Cost:** {cost} 💰\n\n⏳ *Waiting for squad members to join! Click the button! (60s)*\n\n**Squad (1/5):**\n🐻 {ctx.author.name}\n",
+            description=f"**Host:** {ctx.author.display_name}\n**Entry Cost:** {cost} 💰\n\n⏳ *Waiting for squad members to join! Click the button! (60s)*\n\n**Squad (1/5):**\n🐻 {ctx.author.display_name}\n",
             color=discord.Color.dark_red()
         )
 
@@ -586,13 +589,13 @@ class Games(commands.Cog):
             c1_name = choices_view1.choices_made.get(p)
             if not c1_name:
                 c1_name = random.choice(list(level["choices1"].keys()))
-                results_desc += f"💤 **{p.name}** fell asleep in Part 1 and blindly did: **{c1_name}**...\n"
+                results_desc += f"💤 **{p.display_name}** fell asleep in Part 1 and blindly did: **{c1_name}**...\n"
                 
             # Phase 2 pick
             c2_name = choices_view2.choices_made.get(p)
             if not c2_name:
                 c2_name = random.choice(list(level["choices2"].keys()))
-                results_desc += f"💤 **{p.name}** fell asleep in Part 2 and blindly did: **{c2_name}**...\n"
+                results_desc += f"💤 **{p.display_name}** fell asleep in Part 2 and blindly did: **{c2_name}**...\n"
                 
             c1_data = level["choices1"][c1_name]
             c2_data = level["choices2"][c2_name]
@@ -604,9 +607,9 @@ class Games(commands.Cog):
                 base_reward = random.randint(level["min_rew"], level["max_rew"])
                 reward = int(base_reward * c2_data["rew_mult"])
                 await self.eco.add_balance(p.id, reward)
-                results_desc += f"✅ **{p.name}**\n*Phase 1:* {c1_data['text']}\n*Phase 2:* {c2_data['text']}\n🏆 **Escaped with +{reward} 💰!**\n\n"
+                results_desc += f"✅ **{p.display_name}**\n*Phase 1:* {c1_data['text']}\n*Phase 2:* {c2_data['text']}\n🏆 **Escaped with +{reward} 💰!**\n\n"
             else:
-                results_desc += f"❌ **{p.name}**\n*Phase 1:* {c1_data['text']}\n*Phase 2:* {c2_data['text']}\n🚔 **Busted! Chased out & lost {cost} 💰!**\n\n"
+                results_desc += f"❌ **{p.display_name}**\n*Phase 1:* {c1_data['text']}\n*Phase 2:* {c2_data['text']}\n🚔 **Busted! Chased out & lost {cost} 💰!**\n\n"
                 
         results_embed = discord.Embed(
             title="🏆 Heist Results",
@@ -632,7 +635,7 @@ class Games(commands.Cog):
 
         embed = discord.Embed(
             title="🔫 Russian Roulette Lobby",
-            description=f"**Host:** {ctx.author.name}\n**Buy-in:** {bet} 💰\n\n⏳ *Waiting for victims to join! (60s)*\n\n**Players (1/5):**\n👤 {ctx.author.name}\n",
+            description=f"**Host:** {ctx.author.display_name}\n**Buy-in:** {bet} 💰\n\n⏳ *Waiting for victims to join! (60s)*\n\n**Players (1/5):**\n👤 {ctx.author.display_name}\n",
             color=discord.Color.dark_red()
         )
         
@@ -661,7 +664,7 @@ class Games(commands.Cog):
         
         start_embed = discord.Embed(
             title="🔫 Russian Roulette Starting",
-            description=f"The cylinder is loaded with 1 bullet and 5 empty chambers.\nThe cylinder is given a harsh spin and slammed shut.\n\nIt is **{players[0].name}'s** turn to pull the trigger!\n*(You have 30 seconds to pull)*",
+            description=f"The cylinder is loaded with 1 bullet and 5 empty chambers.\nThe cylinder is given a harsh spin and slammed shut.\n\nIt is **{players[0].display_name}'s** turn to pull the trigger!\n*(You have 30 seconds to pull)*",
             color=discord.Color.dark_red()
         )
         

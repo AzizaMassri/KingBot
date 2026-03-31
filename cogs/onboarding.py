@@ -403,7 +403,7 @@ class Onboarding(commands.Cog):
             else:
                 print(f"Onboarding role not found in {member.guild.name}")
         except Exception as e:
-            print(f"Failed to assign Onboarding role to {member.name}: {e}")
+            print(f"Failed to assign Onboarding role to {member.display_name}: {e}")
 
         # Send instructions with Interactive Buttons in the onboarding channel
         welcome_msg = (
@@ -444,7 +444,7 @@ class Onboarding(commands.Cog):
                 view = StartOnboardingView(self.bot, member.guild.id)
                 await member.send(welcome_msg, view=view)
             except discord.Forbidden:
-                print(f"Could not send DM to {member.name} (DMs disabled).")
+                print(f"Could not send DM to {member.display_name} (DMs disabled).")
 
         # The 24-hour time limit kick has been removed by request
 

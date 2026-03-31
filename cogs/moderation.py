@@ -24,7 +24,7 @@ class Moderation(commands.Cog):
             return await ctx.send("❌ Usage: `!kick @user [Reason]`")
         try:
             await member.kick(reason=reason)
-            await ctx.send(f"✅ Kicked **{member.name}**. Reason: {reason or 'No reason provided.'}")
+            await ctx.send(f"✅ Kicked **{member.display_name}**. Reason: {reason or 'No reason provided.'}")
         except discord.Forbidden:
             await ctx.send("❌ I don't have permission to kick this user (They might have a higher role than me).")
 
@@ -36,7 +36,7 @@ class Moderation(commands.Cog):
             return await ctx.send("❌ Usage: `!ban @user [Reason]`")
         try:
             await member.ban(reason=reason)
-            embed = discord.Embed(title="🔨 User Banned", description=f"**{member.name}** has been banned.", color=discord.Color.red())
+            embed = discord.Embed(title="🔨 User Banned", description=f"**{member.display_name}** has been banned.", color=discord.Color.red())
             embed.add_field(name="Reason", value=reason or "No reason provided.")
             await ctx.send(embed=embed)
         except discord.Forbidden:
@@ -52,7 +52,7 @@ class Moderation(commands.Cog):
         try:
             user = await self.bot.fetch_user(user_id)
             await ctx.guild.unban(user)
-            embed = discord.Embed(title="🕊️ User Unbanned", description=f"**{user.name}** has been unbanned.", color=discord.Color.green())
+            embed = discord.Embed(title="🕊️ User Unbanned", description=f"**{user.display_name}** has been unbanned.", color=discord.Color.green())
             await ctx.send(embed=embed)
         except discord.NotFound:
             await ctx.send("❌ That user is not banned or does not exist.")
@@ -104,7 +104,7 @@ class Moderation(commands.Cog):
             
         try:
             await member.edit(nick=new_name[:32])
-            await ctx.send(f"✅ Changed {member.name}'s nickname to **{new_name[:32]}**.")
+            await ctx.send(f"✅ Changed {member.display_name}'s nickname to **{new_name[:32]}**.")
         except discord.Forbidden:
             await ctx.send("❌ I don't have permission to change their nickname.")
 
@@ -119,7 +119,7 @@ class Moderation(commands.Cog):
         try:
             duration = datetime.timedelta(minutes=minutes)
             await member.timeout(duration, reason=reason)
-            embed = discord.Embed(title="🔇 User Muted", description=f"**{member.name}** has been timed out for {minutes} minutes.", color=discord.Color.orange())
+            embed = discord.Embed(title="🔇 User Muted", description=f"**{member.display_name}** has been timed out for {minutes} minutes.", color=discord.Color.orange())
             if reason:
                 embed.add_field(name="Reason", value=reason)
             await ctx.send(embed=embed)
@@ -135,7 +135,7 @@ class Moderation(commands.Cog):
             
         try:
             await member.timeout(None, reason="Unmuted by admin")
-            embed = discord.Embed(title="🔊 User Unmuted", description=f"**{member.name}**'s timeout was removed.", color=discord.Color.green())
+            embed = discord.Embed(title="🔊 User Unmuted", description=f"**{member.display_name}**'s timeout was removed.", color=discord.Color.green())
             await ctx.send(embed=embed)
         except discord.Forbidden:
             await ctx.send("❌ I don't have permission to remove timeouts.")

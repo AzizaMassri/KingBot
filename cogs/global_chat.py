@@ -115,12 +115,12 @@ class GlobalChat(commands.Cog):
                                     except:
                                         translated_channel = channel_name
 
-                                print(f"Attempting to DM {user.name} ({user_id}) translation of {author_name}'s message")
+                                print(f"Attempting to DM {user.display_name} ({user_id}) translation of {author_name}'s message")
                                 try:
                                     await user.send(f"**({guild_name}) [{channel_name} | {translated_channel}] {author_name}:** {translation}")
-                                    print(f"Successfully sent DM to {user.name}")
+                                    print(f"Successfully sent DM to {user.display_name}")
                                 except discord.Forbidden:
-                                    print(f"Failed to DM {user.name}: Forbidden (DMs disabled)")
+                                    print(f"Failed to DM {user.display_name}: Forbidden (DMs disabled)")
 
                     except Exception as e:
                         err_str = str(e)
@@ -174,7 +174,7 @@ class GlobalChat(commands.Cog):
                     "user_id": user_id,
                     "target_language": target_language,
                     "content": message.content,
-                    "author_name": message.author.name,
+                    "author_name": message.author.display_name,
                     "channel_name": message.channel.name,
                     "guild_name": message.guild.name,
                     "context_str": context_str
@@ -187,7 +187,7 @@ class GlobalChat(commands.Cog):
         except Exception as e:
             print(f"❌ Producer Error: {e}")
 
-        self.chat_history.append(f"{message.author.name} (#{message.channel.name}): {message.content}")
+        self.chat_history.append(f"{message.author.display_name} (#{message.channel.name}): {message.content}")
 
 async def setup(bot):
     await bot.add_cog(GlobalChat(bot))

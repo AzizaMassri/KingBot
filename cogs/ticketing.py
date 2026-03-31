@@ -115,7 +115,7 @@ class Ticketing(commands.Cog):
             guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True)
         }
         
-        clean_name = "".join(c for c in user.name if c.isalnum() or c in ("_", "-")).lower()
+        clean_name = "".join(c for c in user.display_name if c.isalnum() or c in ("_", "-")).lower()
         if not clean_name:
             clean_name = "user"
             
@@ -124,7 +124,7 @@ class Ticketing(commands.Cog):
                 f"ticket-{clean_name}",
                 category=category,
                 overwrites=overwrites,
-                reason=f"Ticket created by {user.name}"
+                reason=f"Ticket created by {user.display_name}"
             )
         except Exception as e:
             return await interaction.followup.send(f"❌ Failed to create ticket channel: {e}", ephemeral=True)
@@ -160,7 +160,7 @@ class Ticketing(commands.Cog):
         await interaction.channel.send(embed=embed)
         await asyncio.sleep(5)
         try:
-            await interaction.channel.delete(reason=f"Ticket closed by {interaction.user.name}")
+            await interaction.channel.delete(reason=f"Ticket closed by {interaction.user.display_name}")
         except:
             pass
 

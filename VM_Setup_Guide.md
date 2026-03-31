@@ -133,29 +133,29 @@ When you write new code on your Windows PC, push it to GitHub, then pull it down
 # Pull the latest changes from GitHub
 git pull origin master
 
-# Seamlessly rebuild and restart the Python bot with the new code
-docker compose up -d --build
+# Clean up leftover broken containers and completely rebuild the live code
+docker compose up -d --build --remove-orphans
 ```
 *(You do not need to stop the bot first. Docker automatically hot-swaps the container without dropping your database!)*
 
 ### 📊 2. Checking Bot Health & Logs
-If the bot acts weird or isn't responding, check the logs out to see the raw Python terminal output:
+If the bot acts weird or isn't responding, check the logs out to see the raw Python terminal output. Using `docker compose logs` prevents "No such container" errors by automatically finding the right service:
 ```bash
 # View the live, scrolling terminal logs for the bot
-docker logs -f kingbot_app
+docker compose logs -f kingbot-app
 
 # View the last 50 lines of logs (good for a quick check)
-docker logs --tail 50 kingbot_app
+docker compose logs --tail 50 kingbot-app
 
 # View the live logs for the Postgres Database
-docker logs -f kingbot_postgres
+docker compose logs -f postgres
 ```
 *(Press `Ctrl+C` to exit the live log view)*
 
 ### 🛑 3. Restarting and Stopping Containers
 ```bash
 # Quickly restart just the Python bot (keeps database running)
-docker compose restart kingbot_app
+docker compose restart kingbot-app
 
 # Completely restart EVERYTHING (bot, database, message queue)
 docker compose restart

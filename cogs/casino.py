@@ -37,25 +37,26 @@ class Casino(commands.Cog):
         if choice == "t": choice = "tails"
             
         user_id = ctx.author.id
-        if self.eco.get_balance(user_id) < bet:
+        if await self.eco.get_balance(user_id) < bet:
             return await ctx.send("❌ You don't have enough Kingshot Bucks to make that bet!")
             
-        self.eco.remove_balance(user_id, bet)
+        await self.eco.remove_balance(user_id, bet)
         
         result = random.choice(["heads", "tails"])
         
         if choice == result:
             winnings = bet * 2
-            new_bal = self.eco.add_balance(user_id, winnings)
+            new_bal = await self.eco.add_balance(user_id, winnings)
             embed = discord.Embed(
                 title="🪙 Coin Flip: WIN!",
                 description=f"The coin landed on **{result.upper()}**!\n\nYou won **{winnings} 💰**!\nNew Balance: **{new_bal} 💰**",
                 color=discord.Color.green()
             )
         else:
+            remaining_bal = await self.eco.get_balance(user_id)
             embed = discord.Embed(
                 title="🪙 Coin Flip: LOSS!",
-                description=f"The coin landed on **{result.upper()}**!\n\nYou lost your bet of **{bet} 💰**.\nRemaining Balance: **{self.eco.get_balance(user_id)} 💰**",
+                description=f"The coin landed on **{result.upper()}**!\n\nYou lost your bet of **{bet} 💰**.\nRemaining Balance: **{remaining_bal} 💰**",
                 color=discord.Color.red()
             )
             
@@ -68,13 +69,13 @@ class Casino(commands.Cog):
             return await ctx.send("❌ Usage: `!bj <amount>`")
             
         user_id = ctx.author.id
-        if self.eco.get_balance(user_id) < bet:
+        if await self.eco.get_balance(user_id) < bet:
             return await ctx.send("❌ You don't have enough Kingshot Bucks to make that bet!")
             
-        self.eco.remove_balance(user_id, bet)
+        await self.eco.remove_balance(user_id, bet)
         
         view = BlackjackView(ctx, bet, self.eco)
-        embed = view.generate_embed()
+        embed = await view.generate_embed()
         
         msg = await ctx.send(embed=embed, view=view)
         
@@ -89,10 +90,10 @@ class Casino(commands.Cog):
             return await ctx.send("❌ Usage: `!roll <amount>`")
             
         user_id = ctx.author.id
-        if self.eco.get_balance(user_id) < bet:
+        if await self.eco.get_balance(user_id) < bet:
             return await ctx.send("❌ You don't have enough Kingshot Bucks to make that bet!")
             
-        self.eco.remove_balance(user_id, bet)
+        await self.eco.remove_balance(user_id, bet)
         
         roll_num = random.randint(1, 100)
         
@@ -106,16 +107,17 @@ class Casino(commands.Cog):
             
         if multiplier > 0:
             winnings = bet * multiplier
-            new_bal = self.eco.add_balance(user_id, winnings)
+            new_bal = await self.eco.add_balance(user_id, winnings)
             embed = discord.Embed(
                 title=f"🎲 Rolled a {roll_num}! WIN!",
                 description=f"You won **{multiplier}x** your bet!\n\nPayout: **{winnings} 💰**\nNew Balance: **{new_bal} 💰**",
                 color=discord.Color.green()
             )
         else:
+            remaining_bal = await self.eco.get_balance(user_id)
             embed = discord.Embed(
                 title=f"🎲 Rolled a {roll_num}! LOSS!",
-                description=f"You needed a 66 or higher to win.\n\nYou lost your bet of **{bet} 💰**.\nRemaining Balance: **{self.eco.get_balance(user_id)} 💰**",
+                description=f"You needed a 66 or higher to win.\n\nYou lost your bet of **{bet} 💰**.\nRemaining Balance: **{remaining_bal} 💰**",
                 color=discord.Color.red()
             )
             
@@ -128,10 +130,10 @@ class Casino(commands.Cog):
             return await ctx.send("❌ Usage: `!slots <amount>`")
             
         user_id = ctx.author.id
-        if self.eco.get_balance(user_id) < bet:
+        if await self.eco.get_balance(user_id) < bet:
             return await ctx.send("❌ You don't have enough Kingshot Bucks to make that bet!")
             
-        self.eco.remove_balance(user_id, bet)
+        await self.eco.remove_balance(user_id, bet)
         
         # Initial spinning message
         spin_embed = discord.Embed(
@@ -173,13 +175,14 @@ class Casino(commands.Cog):
             
         if multiplier > 0:
             winnings = bet * multiplier
-            new_bal = self.eco.add_balance(user_id, winnings)
+            new_bal = await self.eco.add_balance(user_id, winnings)
             color = discord.Color.green()
             desc = f"**[ {results[0]} | {results[1]} | {results[2]} ]**\n\n{winnings_text}\nYou won **{winnings} 💰**!\nNew Balance: **{new_bal} 💰**"
             title = "🎰 Slots: WIN! 🎰"
         else:
             color = discord.Color.red()
-            desc = f"**[ {results[0]} | {results[1]} | {results[2]} ]**\n\nNo matches!\nYou lost your bet of **{bet} 💰**.\nRemaining Balance: **{self.eco.get_balance(user_id)} 💰**"
+            remaining_bal = await self.eco.get_balance(user_id)
+            desc = f"**[ {results[0]} | {results[1]} | {results[2]} ]**\n\nNo matches!\nYou lost your bet of **{bet} 💰**.\nRemaining Balance: **{remaining_bal} 💰**"
             title = "🎰 Slots: LOSS 🎰"
             
         embed = discord.Embed(title=title, description=desc, color=color)
@@ -229,7 +232,7 @@ class BlackjackView(TranslatedView):
             return f"[{hand[0]['rank']}{hand[0]['suit']}] [❓❓]"
         return " ".join([f"[{c['rank']}{c['suit']}]" for c in hand])
 
-    def generate_embed(self, game_over=False, player_won=False, draw=False, blackjack=False):
+    async def generate_embed(self, game_over=False, player_won=False, draw=False, blackjack=False):
         p_score = self._calculate_score(self.player_hand)
         d_score = self._calculate_score(self.dealer_hand)
         
@@ -244,16 +247,17 @@ class BlackjackView(TranslatedView):
                 title = "🃏 Blackjack: PUSH (Tie)"
                 desc = f"You tied with the dealer. Bet refunded.\n\n"
                 color = discord.Color.light_grey()
-                self.eco.add_balance(self.ctx.author.id, self.bet) # Refund
+                await self.eco.add_balance(self.ctx.author.id, self.bet) # Refund
             elif player_won:
                 winnings = self.bet * (2.5 if blackjack else 2) 
-                new_bal = self.eco.add_balance(self.ctx.author.id, int(winnings))
+                new_bal = await self.eco.add_balance(self.ctx.author.id, int(winnings))
                 title = "🃏 Blackjack: YOU WIN!"
                 desc = f"{'**BLACKJACK!** ' if blackjack else ''}You won **{int(winnings)} 💰**!\nNew Balance: **{new_bal} 💰**\n\n"
                 color = discord.Color.green()
             else:
+                remaining_bal = await self.eco.get_balance(self.ctx.author.id)
                 title = "🃏 Blackjack: YOU LOSE!"
-                desc = f"You lost your bet of **{self.bet} 💰**.\nRemaining Balance: **{self.eco.get_balance(self.ctx.author.id)} 💰**\n\n"
+                desc = f"You lost your bet of **{self.bet} 💰**.\nRemaining Balance: **{remaining_bal} 💰**\n\n"
                 color = discord.Color.red()
                 
             desc += f"**{self.ctx.author.name}'s Hand** (Score: {p_score})\n{self._format_hand(self.player_hand)}\n\n"
@@ -269,17 +273,20 @@ class BlackjackView(TranslatedView):
         if p_score == 21 and d_score == 21:
             self.stop()
             self.clear_items()
-            await self.send_translated(interaction, embed=self.generate_embed(game_over=True, draw=True))
+            embed = await self.generate_embed(game_over=True, draw=True)
+            await self.send_translated(interaction, embed=embed)
             return True
         elif p_score == 21:
             self.stop()
             self.clear_items()
-            await self.send_translated(interaction, embed=self.generate_embed(game_over=True, player_won=True, blackjack=True))
+            embed = await self.generate_embed(game_over=True, player_won=True, blackjack=True)
+            await self.send_translated(interaction, embed=embed)
             return True
         elif d_score == 21:
             self.stop()
             self.clear_items()
-            await self.send_translated(interaction, embed=self.generate_embed(game_over=True, player_won=False))
+            embed = await self.generate_embed(game_over=True, player_won=False)
+            await self.send_translated(interaction, embed=embed)
             return True
             
         return False
@@ -295,11 +302,13 @@ class BlackjackView(TranslatedView):
         if p_score > 21:
             self.stop()
             self.clear_items()
-            await self.send_translated(interaction, embed=self.generate_embed(game_over=True, player_won=False))
+            embed = await self.generate_embed(game_over=True, player_won=False)
+            await self.send_translated(interaction, embed=embed)
         elif p_score == 21:
             await self.stand_button.callback(interaction) # Auto stand on 21
         else:
-            await self.send_translated(interaction, embed=self.generate_embed())
+            embed = await self.generate_embed()
+            await self.send_translated(interaction, embed=embed)
 
     @discord.ui.button(label="Stand", style=discord.ButtonStyle.danger, custom_id="stand")
     async def stand_button(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -317,11 +326,14 @@ class BlackjackView(TranslatedView):
         d_score = self._calculate_score(self.dealer_hand)
         
         if d_score > 21 or p_score > d_score:
-            await self.send_translated(interaction, embed=self.generate_embed(game_over=True, player_won=True))
+            embed = await self.generate_embed(game_over=True, player_won=True)
+            await self.send_translated(interaction, embed=embed)
         elif p_score < d_score:
-            await self.send_translated(interaction, embed=self.generate_embed(game_over=True, player_won=False))
+            embed = await self.generate_embed(game_over=True, player_won=False)
+            await self.send_translated(interaction, embed=embed)
         else:
-            await self.send_translated(interaction, embed=self.generate_embed(game_over=True, draw=True))
+            embed = await self.generate_embed(game_over=True, draw=True)
+            await self.send_translated(interaction, embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Casino(bot))

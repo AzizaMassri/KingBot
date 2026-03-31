@@ -1871,7 +1871,7 @@ class GovernorGearCalculatorView(discord.ui.View):
         user_id = str(interaction.user.id)
         target_lang = None
         try:
-            target_lang = self.bot.db.hget("global_translator_subs", user_id)
+            target_lang = await self.bot.db.hget("global_translator_subs", user_id)
         except Exception:
             pass
 

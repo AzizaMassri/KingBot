@@ -25,11 +25,11 @@ class RaceLobbyView(discord.ui.View):
         if len(self.players) >= 4:
             return await self.send_translated(interaction, content="The race is full!", ephemeral=True)
             
-        if self.bet > 0 and self.eco.get_balance(interaction.user.id) < self.bet:
+        if self.bet > 0 and await self.eco.get_balance(interaction.user.id) < self.bet:
             return await self.send_translated(interaction, content=f"You don't have enough Kingshot Bucks ({self.bet} needed)!", ephemeral=True)
             
         if self.bet > 0:
-            self.eco.remove_balance(interaction.user.id, self.bet)
+            await self.eco.remove_balance(interaction.user.id, self.bet)
             
         self.players.append(interaction.user)
         self.player_names.append(interaction.user.display_name)
@@ -79,11 +79,11 @@ class HeistLobbyView(TranslatedView):
         if len(self.players) >= 5:
             return await self.send_translated(interaction, content="The heist squad is full (max 5)!", ephemeral=True)
             
-        if self.cost > 0 and self.eco.get_balance(interaction.user.id) < self.cost:
+        if self.cost > 0 and await self.eco.get_balance(interaction.user.id) < self.cost:
             return await self.send_translated(interaction, content=f"You don't have enough Kingshot Bucks ({self.cost} needed)!", ephemeral=True)
             
         if self.cost > 0:
-            self.eco.remove_balance(interaction.user.id, self.cost)
+            await self.eco.remove_balance(interaction.user.id, self.cost)
             
         self.players.append(interaction.user)
         self.player_names.append(interaction.user.display_name)
@@ -160,11 +160,11 @@ class RussianRouletteLobbyView(TranslatedView):
         if len(self.players) >= 5:
             return await self.send_translated(interaction, content="The table is full (max 5)!", ephemeral=True)
             
-        if self.bet > 0 and self.eco.get_balance(interaction.user.id) < self.bet:
+        if self.bet > 0 and await self.eco.get_balance(interaction.user.id) < self.bet:
             return await self.send_translated(interaction, content=f"You don't have enough Kingshot Bucks ({self.bet} needed)!", ephemeral=True)
             
         if self.bet > 0:
-            self.eco.remove_balance(interaction.user.id, self.bet)
+            await self.eco.remove_balance(interaction.user.id, self.bet)
             
         self.players.append(interaction.user)
         
@@ -229,7 +229,7 @@ class RussianRouletteGameView(TranslatedView):
             self.stop()
             winner = self.players[0]
             if self.bet > 0:
-                self.eco.add_balance(winner.id, self.prize_pool)
+                await self.eco.add_balance(winner.id, self.prize_pool)
                 extra_text += f"\n\n🏆 **{winner.name}** is the last one bleeding! They win the pot of **{self.prize_pool} 💰**!"
             else:
                 extra_text += f"\n\n🏆 **{winner.name}** is the last one bleeding! They win absolutely nothing out of pure boredom!"
@@ -330,7 +330,7 @@ class Games(commands.Cog):
         if bet < 0:
             return await ctx.send("❌ Nice try, no negative bets allowed.")
             
-        if self.eco.get_balance(user_id) < bet:
+        if await self.eco.get_balance(user_id) < bet:
             return await ctx.send("❌ You don't have enough Kingshot Bucks to make that bet!")
             
         if my_animal and my_animal not in self.animals:
@@ -341,7 +341,7 @@ class Games(commands.Cog):
 
         # Deduct host bet
         if bet > 0:
-            self.eco.remove_balance(user_id, bet)
+            await self.eco.remove_balance(user_id, bet)
 
         embed = discord.Embed(
             title="🏁 Multiplayer Race Lobby 🏁",
@@ -399,7 +399,7 @@ class Games(commands.Cog):
             if winner_idx < len(players): # A real player won
                 winnings = bet * len(players) # Winner takes all pool
                 winner_id = players[winner_idx].id
-                new_bal = self.eco.add_balance(winner_id, winnings)
+                new_bal = await self.eco.add_balance(winner_id, winnings)
                 win_msg += f"\n💰 **{winner_name}** won the prize pool and earned **{winnings} Bucks**! (New Balance: {new_bal})"
             else:
                 win_msg += f"\n💸 The bot won! Everyone lost their bet of {bet} Bucks. Better luck next time!"
@@ -517,10 +517,10 @@ class Games(commands.Cog):
         level = heist_stories[difficulty]
         cost = level["cost"]
 
-        if self.eco.get_balance(user_id) < cost:
+        if await self.eco.get_balance(user_id) < cost:
             return await ctx.send(f"❌ You need **{cost} Kingshot Bucks** to host this {level['title']} raid!")
 
-        self.eco.remove_balance(user_id, cost)
+        await self.eco.remove_balance(user_id, cost)
 
         embed = discord.Embed(
             title=f"🐻 Multiplayer Heist Lobby: {level['title']}",
@@ -542,7 +542,7 @@ class Games(commands.Cog):
                 color=discord.Color.red()
             )
             for p in players:
-                self.eco.add_balance(p.id, cost) # Refund
+                await self.eco.add_balance(p.id, cost) # Refund
             return await msg.edit(embed=cancel_embed, view=None)
 
         # PHASE 1
@@ -603,7 +603,7 @@ class Games(commands.Cog):
             if roll <= win_chance:
                 base_reward = random.randint(level["min_rew"], level["max_rew"])
                 reward = int(base_reward * c2_data["rew_mult"])
-                self.eco.add_balance(p.id, reward)
+                await self.eco.add_balance(p.id, reward)
                 results_desc += f"✅ **{p.name}**\n*Phase 1:* {c1_data['text']}\n*Phase 2:* {c2_data['text']}\n🏆 **Escaped with +{reward} 💰!**\n\n"
             else:
                 results_desc += f"❌ **{p.name}**\n*Phase 1:* {c1_data['text']}\n*Phase 2:* {c2_data['text']}\n🚔 **Busted! Chased out & lost {cost} 💰!**\n\n"
@@ -623,12 +623,12 @@ class Games(commands.Cog):
         if bet < 0:
             return await ctx.send("❌ Negative bets aren't allowed. Try again.")
             
-        if bet > 0 and self.eco.get_balance(user_id) < bet:
+        if bet > 0 and await self.eco.get_balance(user_id) < bet:
             return await ctx.send("❌ You don't have enough Kingshot Bucks to host that buy-in!")
 
         # Deduct host bet initially
         if bet > 0:
-            self.eco.remove_balance(user_id, bet)
+            await self.eco.remove_balance(user_id, bet)
 
         embed = discord.Embed(
             title="🔫 Russian Roulette Lobby",
@@ -651,7 +651,7 @@ class Games(commands.Cog):
             )
             for p in players:
                 if bet > 0:
-                    self.eco.add_balance(p.id, bet) # Refund
+                    await self.eco.add_balance(p.id, bet) # Refund
             return await msg.edit(embed=cancel_embed, view=None)
 
         # Shuffle player order

@@ -150,6 +150,10 @@ class GlobalChat(commands.Cog):
                 
             cache = self.bot.db
             
+            # Check if auto translator is disabled for this server
+            if await cache.get(f"auto_translator_disabled:{message.guild.id}") == "1":
+                return
+            
             # Check if this channel is allowlisted for translations
             is_allowed = await cache.sismember(f"translation_channels:{message.guild.id}", str(message.channel.id))
             if not is_allowed:

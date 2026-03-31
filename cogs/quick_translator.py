@@ -357,5 +357,17 @@ class QuickTranslator(commands.Cog):
         )
         await ctx.send(embed=embed, view=TransConfigView(self.bot))
 
+    @commands.command(aliases=["toggleauto", "autotoggle"])
+    @commands.has_permissions(administrator=True)
+    async def toggle_auto_translator(self, ctx):
+        """Admin command to toggle the Auto-Translator in this server WITHOUT affecting the manual translating options."""
+        disabled = await self.bot.db.get(f"auto_translator_disabled:{ctx.guild.id}")
+        if disabled == "1":
+            await self.bot.db.delete(f"auto_translator_disabled:{ctx.guild.id}")
+            await ctx.send("✅ The Background Auto-Translator is now **ENABLED** for this server.")
+        else:
+            await self.bot.db.set(f"auto_translator_disabled:{ctx.guild.id}", "1")
+            await ctx.send("🚫 The Background Auto-Translator is now **DISABLED** for this server.")
+
 async def setup(bot):
     await bot.add_cog(QuickTranslator(bot))

@@ -168,7 +168,7 @@ class PostgresCache:
         return new_score
 
     async def zrevrange(self, name, start, end, withscores=False):
-        limit = end - start + 1 if end != -1 else None
+        limit = end - start + 1 if end != -1 else 9999999
         offset = start
         rows = await self.pool.fetch('''
             SELECT member, score FROM zset_kv 

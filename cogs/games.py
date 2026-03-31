@@ -5,7 +5,7 @@ import asyncio
 from cogs.economy import Economy
 from cogs.utils.views import TranslatedView
 
-class RaceLobbyView(discord.ui.View):
+class RaceLobbyView(TranslatedView):
     def __init__(self, host: discord.Member, bet: int, eco, animals, initial_animal: str):
         super().__init__(timeout=60.0)
         self.host = host

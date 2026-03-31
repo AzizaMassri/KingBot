@@ -128,15 +128,15 @@ docker compose up -d --build
 Once your VM is running, you will occasionally need to update the code, check the bot's health, or free up disk space. Run these commands from inside the `~/KingBot` folder.
 
 ### 🔄 1. Updating KingBot with New Code
-When you write new code on your Windows PC, push it to GitHub, then pull it down to the VM to update the live bot seamlessly:
+When you write new code on your Windows PC and push it to GitHub, you will use the automated deployment script to pull the latest changes and cleanly rebuild the bot without triggering Ubuntu security lockups:
 ```bash
-# Pull the latest changes from GitHub
-git pull origin master
+# Make sure the script is executable first (you only need to do this once!)
+chmod +x update.sh
 
-# Clean up leftover broken containers and completely rebuild the live code
-docker compose up -d --build --remove-orphans
+# Run the update script
+./update.sh
 ```
-*(You do not need to stop the bot first. Docker automatically hot-swaps the container without dropping your database!)*
+*(This script safely brings down the bot container, pulls the code, and redeploys it without destroying the underlying virtual networks.)*
 
 ### 📊 2. Checking Bot Health & Logs
 If the bot acts weird or isn't responding, check the logs out to see the raw Python terminal output. Using `docker compose logs` prevents "No such container" errors by automatically finding the right service:
@@ -176,3 +176,20 @@ If you completely broke the database or want to wipe the slate perfectly clean (
 docker compose down -v
 ```
 *(Warning: This deletes your Postgres volume data!)*
+
+---
+
+## Phase 6: Troubleshooting
+
+### 🛡️ Docker Container "Permission Denied" Error
+If you try to stop or rebuild a container and get an error like this:
+> `Error response from daemon: cannot stop container: <id>: permission denied`
+
+This is a known bug on Ubuntu/Debian where the **AppArmor** security module loses track of the container and blocks Docker from modifying it.
+
+To fix it, clean up the orphaned AppArmor profiles and restart the Docker service:
+```bash
+sudo aa-remove-unknown
+sudo systemctl restart docker
+```
+After that, your normal `docker compose up -d --build --remove-orphans` commands will work perfectly again.

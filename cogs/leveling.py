@@ -165,14 +165,23 @@ class Leveling(commands.Cog):
 
     @commands.command()
     async def leaderboard(self, ctx):
-        """Displays the top 10 most active members."""
+        """Displays the top 10 most active members currently in the server."""
         guild_id = ctx.guild.id
         db_key = f"xp_{guild_id}"
 
-        leaderboard_data = await self.db.zrevrange(db_key, 0, 9, withscores=True)
+        # Fetch all members to filter out users who have left the server
+        all_data = await self.db.zrevrange(db_key, 0, -1, withscores=True)
+        
+        leaderboard_data = []
+        for user_id_b, xp in all_data:
+            user_id = int(user_id_b)
+            if ctx.guild.get_member(user_id):
+                leaderboard_data.append((user_id, xp))
+                if len(leaderboard_data) >= 10:
+                    break
         
         if not leaderboard_data:
-            return await ctx.send("No one is on the leaderboard yet!")
+            return await ctx.send("No one from this server is on the leaderboard yet!")
 
         embed = discord.Embed(
             title="👑 Royal Kingdom Leaderboard 👑",
@@ -181,14 +190,13 @@ class Leveling(commands.Cog):
         )
 
         desc = ""
-        for index, (user_id_b, xp) in enumerate(leaderboard_data):
-            user_id = int(user_id_b)
-            member = ctx.guild.get_member(user_id)
-            name = member.name if member else f"Unknown Warrior ({user_id})"
+        for index, (user_id, xp) in enumerate(leaderboard_data):
+            # Use Discord's mention syntax to resolve the name dynamically
+            name = f"<@{user_id}>"
             level = self._get_level_from_xp(int(xp))
             
             medal = "👑" if index == 0 else "🦁" if index == 1 else "🐺" if index == 2 else "⚔️"
-            desc += f"{medal} **#{index + 1}** • **{name}** — **Lv {level}** *( {int(xp):,} Glory )*\n"
+            desc += f"{medal} **#{index + 1}** • {name} — **Lv {level}** *( {int(xp):,} Glory )*\n"
 
         embed.description += desc
         await ctx.send(embed=embed)

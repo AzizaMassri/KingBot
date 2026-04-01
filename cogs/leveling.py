@@ -77,6 +77,9 @@ class Leveling(commands.Cog):
         else:
             granted_xp *= 2.5 # 2.5x Faster
             
+        # Tuned to 2/3 of original XP gain
+        granted_xp *= (2.0 / 3.0)
+            
         guild_id = message.guild.id
         db_key = f"xp_{guild_id}"
         

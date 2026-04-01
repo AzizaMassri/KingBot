@@ -11,6 +11,7 @@ A comprehensive, multi-purpose Discord bot tailored specifically for complex ser
 * **Ghost Mode / Global Invisible:** Administrators can dynamically hide the bot from standard Discord user lists across all servers using the `!toggle_invisible` command, while retaining full functionality.
 * **Leveling & Experience:** Users gain points for chatting and Voice Channel activity, unlocking embedded profile cards (`!rank`) that can be heavily customized with HEX colors and background images.
 * **Minigames & Economy:** Integrated "Kingshot Bucks" system featuring dynamic casino games (`!blackjack`, `!slotmachine`), competitive racing (`!race`), and high-stakes heists (`!heist`).
+* **Advanced Music System:** High-quality, multithreaded audio playback via `!music`. Features a fully interactive UI, Apple Music/Spotify DRM-bypass parsing, and 24/7 internet radio streaming support. (See `music.md` for details).
 * **Alliance Merger Tool:** Advanced data parsing system (`!merger`) capable of evaluating `.txt` and `.csv` rosters to sort members by power and distribute them optimally into Main and Academy alliances.
 * **Custom Calculators:** Built-in calculation algorithms (`!calc`) for server-specific mechanics, checking Troops, Buildings, Shards, and Gear metrics efficiently via interactive Dropdowns.
 * **Voice Broadcasting:** Experimental `!karaoke` streaming that safely pipes audio feeds into Discord Voice Channels.

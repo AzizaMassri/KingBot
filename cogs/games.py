@@ -284,15 +284,15 @@ class RussianRouletteGameView(TranslatedView):
 class Games(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        
-    @property
-    def eco(self):
-        return self.bot.get_cog("Economy")
         self.animals = [
             "🚀", "🛸", "🛰️", "☄️", "🌌", "👨‍🚀", "👽", "🔭", "🪐", "🌠", 
             "🌑", "🌒", "🌓", "🌔", "🌕", "🌖", "🌗", "🌘", "⭐", "🌟",
             "💫", "🌞", "🌝", "🪐", "🛸", "🚀", "🛰️", "☄️", "🌌", "👨‍🚀"
         ]
+        
+    @property
+    def eco(self):
+        return self.bot.get_cog("Economy")
 
     def render_track(self, racers, positions, track_length, player_names):
         track_str = "🏁 **The Great Space Race!** 🏁\n\n"

@@ -7,4 +7,5 @@ yt-dlp
 aiohttp
 aiofiles
 pandas
-asyncpgpillow
+asyncpg
+pillow

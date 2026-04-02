@@ -14,9 +14,16 @@ class CoreCommands(commands.Cog):
             if not cmd:
                 return await ctx.send(f"❌ I don't have a command named `{command_name}`.")
                 
-            embed = discord.Embed(title=f"Command: !{cmd.name}", description=cmd.help or "No description provided.", color=discord.Color.blue())
+            embed = discord.Embed(title=f"Command: !{cmd.name}", description=cmd.help or "No instructions or documentation provided.", color=discord.Color.blue())
+            
             if cmd.aliases:
                 embed.add_field(name="Aliases", value=", ".join(cmd.aliases), inline=False)
+                
+            if isinstance(cmd, commands.Group):
+                subcmds = [c.name for c in cmd.commands if not c.hidden]
+                if subcmds:
+                    embed.add_field(name="Subcommands", value=", ".join([f"`{c}`" for c in subcmds]), inline=False)
+                    
             return await ctx.send(embed=embed)
 
         embed = discord.Embed(

@@ -2,7 +2,58 @@ import discord
 from PIL import Image
 import os
 from io import BytesIO
+
+import discord
 import asyncio
+
+class ArmadaInputModal(discord.ui.Modal, title="King's Armada"):
+    cords = discord.ui.TextInput(
+        label="Coordinates (e.g. A1, J10)",
+        style=discord.TextStyle.short,
+        required=True,
+        max_length=3
+    )
+    def __init__(self, future):
+        super().__init__()
+        self.future = future
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        if not self.future.done():
+            self.future.set_result(self.cords.value)
+
+class ArmadaInputView(discord.ui.View):
+    def __init__(self, user, future):
+        super().__init__(timeout=120)
+        self.user = user
+        self.future = future
+    @discord.ui.button(label="⚔️ Enter Coordinates", style=discord.ButtonStyle.danger)
+    async def invoke_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.user:
+            return await interaction.response.send_message("It is not your turn to command the fleet!", ephemeral=True)
+        await interaction.response.send_modal(ArmadaInputModal(self.future))
+        for c in self.children: c.disabled = True
+        try: await interaction.message.edit(view=self)
+        except: pass
+        self.stop()
+
+class MockMsg:
+    def __init__(self, content): self.content = content
+
+async def prompt_armada_cords(bot, channel, user, prompt_text="Please enter your coordinates:"):
+    future = asyncio.get_event_loop().create_future()
+    view = ArmadaInputView(user, future)
+    msg = await channel.send(f"{user.mention}, {prompt_text}", view=view)
+    try:
+        res = await asyncio.wait_for(future, timeout=120)
+        try: await msg.delete()
+        except: pass
+        return MockMsg(res)
+    except asyncio.TimeoutError:
+        try: await msg.delete()
+        except: pass
+        raise asyncio.TimeoutError
+
+
 import logging
 from .ai import BattleshipAI
 

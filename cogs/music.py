@@ -137,6 +137,12 @@ class PlayModal(discord.ui.Modal, title='Add to Queue'):
             await interaction.followup.send(f"✅ Picked up **{title}** and added it to the queue!")
 
             voice_client = self.guild.voice_client
+            if not voice_client:
+                try:
+                    voice_client = await interaction.user.voice.channel.connect()
+                except discord.ClientException:
+                    voice_client = self.guild.voice_client
+                    
             if voice_client and not voice_client.is_playing() and not voice_client.is_paused():
                 await self.cog.play_next(interaction)
                 
@@ -166,13 +172,6 @@ class MusicControlView(discord.ui.View):
         if not is_admin and auth_voice and str(interaction.user.voice.channel.id) != auth_voice:
             return await interaction.response.send_message(f"❌ Standard users can only queue music from <#{auth_voice}>.", ephemeral=True)
             
-        voice_client = interaction.guild.voice_client
-        if not voice_client:
-            try:
-                await interaction.user.voice.channel.connect()
-            except discord.ClientException:
-                pass
-        
         await interaction.response.send_modal(PlayModal(self.cog, interaction.guild))
 
     @discord.ui.button(label="Pause/Resume", style=discord.ButtonStyle.blurple, emoji="⏯️", custom_id="music_cmd_pause")

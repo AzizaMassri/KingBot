@@ -144,7 +144,7 @@ class PlayModal(discord.ui.Modal, title='Add to Queue'):
                 except discord.ClientException:
                     voice_client = self.guild.voice_client
                     
-            if voice_client and not voice_client.is_playing() and not voice_client.is_paused():
+            if voice_client and not voice_client.is_playing() and not voice_client.is_paused() and not self.cog.is_fetching.get(self.guild.id, False):
                 await self.cog.play_next(interaction)
                 
         except Exception as e:
@@ -242,6 +242,7 @@ class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.queues = {} 
+        self.is_fetching = {}
 
     async def play_next(self, interaction_or_ctx):
         guild = interaction_or_ctx.guild
@@ -253,8 +254,10 @@ class Music(commands.Cog):
         if not queue: return
             
         query = queue.popleft()
+        self.is_fetching[guild.id] = True
         try:
             player = await YTDLSource.create_source(query, loop=self.bot.loop, stream=True)
+            self.is_fetching[guild.id] = False
             def after_call(error):
                 if error: print(f"Music Player Error: {error}")
                 self.bot.loop.call_soon_threadsafe(lambda: self.bot.loop.create_task(self.play_next(interaction_or_ctx)))
@@ -264,6 +267,7 @@ class Music(commands.Cog):
             if channel:
                 asyncio.run_coroutine_threadsafe(channel.send(f"🎶 Now Playing: **{player.title}**"), self.bot.loop)
         except Exception as e:
+            self.is_fetching[guild.id] = False
             channel = getattr(interaction_or_ctx, 'channel', None)
             if channel:
                 asyncio.run_coroutine_threadsafe(channel.send(f"❌ Failed to play next track: `{e}`"), self.bot.loop)

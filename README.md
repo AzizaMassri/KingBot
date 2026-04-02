@@ -10,12 +10,14 @@ A comprehensive, multi-purpose Discord bot tailored specifically for complex ser
 * **Intelligent Moderation:** Full suite of admin commands natively built-in including `!kick`, `!ban`, `!mute`, `!lock`, `!purge`, and `!alias` management for server efficiency.
 * **Ticketing System:** A sophisticated private channel support suite. Server Admins can deploy a unified portal using `!setup_tickets` to instantly generate secure support channels for users.
 * **Onboarding System:** Intuitive, interactive modal setup for new members requiring an exact name format and presenting role selection via a customizable Admin dropdown UI. Completely togglable via `!togglecog Onboarding`.
+* **Reaction Roles:** Modern, modal-based builder interface for custom server reaction roles.
 * **Ghost Mode / Global Invisible:** Administrators can dynamically hide the bot from standard Discord user lists across all servers using the `!toggle_invisible` command, while retaining full functionality.
 * **Leveling & Experience:** Users gain points for chatting and Voice Channel activity, unlocking embedded profile cards (`!rank`) that can be heavily customized with HEX colors and background images.
-* **Minigames & Economy:** Integrated "Kingshot Bucks" system featuring dynamic casino games (`!blackjack`, `!slotmachine`), competitive racing (`!race`), and high-stakes heists (`!heist`).
-* **Advanced Music System:** High-quality, multithreaded audio playback via `!music`. Features a fully interactive UI, Apple Music/Spotify DRM-bypass parsing, and 24/7 internet radio streaming support. (See `music.md` for details).
+* **Economy Casino & Events:** Integrated "Kingshot Bucks" system featuring dynamic casino games (`!blackjack`, `!slotmachine`), competitive racing (`!race`), and high-stakes heists (`!heist`).
+* **Century Games Arcade (Minigames):** A fully loaded hub (`!minigames`) containing massive interactive UI games: King's Monopoly, Armada (Battleship), King's Execution (Hangman), Knight's Row (Connect 4), Swords & Shields (Tic-Tac-Toe), and Monarch's Mysteries (a 21-question automated Trivia engine).
+* **Advanced Music System:** High-quality, multithreaded audio playback via `!music`. Features a fully interactive UI, Apple Music/Spotify DRM-bypass parsing, and 24/7 internet radio streaming support.
 * **Alliance Merger Tool:** Advanced data parsing system (`!merger`) capable of evaluating `.txt` and `.csv` rosters to sort members by power and distribute them optimally into Main and Academy alliances.
-* **Custom Calculators:** Built-in calculation algorithms (`!calc`) for server-specific mechanics, checking Troops, Buildings, Shards, and Gear metrics efficiently via interactive Dropdowns.
+* **Educational Guides:** Work-in-progress manuals providing extensive information on Player Growth, Events, Facilities, Castles, and more, efficiently replacing the old custom calculators.
 * **Voice Broadcasting:** Experimental `!karaoke` streaming that safely pipes audio feeds into Discord Voice Channels.
 
 ## 🛠️ Architecture & Technology Stack

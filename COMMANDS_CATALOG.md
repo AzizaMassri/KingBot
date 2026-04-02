@@ -21,7 +21,7 @@
 
 -----
 ## Admin Config Commands
-**Admin**: `!restart` `!reload` `!sync` `!toggle_command` `!toggle_cog` `!toggle_invisible`
+**Admin**: `!control_panel` `!toggle_command` `!toggle_cog`
 
 **Aliases**: `!alias` `!aliases`
 
@@ -34,6 +34,8 @@
 **Leveling**: `!leveling_admin` `!givexp`
 
 **Moderation**: `!purge` `!kick` `!ban` `!unban` `!addrole` `!removerole` `!forcename` `!mute` `!unmute` `!lock` `!unlock`
+
+**Music**: `!music_admin`
 
 **Onboarding**: `!setonboardingchannel` `!onboarding_admin` `!onboarding_roles` `!onboarding_add` `!onboarding_remove`
 

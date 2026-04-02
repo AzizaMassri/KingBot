@@ -123,8 +123,14 @@ class MyBot(commands.AutoShardedBot):
         
         # Load Cogs Dynamically
         for filename in os.listdir('./cogs'):
+            extension = None
             if filename.endswith('.py') and not filename.startswith('__'):
                 extension = f'cogs.{filename[:-3]}'
+            elif os.path.isdir(f'./cogs/{filename}') and filename not in ['utils', '__pycache__']:
+                if os.path.isfile(f'./cogs/{filename}/__init__.py'):
+                    extension = f'cogs.{filename}'
+                    
+            if extension:
                 try:
                     await self.load_extension(extension)
                     print(f'✅ Loaded extension: {extension}')

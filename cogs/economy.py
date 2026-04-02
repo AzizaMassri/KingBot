@@ -170,9 +170,16 @@ class PrinceWilliamDropView(discord.ui.View):
         try:
             if self.message:
                 await self.message.edit(view=self)
+                departures = [
+                    "\"My royal carriage awaits! Spend your loot wisely, peasants—until next time!\"",
+                    "\"I must away! The royal corgis have seized control of the armory again. Adieu, my filthy but lovable commoners!\"",
+                    "\"And with that, my peasants, my monthly charity quota is met! I'm off to bathe in liquid gold!\"",
+                    "\"Dash it all, I hear the royal auditors approaching! I must depart before they notice the vault is empty! Toodles!\"",
+                    "\"Farewell! Try not to spend it all on cheap mead and mud pies in my absence!\""
+                ]
                 embed = discord.Embed(
                     title="👑 The Royal Carriage Departs...",
-                    description="\"My royal carriage awaits! Spend your loot wisely, peasants—until next time!\"",
+                    description=random.choice(departures),
                     color=discord.Color.dark_magenta()
                 )
                 await self.message.reply(embed=embed)
@@ -346,9 +353,16 @@ class Economy(commands.Cog):
                 
                 channel = message.guild.get_channel(channel_id)
                 if channel:
+                    arrivals = [
+                        "\"Greetings peasants! It is I, Prince William! Sponsored strictly by Kingshot - by KingBot! Who here desires fresh loot?!\"",
+                        "\"Hark! Drop your plows and gaze upon my majestic splendor! I have arrived to fund your questionable financial decisions!\"",
+                        "\"Make way for royalty! I stole the King's platinum credit card and I am ready to make it rain upon you commoners!\"",
+                        "\"Did someone order a royal bailout? It is I, Prince William, gracing this channel with pocket change that will change your lives!\"",
+                        "\"Bow before me! I bring you glorious Kingshot Bucks! And yes, before you ask, my hair is naturally this magnificent.\""
+                    ]
                     embed = discord.Embed(
                         title="👑 ROYAL ARRIVAL 👑",
-                        description="\"Greetings peasants! It is I, Prince William! Sponsored strictly by Kingshot - by Century Games! Who here desires fresh loot?!\"",
+                        description=random.choice(arrivals),
                         color=discord.Color.gold()
                     )
                     try:

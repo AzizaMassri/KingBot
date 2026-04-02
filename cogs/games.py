@@ -47,9 +47,9 @@ class RaceLobbyView(TranslatedView):
         if len(self.players) >= 4:
             self.stop()
             embed.title = "🏁 Race Starting! 🏁"
-            await self.send_translated(interaction, embed=embed, view=None)
+            await self.edit_translated(interaction, embed=embed, view=None)
         else:
-            await self.send_translated(interaction, embed=embed, view=self)
+            await self.edit_translated(interaction, embed=embed, view=self)
 
     @discord.ui.button(label="Start Now", style=discord.ButtonStyle.primary)
     async def start_early(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -58,7 +58,7 @@ class RaceLobbyView(TranslatedView):
         self.stop()
         embed = interaction.message.embeds[0]
         embed.title = "🏁 Race Starting! 🏁"
-        await self.send_translated(interaction, embed=embed, view=None)
+        await self.edit_translated(interaction, embed=embed, view=None)
 
 class HeistLobbyView(TranslatedView):
     def __init__(self, host: discord.Member, cost: int, eco, title: str):
@@ -97,9 +97,9 @@ class HeistLobbyView(TranslatedView):
         if len(self.players) >= 5:
             self.stop()
             embed.title = f"🐻 Heist Starting: {self.title}"
-            await self.send_translated(interaction, embed=embed, view=None)
+            await self.edit_translated(interaction, embed=embed, view=None)
         else:
-            await self.send_translated(interaction, embed=embed, view=self)
+            await self.edit_translated(interaction, embed=embed, view=self)
 
     @discord.ui.button(label="Start Heist", style=discord.ButtonStyle.primary)
     async def start_early(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -111,7 +111,7 @@ class HeistLobbyView(TranslatedView):
         self.stop()
         embed = interaction.message.embeds[0]
         embed.title = f"🐻 Heist Starting: {self.title}"
-        await self.send_translated(interaction, embed=embed, view=None)
+        await self.edit_translated(interaction, embed=embed, view=None)
 
 class HeistChoicesView(TranslatedView):
     def __init__(self, players, custom_choices, eco):
@@ -177,9 +177,9 @@ class RussianRouletteLobbyView(TranslatedView):
         if len(self.players) >= 5:
             self.stop()
             embed.title = "🔫 Russian Roulette Starting!"
-            await self.send_translated(interaction, embed=embed, view=None)
+            await self.edit_translated(interaction, embed=embed, view=None)
         else:
-            await self.send_translated(interaction, embed=embed, view=self)
+            await self.edit_translated(interaction, embed=embed, view=self)
 
     @discord.ui.button(label="Spin Cylinder (Start)", style=discord.ButtonStyle.primary)
     async def start_early(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -191,7 +191,7 @@ class RussianRouletteLobbyView(TranslatedView):
         self.stop()
         embed = interaction.message.embeds[0]
         embed.title = "🔫 Russian Roulette Starting!"
-        await self.send_translated(interaction, embed=embed, view=None)
+        await self.edit_translated(interaction, embed=embed, view=None)
 
 class RussianRouletteGameView(TranslatedView):
     def __init__(self, players: list, bet: int, eco):
@@ -239,7 +239,7 @@ class RussianRouletteGameView(TranslatedView):
                 description=extra_text,
                 color=discord.Color.gold()
             )
-            return await self.send_translated(interaction, embed=embed, view=None)
+            return await self.edit_translated(interaction, embed=embed, view=None)
 
         # Loop turn to next active player
         self.current_turn = self.current_turn % len(self.players)
@@ -251,7 +251,7 @@ class RussianRouletteGameView(TranslatedView):
             description=desc,
             color=discord.Color.dark_red()
         )
-        await self.send_translated(interaction, embed=embed, view=self)
+        await self.edit_translated(interaction, embed=embed, view=self)
 
     @discord.ui.button(label="Pull Trigger", style=discord.ButtonStyle.danger, emoji="💥")
     async def pull_trigger(self, interaction: discord.Interaction, button: discord.ui.Button):

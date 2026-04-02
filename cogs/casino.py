@@ -277,19 +277,19 @@ class BlackjackView(TranslatedView):
             self.stop()
             self.clear_items()
             embed = await self.generate_embed(game_over=True, draw=True)
-            await self.send_translated(interaction, embed=embed)
+            await self.edit_translated(interaction, embed=embed)
             return True
         elif p_score == 21:
             self.stop()
             self.clear_items()
             embed = await self.generate_embed(game_over=True, player_won=True, blackjack=True)
-            await self.send_translated(interaction, embed=embed)
+            await self.edit_translated(interaction, embed=embed)
             return True
         elif d_score == 21:
             self.stop()
             self.clear_items()
             embed = await self.generate_embed(game_over=True, player_won=False)
-            await self.send_translated(interaction, embed=embed)
+            await self.edit_translated(interaction, embed=embed)
             return True
             
         return False
@@ -306,12 +306,12 @@ class BlackjackView(TranslatedView):
             self.stop()
             self.clear_items()
             embed = await self.generate_embed(game_over=True, player_won=False)
-            await self.send_translated(interaction, embed=embed)
+            await self.edit_translated(interaction, embed=embed)
         elif p_score == 21:
             await self.stand_button.callback(interaction) # Auto stand on 21
         else:
             embed = await self.generate_embed()
-            await self.send_translated(interaction, embed=embed)
+            await self.edit_translated(interaction, embed=embed)
 
     @discord.ui.button(label="Stand", style=discord.ButtonStyle.danger, custom_id="stand")
     async def stand_button(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -330,13 +330,13 @@ class BlackjackView(TranslatedView):
         
         if d_score > 21 or p_score > d_score:
             embed = await self.generate_embed(game_over=True, player_won=True)
-            await self.send_translated(interaction, embed=embed)
+            await self.edit_translated(interaction, embed=embed)
         elif p_score < d_score:
             embed = await self.generate_embed(game_over=True, player_won=False)
-            await self.send_translated(interaction, embed=embed)
+            await self.edit_translated(interaction, embed=embed)
         else:
             embed = await self.generate_embed(game_over=True, draw=True)
-            await self.send_translated(interaction, embed=embed)
+            await self.edit_translated(interaction, embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Casino(bot))

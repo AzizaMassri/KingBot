@@ -1,5 +1,7 @@
 # 👑 KingBot
 
+> **⚠️ Legal Disclaimer:** KingBot is an independent, player-created project developed solely for the purposes of supplementing gameplay, providing educational assistance, real-time message translation capabilities, and facilitating the management of alliance and kingdom Discord servers. This project is strictly unofficial and is not affiliated with, endorsed by, sponsored by, or associated in any official capacity with Century Games or its affiliates.
+
 A comprehensive, multi-purpose Discord bot tailored specifically for complex server management, interactive minigames, user leveling, and real-time cross-language AI translations.
 
 ## ✨ Features

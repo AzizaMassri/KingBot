@@ -103,6 +103,12 @@ sudo fuser -k 15672/tcp
 sudo fuser -k 5432/tcp
 ```
 
+### Step 6: Autonomous Architecture Validation
+Recent build updates have systematically purged external runtime requirements. When you run the launch command in Phase 4, the Docker engine will automatically construct the following advanced architectures independently, without requiring tedious native Linux driver installations:
+- **Audio Routing & FFmpeg**: Securely compiled internally with high-availability reconnects, delivering instant, timeout-free `!music` playback.
+- **Persistent Memory Backends**: The `!diceduel` module natively routes into an asynchronous PostgreSQL cache to execute instantaneous nickname reversions without clogging the root server.
+- **Auto-Translation Clusters**: Hooks deeply via the `GEMINI_API_KEY` to autonomously power global chat monitoring and `!events` UI translations.
+
 ---
 
 ## Phase 4: Launching KingBot
@@ -164,10 +170,12 @@ docker compose restart
 docker compose down
 ```
 
-### 🧹 4. Freeing Up Disk Space
-Over time, Docker will hoard old image versions from your previous code updates. Run this to clear out unused data and free up disk space on the VM:
+### 🧹 4. Freeing Up Disk Space & Fixing Build Errors
+Over time, Docker's BuildKit will hoard old image versions, dangling cache, and isolated volume networks from your previous code updates. If you ever run `./update.sh` and receive an `ERROR exporting to image` or `No space left on device` failure, your VM disk is 100% full!
+
+Run this nuclear sweeping command to clear out all unused cache and restore gigabytes of disk space instantly on the VM:
 ```bash
-docker image prune -a -f
+docker system prune -a --volumes -f
 ```
 
 ### 💣 5. The Nuclear Option (Start from Scratch)

@@ -70,28 +70,28 @@ class KingsMinigames(BaseMinigameCog):
         await ctx.send(embed=embed)
 
     @commands.hybrid_command(name="swordsandshields", aliases=["ss", "tictactoe"])
-    @app_commands.describe(opponent="Invite another user to play.", bet="Optionally, bet an amount of currency.")
+    @app_commands.describe(opponent="Invite another user to play.")
     @commands.guild_only()
-    async def tictactoe(self, ctx: commands.Context, opponent: Optional[discord.Member] = None, bet: Optional[int] = None):
+    async def tictactoe(self, ctx: commands.Context, opponent: Optional[discord.Member] = None):
         """
         Play a game of Tic-Tac-Toe against the bot or another user.
         """
         assert ctx.guild and isinstance(ctx.author, discord.Member)
         opponent = opponent or ctx.guild.me
         players = [ctx.author, opponent] if opponent.bot else [opponent, ctx.author]
-        await self.base_minigame_cmd(TicTacToeGame, ctx, players, opponent.bot, bet)
+        await self.base_minigame_cmd(TicTacToeGame, ctx, players, opponent.bot, 0)
 
     @commands.hybrid_command(name="knightsrow", aliases=["kr", "connect4"])
-    @app_commands.describe(opponent="Invite another user to play.", bet="Optionally, bet an amount of currency.")
+    @app_commands.describe(opponent="Invite another user to play.")
     @commands.guild_only()
-    async def connectfour(self, ctx: commands.Context, opponent: Optional[discord.Member] = None, bet: Optional[int] = None):
+    async def connectfour(self, ctx: commands.Context, opponent: Optional[discord.Member] = None):
         """
         Play a game of Connect 4 against the bot or another user.
         """
         assert ctx.guild and isinstance(ctx.author, discord.Member) and isinstance(ctx.channel, (discord.abc.GuildChannel, discord.Thread))
         opponent = opponent or ctx.guild.me
         players = [ctx.author, opponent] if opponent.bot else [opponent, ctx.author]
-        await self.base_minigame_cmd(ConnectFourGame, ctx, players, opponent.bot, bet)
+        await self.base_minigame_cmd(ConnectFourGame, ctx, players, opponent.bot, 0)
 
 
     async def base_minigame_cmd(self,

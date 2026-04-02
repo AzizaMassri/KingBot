@@ -60,12 +60,12 @@ class KingsMinigames(BaseMinigameCog):
         embed.add_field(name="🟩 Casino", value="`!casino`, `!coinflip`, `!blackjack`, `!roll`, `!slots`", inline=False)
         embed.add_field(name="🟩 DiceGame", value="`!diceduel`", inline=False)
         embed.add_field(name="🟩 Games", value="`!race`, `!heist`, `!roulette`", inline=False)
-        embed.add_field(name="🟩 KingsArmada", value="`!armada`, `!armadaboard`", inline=False)
-        embed.add_field(name="🟩 KingsExecution", value="`!execution`", inline=False)
-        embed.add_field(name="🟩 MonarchsMysteries", value="`!monarchsmysteries`", inline=False)
+        embed.add_field(name="🟩 KingsArmada (Battleship)", value="`!armada`, `!armadaboard`", inline=False)
+        embed.add_field(name="🟩 KingsExecution (Hangman)", value="`!execution`", inline=False)
+        embed.add_field(name="🟩 MonarchsMysteries (Trivia)", value="`!monarchsmysteries`", inline=False)
         embed.add_field(name="🟩 Monopoly", value="`!monopoly`", inline=False)
-        embed.add_field(name="🟩 Knight's Row", value="`!kr`", inline=False)
-        embed.add_field(name="🟩 Swords & Shields", value="`!ss`", inline=False)
+        embed.add_field(name="🟩 Knight's Row (Connect 4)", value="`!kr`", inline=False)
+        embed.add_field(name="🟩 Swords & Shields (Tic-Tac-Toe)", value="`!ss`", inline=False)
         
         await ctx.send(embed=embed)
 

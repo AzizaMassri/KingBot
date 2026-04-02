@@ -155,7 +155,7 @@ class MusicControlView(discord.ui.View):
         super().__init__(timeout=None) 
         self.cog = cog
 
-    @discord.ui.button(label="Play / Add", style=discord.ButtonStyle.green, emoji="🎵", custom_id="music_cmd_play")
+    @discord.ui.button(label="Play Song", style=discord.ButtonStyle.green, emoji="▶️", custom_id="music_cmd_play", row=0)
     async def play_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         cfg = await self.cog.bot.db.hgetall(f"music_cfg:{interaction.guild.id}") or {}
         auth_text = cfg.get("auth_text", "")
@@ -175,7 +175,23 @@ class MusicControlView(discord.ui.View):
             
         await interaction.response.send_modal(PlayModal(self.cog, interaction.guild))
 
-    @discord.ui.button(label="Pause/Resume", style=discord.ButtonStyle.blurple, emoji="⏯️", custom_id="music_cmd_pause")
+    @discord.ui.button(label="Add to Queue", style=discord.ButtonStyle.primary, emoji="➕", custom_id="music_cmd_add_queue", row=0)
+    async def queue_add_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        cfg = await self.cog.bot.db.hgetall(f"music_cfg:{interaction.guild.id}") or {}
+        auth_text = cfg.get("auth_text", "")
+        auth_voice = cfg.get("auth_voice", "")
+        is_admin = interaction.user.guild_permissions.administrator
+        
+        if not is_admin and auth_text and str(interaction.channel_id) != auth_text:
+            return await interaction.response.send_message(f"❌ You may only queue music in <#{auth_text}>.", ephemeral=True)
+        if not interaction.user.voice:
+            return await interaction.response.send_message("❌ You must be in a Voice Channel to queue music!", ephemeral=True)
+        if not is_admin and auth_voice and str(interaction.user.voice.channel.id) != auth_voice:
+            return await interaction.response.send_message(f"❌ Standard users can only queue music from <#{auth_voice}>.", ephemeral=True)
+            
+        await interaction.response.send_modal(PlayModal(self.cog, interaction.guild))
+
+    @discord.ui.button(label="Pause/Resume", style=discord.ButtonStyle.blurple, emoji="⏯️", custom_id="music_cmd_pause", row=1)
     async def pause_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         voice_client = interaction.guild.voice_client
         if not voice_client:
@@ -190,7 +206,7 @@ class MusicControlView(discord.ui.View):
         else:
             await interaction.response.send_message("❌ No music is currently playing.", ephemeral=True)
 
-    @discord.ui.button(label="Skip", style=discord.ButtonStyle.gray, emoji="⏭️", custom_id="music_cmd_skip")
+    @discord.ui.button(label="Skip Track", style=discord.ButtonStyle.gray, emoji="⏭️", custom_id="music_cmd_skip", row=1)
     async def skip_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         voice_client = interaction.guild.voice_client
         if not voice_client or not voice_client.is_playing():
@@ -199,7 +215,7 @@ class MusicControlView(discord.ui.View):
         voice_client.stop()
         await interaction.response.send_message("⏭️ Skipped the current track.")
 
-    @discord.ui.button(label="Queue", style=discord.ButtonStyle.secondary, emoji="📜", custom_id="music_cmd_queue")
+    @discord.ui.button(label="View Queue", style=discord.ButtonStyle.secondary, emoji="📜", custom_id="music_cmd_queue", row=1)
     async def queue_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         queue = self.cog.queues.get(interaction.guild.id)
         if not queue:
@@ -216,7 +232,7 @@ class MusicControlView(discord.ui.View):
             
         await interaction.response.send_message(msg, ephemeral=True)
 
-    @discord.ui.button(label="Disconnect", style=discord.ButtonStyle.red, emoji="🛑", custom_id="music_cmd_stop")
+    @discord.ui.button(label="Disconnect", style=discord.ButtonStyle.red, emoji="🛑", custom_id="music_cmd_stop", row=1)
     async def stop_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         voice_client = interaction.guild.voice_client
         if voice_client:
@@ -281,7 +297,7 @@ class Music(commands.Cog):
             description="Welcome to the high-performance Music Dashboard.\n\n"
                         "• **Multi-Source Support:** Works with YouTube, Apple Music, Spotify, Deezer, and Direct Links.\n"
                         "• **24/7 Radio:** Paste an `.m3u` or `.pls` internet radio link for infinite ambience.\n\n"
-                        "Click **Play / Add** to open the Search Modal and start queueing songs!",
+                        "Click **Play Song** or **Add to Queue** to open the Search Modal and stream tracks!",
             color=discord.Color.brand_green()
         )
         embed.set_footer(text="Settings controlled strictly by Server Administrators")

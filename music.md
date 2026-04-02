@@ -11,6 +11,20 @@ Because the Music system dynamically buffers live streaming media into Discord, 
 - **Docker:** If you are running the bot via the provided `docker-compose.yml`, `ffmpeg` is **already built-in** to the Dockerfile. You don't need to do anything.
 - **Native Windows/Linux:** You must install FFmpeg and add it to your system PATH.
 
+#### Ubuntu or Debian-based VMs
+This is the most common Linux environment. Run the following commands one by one:
+
+```bash
+# 1. Update your package lists to ensure you get the latest version
+sudo apt update
+
+# 2. Install FFmpeg
+sudo apt install ffmpeg -y
+
+# 3. Verify the installation (this will also confirm it is in your PATH)
+ffmpeg -version
+```
+
 ### 2. Multi-Service Streaming (Spotify, Apple Music, Deezer)
 To ensure uninterrupted playback across DRM-protected platforms like Spotify and Apple Music, KingBot utilizes an intelligent metadata bypass:
 - When a user links a Spotify or Apple Music song, the bot reads the track name and artist.

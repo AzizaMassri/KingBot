@@ -6,19 +6,6 @@ import os
 from datetime import datetime, timedelta, timezone
 from cogs.utils.views import TranslatedView, TranslatedModal
 
-# Quick JSON store for persistent nickname resets
-DB_FILE = "kingshot_nicknames.json"
-
-def load_db():
-    if not os.path.exists(DB_FILE):
-        return {}
-    with open(DB_FILE, "r") as f:
-        return json.load(f)
-
-def save_db(data):
-    with open(DB_FILE, "w") as f:
-        json.dump(data, f, indent=4)
-
 class RenameModal(TranslatedModal, title='Claim Your Prize: Rename the Loser!'):
     new_name = discord.ui.TextInput(
         label='New Kingshot Name',
@@ -54,13 +41,13 @@ class RenameModal(TranslatedModal, title='Claim Your Prize: Rename the Loser!'):
             exp_date = datetime.now(timezone.utc) + timedelta(days=2)
             exp_date = exp_date.replace(hour=0, minute=0, second=0, microsecond=0)
             
-            db = load_db()
-            db[str(self.loser.id)] = {
+            payload = {
                 "guild_id": self.loser.guild.id,
                 "original_name": original_name,
                 "expires_at": exp_date.timestamp()
             }
-            save_db(db)
+            # Save persistently inside Postgres asynchronously, preventing Event Loop Blocking!
+            await self.loser.client.db.set(f"kingshot_loser:{self.loser.id}", json.dumps(payload))
 
             await self.send_translated(interaction, content=f"🌋 **NAME CHANGE APPLIED!** 🌋\n{self.loser.mention} is now known as **{final_name}** until {exp_date.strftime('%Y-%m-%d 00:00 UTC')}.")
             
@@ -155,28 +142,34 @@ class DiceGame(commands.Cog):
 
     @tasks.loop(minutes=30)
     async def nickname_reverter(self):
-        """Background task to check for expired nicknames and revert them."""
-        db = load_db()
+        """Background task to check for expired nicknames natively using the Database Cache."""
         now = datetime.now(timezone.utc).timestamp()
-        to_remove = []
-
-        for user_id, data in db.items():
-            if now >= data["expires_at"]:
-                guild = self.bot.get_guild(data["guild_id"])
-                if guild:
-                    member = guild.get_member(int(user_id))
-                    if member:
-                        try:
-                            await member.edit(nick=data["original_name"])
-                            print(f"Reverted nickname for {member.display_name}")
-                        except discord.Forbidden:
-                            print(f"Failed to revert nickname for {user_id}: Missing permissions.")
-                to_remove.append(user_id)
-
-        if to_remove:
-            for uid in to_remove:
-                del db[uid]
-            save_db(db)
+        
+        try:
+            keys = await self.bot.db.keys("kingshot_loser:*")
+            if not keys: return
+            
+            for key in keys:
+                data_str = await self.bot.db.get(key)
+                if not data_str: continue
+                
+                data = json.loads(data_str)
+                if now >= data["expires_at"]:
+                    guild = self.bot.get_guild(data["guild_id"])
+                    if guild:
+                        user_id = int(key.split(":")[1])
+                        member = guild.get_member(user_id)
+                        if member:
+                            try:
+                                await member.edit(nick=data["original_name"])
+                                print(f"Reverted nickname for {member.display_name}")
+                            except discord.Forbidden:
+                                print(f"Failed to revert nickname for {user_id}: Missing permissions.")
+                    
+                    # Delete record entirely after reverting
+                    await self.bot.db.delete(key)
+        except Exception as e:
+            print(f"Dice Game DB Loop Error: {e}")
 
     @nickname_reverter.before_loop
     async def before_reverter(self):

@@ -136,7 +136,11 @@ class PlayModal(discord.ui.Modal, title='Add to Queue'):
             
             self.cog.queues[self.guild.id].append(query)
             await interaction.followup.send(f"✅ Picked up **{title}** and added it to the queue!")
+        except Exception as e:
+            return await interaction.followup.send(f"❌ An error occurred while fetching that song: `{e}`")
 
+        # Handle VC Connection and playback strictly in the background without throwing to user UI
+        try:
             voice_client = self.guild.voice_client
             if not voice_client:
                 try:
@@ -146,9 +150,8 @@ class PlayModal(discord.ui.Modal, title='Add to Queue'):
                     
             if voice_client and not voice_client.is_playing() and not voice_client.is_paused() and not self.cog.is_fetching.get(self.guild.id, False):
                 await self.cog.play_next(interaction)
-                
-        except Exception as e:
-            await interaction.followup.send(f"❌ An error occurred while fetching that song: `{e}`")
+        except Exception:
+            pass
 
 class MusicControlView(discord.ui.View):
     def __init__(self, cog):

@@ -56,12 +56,18 @@ class KingsMinigames(BaseMinigameCog):
             description="Welcome to the royal arcade!\n\n*⚠️ Legal Disclaimer: KingBot is an independent, player-created project developed solely for the purposes of supplementing gameplay, providing educational assistance, and facilitating the management of alliance and kingdom Discord servers. This project is strictly unofficial and is not affiliated with, endorsed by, sponsored by, or associated in any official capacity with Century Games or its affiliates.*\n\nHere are the games you can play:",
             color=discord.Color.gold()
         )
+        # Classic Century Games
         embed.add_field(name="🏰 King's Monopoly", value="`!monopoly` - Conquer the kingdom's properties!", inline=False)
         embed.add_field(name="⚓ King's Armada", value="`!armada` - Sink your opponent's fleet in Battleship!", inline=False)
         embed.add_field(name="🪓 King's Execution", value="`!execution` - A lethal game of Hangman!", inline=False)
         embed.add_field(name="🔴 Knight's Row", value="`!kr` - Drop your colors in a Connect-4 duel!", inline=False)
         embed.add_field(name="⚔️ Swords & Shields", value="`!ss` - Challenge someone to Tic-Tac-Toe!", inline=False)
-        embed.add_field(name="👑 Monarch's Mysteries", value="`!trivia` - Compete in a 21-question trivia showdown!", inline=False)
+        
+        # Casino / Economy Betting Games
+        embed.add_field(name="💰 Casino Suite", value="`!blackjack`, `!slotmachine`, `!roulette` - Wager your Kingshot Bucks!", inline=False)
+        embed.add_field(name="🏇 The Royal Races", value="`!race` - Bet on the fastest animal in the kingdom!", inline=False)
+        embed.add_field(name="🎲 Dice Duel", value="`!diceduel` - Roll the dice against a rival!", inline=False)
+        embed.add_field(name="🕵️ Royal Heist", value="`!heist` - Team up to rob the royal vault!", inline=False)
         
         await ctx.send(embed=embed)
 

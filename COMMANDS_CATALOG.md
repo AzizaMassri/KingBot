@@ -11,7 +11,7 @@
 
 **Economy**: `!minigames` `!economy` `!collect`
 
-**Games**: `!race` `!heist` `!roulette`
+**Games & Board Games**: `!race` `!heist` `!roulette` `!armada` `!armadaboard` `!monopoly` `!kr` `!ss` `!execution` `!monarchsmysteries`
 
 **Leveling**: `!rank` `!leaderboard` `!setcolor` `!setimage`
 

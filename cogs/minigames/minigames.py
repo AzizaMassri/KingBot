@@ -16,6 +16,7 @@ from .base import Minigame, BaseMinigameCog
 from .connect4 import ConnectFourGame
 from .tictactoe import TicTacToeGame
 from .views.replace_view import ReplaceView
+from .views.hub_view import MinigameHubView
 
 log = logging.getLogger("red.crab-cogs.minigames")
 
@@ -49,25 +50,16 @@ class KingsMinigames(BaseMinigameCog):
     @commands.guild_only()
     async def minigames_list(self, ctx: commands.Context):
         """
-        View all the KingBot Games available!
+        Interactive UI Hub for all KingBot Minigames!
         """
         embed = discord.Embed(
             title="🎮 KingBot (& Kingshot) - Minigame Suite",
-            description="Welcome to the royal arcade!\n\n*⚠️ Legal Disclaimer: KingBot is an independent, player-created project developed solely for the purposes of supplementing gameplay, providing educational assistance, and facilitating the management of alliance and kingdom Discord servers. This project is strictly unofficial and is not affiliated with, endorsed by, sponsored by, or associated in any official capacity with Century Games or its affiliates.*\n\nHere are the games you can play:",
+            description="Welcome to the royal arcade!\n\n*⚠️ Legal Disclaimer: KingBot is an independent, player-created project developed solely for the purposes of supplementing gameplay, providing educational assistance, and facilitating the management of alliance and kingdom Discord servers. This project is strictly unofficial and is not affiliated with, endorsed by, sponsored by, or associated in any official capacity with Century Games or its affiliates.*\n\n**Please select a game category from the dropdown menu below!**",
             color=discord.Color.gold()
         )
-        # Requested Layout
-        embed.add_field(name="🟩 Casino", value="`!casino`, `!coinflip`, `!blackjack`, `!roll`, `!slots`", inline=False)
-        embed.add_field(name="🟩 DiceGame", value="`!diceduel`", inline=False)
-        embed.add_field(name="🟩 Games", value="`!race`, `!heist`, `!roulette`", inline=False)
-        embed.add_field(name="🟩 KingsArmada (Battleship)", value="`!armada`, `!armadaboard`", inline=False)
-        embed.add_field(name="🟩 KingsExecution (Hangman)", value="`!execution`", inline=False)
-        embed.add_field(name="🟩 MonarchsMysteries (Trivia)", value="`!monarchsmysteries`", inline=False)
-        embed.add_field(name="🟩 Monopoly", value="`!monopoly`", inline=False)
-        embed.add_field(name="🟩 Knight's Row (Connect 4)", value="`!kr`", inline=False)
-        embed.add_field(name="🟩 Swords & Shields (Tic-Tac-Toe)", value="`!ss`", inline=False)
         
-        await ctx.send(embed=embed)
+        view = MinigameHubView(self.bot)
+        await ctx.send(embed=embed, view=view)
 
     @commands.hybrid_command(name="swordsandshields", aliases=["ss", "tictactoe"])
     @app_commands.describe(opponent="Invite another user to play.")

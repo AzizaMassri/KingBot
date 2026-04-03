@@ -214,19 +214,7 @@ class Economy(commands.Cog):
                     return True
                 return False
 
-    @commands.group(invoke_without_command=True, aliases=["minigame"])
-    async def minigames(self, ctx):
-        """Interactive Kingshot Bucks Minigames!"""
-        embed = discord.Embed(
-            title="🎮 Kingshot Bucks Minigames 🎮",
-            description="Play games to earn **Kingshot Bucks 💰**!\nUse `!` followed by the command below to play.",
-            color=discord.Color.gold()
-        )
-        embed.add_field(name="🐻 `!heist <1-5>`", value="Send bear warriors on a medieval raid. Higher difficulty = bigger rewards!", inline=False)
-        embed.add_field(name="🏁 `!race <Animal> <Bet>`", value="Bet Kingshot Bucks on a random animal race. Example: `!race 🐢 100`", inline=False)
-        embed.add_field(name="💰 `!collect`", value="Claim your idle free Kingshot Bucks periodically.", inline=False)
-        embed.add_field(name="🏦 `!economy` / `!bank`", value="Access the main economy dashboard.", inline=False)
-        await ctx.send(embed=embed)
+
 
     @commands.command(aliases=["bank", "bal"])
     async def economy(self, ctx, member: discord.Member = None):

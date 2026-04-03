@@ -136,7 +136,7 @@ class HeistChoicesView(TranslatedView):
             self.choices_made[interaction.user] = choice_name
             await self.send_translated(interaction, content=f"You chose to: **{choice_name}**", ephemeral=True)
             
-            if len(self.choices_made) >= len(self.players):
+            if len(self.choices_made) >= sum(1 for p in self.players if not getattr(p, "bot", False)):
                 self.stop()
                 try:
                     await interaction.message.edit(view=None)
@@ -251,7 +251,15 @@ class RussianRouletteGameView(TranslatedView):
             description=desc,
             color=discord.Color.dark_red()
         )
-        await self.edit_translated(interaction, embed=embed, view=self)
+        msg = await self.edit_translated(interaction, embed=embed, view=self)
+        
+        if getattr(current_player, "bot", False):
+            # Let the bot spin in 2 seconds
+            asyncio.create_task(self.bot_action(msg))
+
+    async def bot_action(self, msg):
+        await asyncio.sleep(2.0)
+        await self.pull_trigger_logic(None)
 
     @discord.ui.button(label="Pull Trigger", style=discord.ButtonStyle.danger, emoji="💥")
     async def pull_trigger(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -259,6 +267,11 @@ class RussianRouletteGameView(TranslatedView):
         
         if interaction.user != current_player:
             return await self.send_translated(interaction, content="It is NOT your turn! Don't be so eager to die.", ephemeral=True)
+            
+        await self.pull_trigger_logic(interaction)
+
+    async def pull_trigger_logic(self, interaction: discord.Interaction):
+        current_player = self.players[self.current_turn]
             
         # Check chamber
         if self.current_chamber == self.bullet_chamber:
@@ -279,7 +292,33 @@ class RussianRouletteGameView(TranslatedView):
             self.current_chamber += 1
             self.current_turn += 1
             
-        await self.update_board(interaction, result_text)
+        if interaction:
+            await self.update_board(interaction, result_text)
+        else:
+            # Bot action uses a manual edit because there's no interaction context
+            await self.update_board_manual(result_text)
+
+    async def update_board_manual(self, extra_text=""):
+        if len(self.players) == 1:
+            self.stop()
+            winner = self.players[0]
+            if self.bet > 0:
+                await self.eco.add_balance(winner.id, self.prize_pool)
+                extra_text += f"\n\n🏆 **{winner.display_name}** is the last one bleeding! They win the pot of **{self.prize_pool} 💰**"
+            else:
+                extra_text += f"\n\n🏆 **{winner.display_name}** is the last one bleeding! They win absolutely nothing!"
+            embed = discord.Embed(title="🔫 Game Over", description=extra_text, color=discord.Color.gold())
+            if self.message:
+                return await self.message.edit(embed=embed, view=None)
+            
+        self.current_turn = self.current_turn % len(self.players)
+        current_player = self.players[self.current_turn]
+        desc = extra_text + f"\n\nIt is **{current_player.display_name}'s** turn to pull the trigger!\n*(You have 30 seconds)*"
+        embed = discord.Embed(title="🔫 Russian Roulette", description=desc, color=discord.Color.dark_red())
+        if self.message:
+            await self.message.edit(embed=embed, view=self)
+        if getattr(current_player, "bot", False):
+            asyncio.create_task(self.bot_action(None))
 
 class Games(commands.Cog):
     def __init__(self, bot):
@@ -539,14 +578,8 @@ class Games(commands.Cog):
         players = view.players
         
         if len(players) < 2:
-            cancel_embed = discord.Embed(
-                title="❌ Heist Cancelled",
-                description="Not enough players joined (Need at least 2). Your Bucks have been refunded.",
-                color=discord.Color.red()
-            )
-            for p in players:
-                await self.eco.add_balance(p.id, cost) # Refund
-            return await msg.edit(embed=cancel_embed, view=None)
+            players.append(ctx.guild.me)
+            await ctx.send(f"🤖 Not enough humans joined, so **{ctx.guild.me.display_name}** stepped in to help pull off the heist!")
 
         # PHASE 1
         story1_embed = discord.Embed(
@@ -647,15 +680,8 @@ class Games(commands.Cog):
         players = lobby_view.players
         
         if len(players) < 2:
-            cancel_embed = discord.Embed(
-                title="❌ Game Cancelled",
-                description="Not enough players joined to play Russian Roulette (Need at least 2). Bucks refunded.",
-                color=discord.Color.red()
-            )
-            for p in players:
-                if bet > 0:
-                    await self.eco.add_balance(p.id, bet) # Refund
-            return await msg.edit(embed=cancel_embed, view=None)
+            players.append(ctx.guild.me)
+            await ctx.send(f"🤖 Not enough victims joined, so **{ctx.guild.me.display_name}** sits down at the table!")
 
         # Shuffle player order
         random.shuffle(players)
@@ -668,7 +694,13 @@ class Games(commands.Cog):
             color=discord.Color.dark_red()
         )
         
-        await ctx.send(embed=start_embed, view=game_view)
+        msg = await ctx.send(embed=start_embed, view=game_view)
+        game_view.message = msg
+        
+        # If the first player is a bot, kick off the bot action loop automatically!
+        if getattr(players[0], "bot", False):
+            asyncio.create_task(game_view.bot_action(None))
+            
         await game_view.wait()
 
 async def setup(bot):

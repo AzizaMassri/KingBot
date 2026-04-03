@@ -2,61 +2,134 @@ import discord
 from PIL import Image
 import os
 from io import BytesIO
-
-import discord
 import asyncio
-
-class ArmadaInputModal(discord.ui.Modal, title="King's Armada"):
-    cords = discord.ui.TextInput(
-        label="Coordinates (e.g. A1, J10)",
-        style=discord.TextStyle.short,
-        required=True,
-        max_length=3
-    )
-    def __init__(self, future):
-        super().__init__()
-        self.future = future
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        if not self.future.done():
-            self.future.set_result(self.cords.value)
-
-class ArmadaInputView(discord.ui.View):
-    def __init__(self, user, future):
-        super().__init__(timeout=120)
-        self.user = user
-        self.future = future
-    @discord.ui.button(label="⚔️ Enter Coordinates", style=discord.ButtonStyle.danger)
-    async def invoke_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user != self.user:
-            return await interaction.response.send_message("It is not your turn to command the fleet!", ephemeral=True)
-        await interaction.response.send_modal(ArmadaInputModal(self.future))
-        for c in self.children: c.disabled = True
-        try: await interaction.message.edit(view=self)
-        except: pass
-        self.stop()
-
-class MockMsg:
-    def __init__(self, content): self.content = content
-
-async def prompt_armada_cords(bot, channel, user, prompt_text="Please enter your coordinates:"):
-    future = asyncio.get_event_loop().create_future()
-    view = ArmadaInputView(user, future)
-    msg = await channel.send(f"{user.mention}, {prompt_text}", view=view)
-    try:
-        res = await asyncio.wait_for(future, timeout=120)
-        try: await msg.delete()
-        except: pass
-        return MockMsg(res)
-    except asyncio.TimeoutError:
-        try: await msg.delete()
-        except: pass
-        raise asyncio.TimeoutError
-
-
 import logging
 from .ai import BattleshipAI
 
+
+class ArmadaPlayerShipModal(discord.ui.Modal):
+    cords = discord.ui.TextInput(
+        label="Coordinates (e.g. A1R, J10D)",
+        style=discord.TextStyle.short,
+        required=True,
+        max_length=4,
+        placeholder="C4R"
+    )
+
+    def __init__(self, game, player_idx, ship_len, ship_name, view):
+        super().__init__(title=f"Place {ship_name} (Length {ship_len})")
+        self.game = game
+        self.player_idx = player_idx
+        self.ship_len = ship_len
+        self.view = view
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        val = self.cords.value.lower()
+        success, error_msg = await self.game._place_silent(self.player_idx, self.ship_len, val)
+        if not success:
+            await interaction.followup.send(f"Invalid placement: {error_msg}", ephemeral=True)
+            return
+            
+        self.view.current_ship_index += 1
+        await self.view.refresh_step(interaction)
+
+
+class ArmadaPlayerSetupView(discord.ui.View):
+    def __init__(self, game, player_idx):
+        super().__init__(timeout=300)
+        self.game = game
+        self.player_idx = player_idx
+        self.ships = [
+            (5, "Carrier"),
+            (4, "Battleship"),
+            (3, "Cruiser"),
+            (3, "Submarine"),
+            (2, "Destroyer")
+        ]
+        self.current_ship_index = 0
+        self.place_button = discord.ui.Button(label="Place Ship", style=discord.ButtonStyle.primary, emoji="🚢")
+        self.place_button.callback = self.invoke_modal
+        self.add_item(self.place_button)
+        
+    async def invoke_modal(self, interaction: discord.Interaction):
+        if self.current_ship_index >= len(self.ships):
+            return await interaction.response.send_message("You have already placed all ships!", ephemeral=True)
+        length, name = self.ships[self.current_ship_index]
+        modal = ArmadaPlayerShipModal(self.game, self.player_idx, length, name, self)
+        await interaction.response.send_modal(modal)
+
+    async def refresh_step(self, interaction: discord.Interaction):
+        if self.current_ship_index >= len(self.ships):
+            self.clear_items()
+            img = self.game._gen_img(self.player_idx, 1)
+            file = discord.File(img, 'board.png')
+            await interaction.edit_original_response(
+                content="**Setup Complete!** Wait for your opponent to finish their setup.",
+                attachments=[file],
+                view=self
+            )
+            if self.player_idx == 0:
+                self.game.p1_setup_done.set()
+            else:
+                self.game.p2_setup_done.set()
+            self.stop()
+            return
+            
+        length, name = self.ships[self.current_ship_index]
+        self.place_button.label = f"Place {name} (Length {length})"
+        
+        img = self.game._gen_img(self.player_idx, 1)
+        file = discord.File(img, 'board.png')
+        await interaction.edit_original_response(
+            content=f"**Ship Placement Phase**\nPlease place your {name} (Length {length})\n*Use format like A1R or C4D*",
+            attachments=[file],
+            view=self
+        )
+
+
+class ArmadaSetupLobbyView(discord.ui.View):
+    def __init__(self, game):
+        super().__init__(timeout=300)
+        self.game = game
+        self.p1_started = False
+        self.p2_started = False
+
+    @discord.ui.button(label="Player 1 Setup", style=discord.ButtonStyle.success)
+    async def p1_setup(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.game.player[0]:
+            return await interaction.response.send_message("Only Player 1 can use this button.", ephemeral=True)
+        if self.p1_started:
+            return await interaction.response.send_message("You have already started your setup!", ephemeral=True)
+        self.p1_started = True
+        
+        view = ArmadaPlayerSetupView(self.game, 0)
+        img = self.game._gen_img(0, 1)
+        file = discord.File(img, 'board.png')
+        await interaction.response.send_message(
+            content="**Ship Placement Phase**\nPlease place your Carrier (Length 5)\n*Use format like A1R or C4D*",
+            file=file,
+            view=view,
+            ephemeral=True
+        )
+
+    @discord.ui.button(label="Player 2 Setup", style=discord.ButtonStyle.success)
+    async def p2_setup(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.game.player[1]:
+            return await interaction.response.send_message("Only Player 2 can use this button.", ephemeral=True)
+        if self.p2_started:
+            return await interaction.response.send_message("You have already started your setup!", ephemeral=True)
+        self.p2_started = True
+        
+        view = ArmadaPlayerSetupView(self.game, 1)
+        img = self.game._gen_img(1, 1)
+        file = discord.File(img, 'board.png')
+        await interaction.response.send_message(
+            content="**Ship Placement Phase**\nPlease place your Carrier (Length 5)\n*Use format like A1R or C4D*",
+            file=file,
+            view=view,
+            ephemeral=True
+        )
 
 class ArmadaGame():
 	"""
@@ -81,10 +154,12 @@ class ArmadaGame():
 			'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4,
 			'f': 5, 'g': 6, 'h': 7, 'i': 8, 'j': 9
 		}
-		self.pmsg = []
+		self.pmsg = [None, None]
 		self.key = [[], []]
 		self.ship_pos = [[], []]
 		self.log = logging.getLogger('kingbot.armada')
+		self.p1_setup_done = asyncio.Event()
+		self.p2_setup_done = asyncio.Event()
 		self._task = asyncio.create_task(self.run())
 		self._task.add_done_callback(self.error_callback) #Thanks Sinbad <3
 	
@@ -303,43 +378,69 @@ class ArmadaGame():
 		self.ship_pos[player].append((x, y, d))
 		return True
 	
+	async def _place_silent(self, player, length, value):
+		hold = {}
+		try:
+			x = self.letnum[value[0]]
+		except (KeyError, IndexError):
+			return False, 'x cord must be a letter from A-J.'
+		try:
+			y = int(value[1])
+		except (ValueError, IndexError):
+			return False, 'y cord must be a number from 0-9.'
+		try:
+			d = value[2]
+		except IndexError:
+			return False, 'd cord must be a direction of d or r.'
+		try:
+			if d == 'r': #right
+				if 10 - length < x: return False, 'too far to the right.'
+				for z in range(length):
+					if self.board[player][(y*10)+x+z] != 0: return False, 'another ship is in that range.'
+				for z in range(length):
+					self.board[player][(y*10)+x+z] = 3
+					hold[(y*10)+x+z] = 0
+			elif d == 'd': #down
+				for z in range(length):
+					if self.board[player][((y+z)*10)+x] != 0: return False, 'another ship is in that range.'
+				for z in range(length):
+					self.board[player][((y+z)*10)+x] = 3
+					hold[((y+z)*10)+x] = 0
+			else:
+				return False, 'd cord must be a direction of d or r.'
+		except IndexError:
+			return False, 'too far down.'
+		self.key[player].append(hold)
+		self.ship_pos[player].append((x, y, d))
+		return True, ''
+	
 	async def run(self):
 		"""
 		Runs the actual game.
 		Should only be called by __init__.
 		"""
-		for x in range(2): #each player
-			await self.channel.send(f'Messaging {self.name[x]} for setup now.')
-			privateMessage = await self.player[x].send(
-				f'{self.name[x]}, it is your turn to set up your ships.\n'
-				'Place ships by entering the top left coordinate using the letter of the column '
-				'followed by the number of the row and the direction of (r)ight or (d)own '
-				'in ColumnRowDirection format (such as c2r).'
-			)
-			for ship_len in [5, 4, 3, 3, 2]: #each ship length
-				await self.send_board(x, 1, self.player[x], f'Place your {ship_len} length ship.')
-				while True:
-					if isinstance(self.player[x], BattleshipAI):
-						await asyncio.sleep(1)
-						cords = self.player[x].place(self.board[x], ship_len)
-					else:
-						try:
-							cords = await self.bot.wait_for(
-								'message',
-								timeout=120,
-								check=lambda m: (
-									m.channel == privateMessage.channel
-									and not m.author.bot
-								)
-							)
-							cords = cords.content
-						except asyncio.TimeoutError:
-							await self.channel.send(f'{self.name[x]} took too long, shutting down.')
-							return
-					if await self._place(x, ship_len, cords.lower()): #only break if _place succeeded
-						break
-			m = await self.send_board(x, 1, self.player[x], '')
-			self.pmsg.append(m) #save this message for editing later
+		lobby = ArmadaSetupLobbyView(self)
+		lobby_msg = await self.channel.send("Welcome to King's Armada! Both players, please press your button below to securely set up your ships.", view=lobby)
+		
+		# Auto-place for AI
+		for x in range(2):
+			if isinstance(self.player[x], BattleshipAI):
+				for ship_len in [5, 4, 3, 3, 2]:
+					cords = self.player[x].place(self.board[x], ship_len)
+					await self._place_silent(x, ship_len, cords)
+				if x == 0: self.p1_setup_done.set()
+				else: self.p2_setup_done.set()
+				
+		try:
+			await asyncio.wait_for(asyncio.gather(self.p1_setup_done.wait(), self.p2_setup_done.wait()), timeout=300)
+		except asyncio.TimeoutError:
+			await self.channel.send("Setup timed out. The game has been cancelled.")
+			try: await lobby_msg.delete()
+			except: pass
+			return
+
+		await lobby_msg.edit(content="Setup complete! The battle has begun.", view=None)
+
 		pswap = {1:0, 0:1} #helper to swap player
 		while True:
 			self.p = pswap[self.p] #swap players

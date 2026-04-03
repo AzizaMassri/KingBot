@@ -86,6 +86,10 @@ class KingsArmada(commands.Cog):
 		if opponent is None:
 			view = GetPlayersView(ctx, 2)
 			initial_message = await ctx.send(view.generate_message(), view=view)
+		elif opponent == ctx.guild.me or opponent.bot:
+			opponent = BattleshipAI(name="KingBots Armada AI")
+			initial_message = await ctx.send(f"You have challenged {opponent.display_name} to a game of King's Armada!")
+			view = None
 		else:
 			view = ConfirmView(opponent)
 			initial_message = await ctx.send(f"{opponent.mention} You have been challenged to a game of King's Armada by {ctx.author.display_name}!", view=view)
@@ -104,12 +108,16 @@ class KingsArmada(commands.Cog):
 			except discord.HTTPException:
 				pass
 
-		await view.wait()
+		if view:
+			await view.wait()
 
 		if opponent is None:
+			if not view: return
 			players = view.players
+		elif isinstance(opponent, BattleshipAI):
+			players = [ctx.author, opponent]
 		else:
-			if not view.result:
+			if not view or not view.result:
 				await channel.send(f'{opponent.display_name} does not want to play, shutting down.')
 				return
 			players = [ctx.author, opponent]

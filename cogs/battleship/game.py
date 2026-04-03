@@ -5,6 +5,7 @@ from io import BytesIO
 import asyncio
 import logging
 from .ai import BattleshipAI
+from pathlib import Path
 
 
 class ArmadaPlayerShipModal(discord.ui.Modal):
@@ -226,7 +227,7 @@ class ArmadaGame():
 		player = int, Which player's board to print.
 		show_unhit = int, Should unhit ships be shown.
 		"""
-		path = os.path.join(os.path.dirname(__file__), 'data')
+		path = Path(__file__).parent / 'data'
 		img = Image.open(path / 'board.png')
 		hit = Image.open(path / 'hit.png')
 		miss = Image.open(path / 'miss.png')

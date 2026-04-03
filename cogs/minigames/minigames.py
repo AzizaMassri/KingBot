@@ -53,8 +53,8 @@ class KingsMinigames(BaseMinigameCog):
         Interactive UI Hub for all KingBot Minigames!
         """
         embed = discord.Embed(
-            title="🎮 KingBot (& Kingshot) - Minigame Suite",
-            description="Welcome to the royal arcade!\n\n*⚠️ Legal Disclaimer: KingBot is an independent, player-created project developed solely for the purposes of supplementing gameplay, providing educational assistance, and facilitating the management of alliance and kingdom Discord servers. This project is strictly unofficial and is not affiliated with, endorsed by, sponsored by, or associated in any official capacity with Century Games or its affiliates.*\n\n**Please select a game category from the dropdown menu below!**",
+            title="🎮 KingBot - Minigame Suite",
+            description="Welcome to the Arcade!\n\nUse this interactive interface to securely browse and play our huge catalogue of minigames, including board games against AI and group-based wagers! Click below.",
             color=discord.Color.gold()
         )
         

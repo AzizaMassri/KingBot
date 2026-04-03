@@ -73,7 +73,7 @@ class MinigameHubView(discord.ui.View):
             self.add_game_button("Slots", "🎰", discord.ButtonStyle.primary, self.launch_slots)
         elif choice == "Board Games":
             self.add_game_button("Monopoly", "🎩", discord.ButtonStyle.success, self.launch_monopoly)
-            self.add_game_button("King's Armada", "🚢", discord.ButtonStyle.success, self.launch_armada)
+            self.add_game_button("Battleship", "🚢", discord.ButtonStyle.success, self.launch_armada)
             self.add_game_button("Connect 4", "🔴", discord.ButtonStyle.success, self.launch_connect4)
             self.add_game_button("Tic-Tac-Toe", "❌", discord.ButtonStyle.success, self.launch_tictactoe)
         elif choice == "Interactive Games":
@@ -153,7 +153,7 @@ class MinigameHubView(discord.ui.View):
                 except:
                     return await inter.response.send_message("Invalid ID.", ephemeral=True)
             await self.invoke_command(inter, "armada", opponent)
-        await interaction.response.send_modal(GameInputModal("King's Armada", inputs, on_submit))
+        await interaction.response.send_modal(GameInputModal("Battleship", inputs, on_submit))
 
     async def launch_connect4(self, interaction: discord.Interaction):
         inputs = [{"label": "Opponent ID (Leave blank to play bot)", "placeholder": "ID or blank", "required": False}]

@@ -24,7 +24,7 @@ class ArmadaPlayerShipModal(discord.ui.Modal):
         self.view = view
 
     async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer()
         val = self.cords.value.lower()
         success, error_msg = await self.game._place_silent(self.player_idx, self.ship_len, val)
         if not success:
@@ -97,16 +97,17 @@ class ArmadaSetupLobbyView(discord.ui.View):
 
     @discord.ui.button(label="Player 1 Setup", style=discord.ButtonStyle.success)
     async def p1_setup(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer(ephemeral=True)
         if interaction.user != self.game.player[0]:
-            return await interaction.response.send_message("Only Player 1 can use this button.", ephemeral=True)
+            return await interaction.followup.send("Only Player 1 can use this button.", ephemeral=True)
         if self.p1_started:
-            return await interaction.response.send_message("You have already started your setup!", ephemeral=True)
+            return await interaction.followup.send("You have already started your setup!", ephemeral=True)
         self.p1_started = True
         
         view = ArmadaPlayerSetupView(self.game, 0)
         img = self.game._gen_img(0, 1)
         file = discord.File(img, 'board.png')
-        await interaction.response.send_message(
+        await interaction.followup.send(
             content="**Ship Placement Phase**\nPlease place your Carrier (Length 5)\n*Use format like A1R or C4D*",
             file=file,
             view=view,
@@ -115,16 +116,17 @@ class ArmadaSetupLobbyView(discord.ui.View):
 
     @discord.ui.button(label="Player 2 Setup", style=discord.ButtonStyle.success)
     async def p2_setup(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer(ephemeral=True)
         if interaction.user != self.game.player[1]:
-            return await interaction.response.send_message("Only Player 2 can use this button.", ephemeral=True)
+            return await interaction.followup.send("Only Player 2 can use this button.", ephemeral=True)
         if self.p2_started:
-            return await interaction.response.send_message("You have already started your setup!", ephemeral=True)
+            return await interaction.followup.send("You have already started your setup!", ephemeral=True)
         self.p2_started = True
         
         view = ArmadaPlayerSetupView(self.game, 1)
         img = self.game._gen_img(1, 1)
         file = discord.File(img, 'board.png')
-        await interaction.response.send_message(
+        await interaction.followup.send(
             content="**Ship Placement Phase**\nPlease place your Carrier (Length 5)\n*Use format like A1R or C4D*",
             file=file,
             view=view,

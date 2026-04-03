@@ -205,13 +205,20 @@ class RussianRouletteGameView(TranslatedView):
         self.prize_pool = bet * len(players)
         
         # Funny commentary lines
+        # Funny commentary lines
         self.survive_lines = [
             "*Click.* They sweat nervously, but survive.",
             "*Click.* \"I told you I was built different!\"",
             "*Click.* A sigh of relief echoes across the table.",
             "*Click.* The gun jams? Wait, no, just empty.",
             "*Click.* They stare death in the face and smile.",
-            "*Click.* \"Easy money. Who's next?\""
+            "*Click.* \"Easy money. Who's next?\"",
+            "*Click.* They aggressively dab to assert dominance over death.",
+            "*Click.* They let out a squeal that shatters glass, but live.",
+            "*Click.* \"Did I win? Is it over? Can I go home?\"",
+            "*Click.* They casually yawn. \"Boring.\"",
+            "*Click.* They open one eye. Still alive? Nice.",
+            "*Click.* They wipe sweat off their forehead with a trembling hand."
         ]
         
         self.die_lines = [
@@ -221,6 +228,12 @@ class RussianRouletteGameView(TranslatedView):
             "**BANG!** 💥 Welp. Rest in pieces.",
             "**BANG!** 💥 Medic! Actually... don't bother.",
             "**BANG!** 💥 They folded like a lawn chair.",
+            "**BANG!** 💥 Their soul immediately disconnected from the server.",
+            "**BANG!** 💥 Boom, headshot! Someone clip that!",
+            "**BANG!** 💥 Looks like they lost their mind! Literally.",
+            "**BANG!** 💥 Does insurance cover that? Nope.",
+            "**BANG!** 💥 They just got logged out of life.",
+            "**BANG!** 💥 Press F to pay respects."
         ]
 
     async def update_board(self, interaction: discord.Interaction, extra_text=""):
@@ -481,80 +494,81 @@ class Games(commands.Cog):
         heist_stories = {
             1: {
                 "cost": 50, "win_chance": 75, "min_rew": 60, "max_rew": 130, "title": "Peasant Village 🛖",
-                "story1": "The squad approaches the village. There's a pile of unguarded honey, but also a pitchfork-wielding mob.",
+                "story1": "The squad rolls up to a quiet village. There's an unguarded honey stash, but an angry farmer holds a pitchfork.",
                 "choices1": {
-                    "Eat Honey": {"mod": -10, "text": "Gorged on honey and got a Sugar Rush!"},
-                    "Charge Mob": {"mod": 10, "text": "Terrifying roar! The peasants scattered instantly."},
-                    "Sneak": {"mod": 5, "text": "Sneaky bears found hidden stashes!"}
+                    "Eat Honey": {"mod": -10, "text": "Threw caution to the wind and gorged on honey! You're sticky, but energized!"},
+                    "Ooga Booga": {"mod": 10, "text": "Hit 'em with the OOGA BOOGA! The farmer dropped his pitchfork and fled!"},
+                    "Ninja Mode": {"mod": 5, "text": "Did a literal combat roll past the farmer. Very stealthy. Very cool."}
                 },
-                "story2": "You've breached the village square! The village elder blocks the main vault.",
+                "story2": "You breached the town square! The village elder is guarding the piggy bank aggressively.",
                 "choices2": {
-                    "Intimidate": {"mod": 5, "rew_mult": 1.2, "text": "Growled loudly! The elder handed over the keys."},
-                    "Bribe with Honey": {"mod": 15, "rew_mult": 1.0, "text": "Traded the honey for safe passage!"},
-                    "Smash Vault": {"mod": -15, "rew_mult": 2.0, "text": "Destroyed the vault! Found massive hidden loot!"}
+                    "Flex Muscles": {"mod": 5, "rew_mult": 1.2, "text": "Flexed your biceps! The elder was so intimidated he handed over the keys."},
+                    "Dance Off": {"mod": 15, "rew_mult": 1.0, "text": "Hit the Griddy! The elder respected the moves and let you pass!"},
+                    "Dropkick Vault": {"mod": -15, "rew_mult": 2.0, "text": "Dropkicked the piggy bank! Shards and coins flew everywhere! Massive loot!"}
                 }
             },
             2: {
                 "cost": 150, "win_chance": 60, "min_rew": 200, "max_rew": 450, "title": "Knight's Fortress 🏰",
-                "story1": "The squad reaches the fortress. A smug knight challenges the bears to a duel.",
+                "story1": "The squad reaches a stone fortress. A very smug knight refuses to let you cross the drawbridge.",
                 "choices1": {
-                    "Accept Duel": {"mod": 10, "text": "Flattened the knight in single combat!"},
-                    "Flank Castle": {"mod": -5, "text": "Broke through the unguarded armory!"},
-                    "Intimidate": {"mod": 5, "text": "Stared down the guards until they yielded."}
+                    "Slap Knight": {"mod": 10, "text": "Walked up and slapped the knight! His armor rattled as he fell over!"},
+                    "Catapult Toss": {"mod": -5, "text": "Loaded yourselves into a catapult and yeeted over the wall!"},
+                    "Yell Insults": {"mod": 5, "text": "Called him a tin can! He cried and ran away."}
                 },
-                "story2": "You made it inside the keep! The armory is locked, but the kitchen smells amazing.",
+                "story2": "You're inside the keep! The armory is heavily locked, but the kitchen has an unattended roast turkey.",
                 "choices2": {
-                    "Raid Armory": {"mod": -10, "rew_mult": 2.0, "text": "Broke the locks and stole shiny armor!"},
-                    "Eat Kitchen Meat": {"mod": 15, "rew_mult": 1.0, "text": "Ate the King's dinner! Great morale boost."},
-                    "Hold Hostages": {"mod": 0, "rew_mult": 1.5, "text": "Held the chefs ransom for extra gold!"}
+                    "Raid Armory": {"mod": -10, "rew_mult": 2.0, "text": "Chewed through the locks and stole shiny, expensive swords!"},
+                    "Eat Turkey": {"mod": 15, "rew_mult": 1.0, "text": "Ate the King's turkey! The squad is absolutely vibing now."},
+                    "Steal the Chef": {"mod": 0, "rew_mult": 1.5, "text": "Kidnapped the royal chef for a ransom! High IQ play."}
                 }
             },
             3: {
                 "cost": 500, "win_chance": 45, "min_rew": 800, "max_rew": 1600, "title": "Baron's Keep 🛡️",
-                "story1": "The Baron is throwing a massive feast. The smell of meats distracts the bears.",
+                "story1": "The Baron is throwing a massive, pretentious VIP party. There are bouncers at the door.",
                 "choices1": {
-                    "Crash Party": {"mod": 10, "text": "Crashed the feast and caused complete chaos!"},
-                    "Sneak Around": {"mod": 5, "text": "Silently moved past the drunken guards."},
-                    "Eat Food": {"mod": -5, "text": "Ate the Baron's legendary roasted pigs. Worth it!"}
+                    "Crash Party": {"mod": 10, "text": "Kicked the door off its hinges and ruined the DJ's set!"},
+                    "Fake ID": {"mod": 5, "text": "Showed a completely fake driver's license. The bouncer bought it!"},
+                    "Raid Buffet": {"mod": -5, "text": "Fought three nobles simply to eat their caviar. Worth it!"}
                 },
-                "story2": "The Baron's elite guards swarm the hallways!",
+                "story2": "The Baron's elite SWAT guards swarm the hallways, tasers drawn!",
                 "choices2": {
-                    "Fight Guards": {"mod": -15, "rew_mult": 2.5, "text": "Brutal fight! Defeated the elites to access the secret vault!"},
-                    "Jump out Window": {"mod": 20, "rew_mult": 1.0, "text": "Fled with whatever was in your pockets!"},
-                    "Roar Loudly": {"mod": 0, "rew_mult": 1.5, "text": "Paralyzed them with fear to slowly loot the room!"}
+                    "Matrix Dodge": {"mod": -15, "rew_mult": 2.5, "text": "Dodged the tasers in slow-motion and looted the secret vault!"},
+                    "Defenestration": {"mod": 20, "rew_mult": 1.0, "text": "Threw yourself out a glass window to escape with whatever you had!"},
+                    "Flashbang": {"mod": 0, "rew_mult": 1.5, "text": "Tossed a flashbang, totally blinding them while you emptied the register!"}
                 }
             },
             4: {
                 "cost": 1500, "win_chance": 30, "min_rew": 2500, "max_rew": 5500, "title": "King's Castle 👑",
-                "story1": "The King's royal guards are armed to the teeth at the front gate.",
+                "story1": "The King's royal guards are completely armed to the teeth, blocking the golden gates.",
                 "choices1": {
-                    "Rampage": {"mod": 10, "text": "Went full berserk! Guards dropped their weapons and ran!"},
-                    "Bribe Guards": {"mod": -5, "text": "Traded forest berries for gold. The guards bought it!"},
-                    "Dig Under": {"mod": 5, "text": "Dug a tunnel straight into the courtyard."}
+                    "Berserker Rage": {"mod": 10, "text": "Went completely feral! The guards screamed and abandoned their posts!"},
+                    "Give Bitcoin": {"mod": -5, "text": "Bribed them with crypto. They let you in while checking their portfolios!"},
+                    "Sewer Pipe": {"mod": 5, "text": "Crawled through a literal sewer pipe. You smell awful, but you're in."}
                 },
-                "story2": "You're in the Royal Treasury! The King himself is throwing gold coins to distract you!",
+                "story2": "You reached the Royal Treasury! The King himself is throwing literal gold bars to stop you!",
                 "choices2": {
-                    "Pack Gold Quickly": {"mod": -10, "rew_mult": 2.0, "text": "Stuffed your fur full of treasure!"},
-                    "Tackle King": {"mod": -20, "rew_mult": 3.0, "text": "Robbed the crown right off his head!"},
-                    "Grab Gems": {"mod": 10, "rew_mult": 1.2, "text": "Grabbed a few choice jewels and dodged attacks!"}
+                    "Catch Gold": {"mod": -10, "rew_mult": 2.0, "text": "Caught the flying gold bars with your teeth like an absolute unit!"},
+                    "Tackle King": {"mod": -20, "rew_mult": 3.0, "text": "Spear-tackled the King through a table and stole his Rolex!"},
+                    "Vacuum Cleaner": {"mod": 10, "rew_mult": 1.2, "text": "Pulled out an industrial vacuum and sucked up all the loose gems!"}
                 }
             },
             5: {
                 "cost": 5000, "win_chance": 15, "min_rew": 15000, "max_rew": 55000, "title": "Emperor's Vault 🐉",
-                "story1": "A massive dragon guards the Emperor's Vault! Your bears have never seen a scaly flying dog before.",
+                "story1": "A massive, breathing dragon guards the Emperor's Vault! It stares at you, preparing to breathe fire.",
                 "choices1": {
-                    "Bribe with Salmon": {"mod": 20, "text": "Tossed premium salmon. The dragon loves fish!"},
-                    "Bear Wrestle": {"mod": -10, "text": "Suplexed the dragon! Legendary maneuver!"},
-                    "Hide": {"mod": 5, "text": "Waited in the shadows perfectly still."}
+                    "Offer Scooby Snack": {"mod": 20, "text": "Tossed a single Scooby Snack. The dragon wagged its tail and ate it!"},
+                    "Suplex Dragon": {"mod": -10, "text": "Grabbed the dragon by the tail and suplexed it! Anime style!"},
+                    "Play Dead": {"mod": 5, "text": "Dropped to the floor and played dead. The dragon got bored and slept."}
                 },
-                "story2": "The dragon's fire is melting the vault door! What now?!",
+                "story2": "The dragon's fire breath accidentally melted the vault door open! The alarm is blaring!",
                 "choices2": {
-                    "Run Through Fire": {"mod": -25, "rew_mult": 4.0, "text": "Ran through the flames! Singed fur, massive payout!"},
-                    "Wait for Cool": {"mod": 15, "rew_mult": 1.1, "text": "Waited it out. Took less damage but guards caught up to some loot."},
-                    "Throw Water": {"mod": 0, "rew_mult": 2.0, "text": "Doused the door! Snuck in and grabbed handfuls of diamonds!"}
+                    "Loot in the Fire": {"mod": -25, "rew_mult": 4.0, "text": "Ran straight through roaring flames! Singed eyebrows, but legendary payout!"},
+                    "Call an Uber": {"mod": 15, "rew_mult": 1.1, "text": "Grabbed whatever was closest and immediately called an Uber out of there!"},
+                    "Fire Extinguisher": {"mod": 0, "rew_mult": 2.0, "text": "Sprayed an extinguisher everywhere, blinding the guards while you shoved diamonds in your pockets!"}
                 }
             }
         }
+
 
         level = heist_stories[difficulty]
         cost = level["cost"]

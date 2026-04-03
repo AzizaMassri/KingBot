@@ -300,9 +300,11 @@ class RussianRouletteGameView(TranslatedView):
         else:
             # Player lives
             flavor = random.choice(self.survive_lines)
-            result_text = f"**{current_player.display_name}** puts the gun to their head and pulls...\n{flavor}"
+            result_text = f"**{current_player.display_name}** puts the gun to their head and pulls...\n{flavor}\n*(The cylinder is spun again...)*"
             
-            self.current_chamber += 1
+            # Respin cylinder after survival so it's a 1/6 chance every pull
+            self.bullet_chamber = random.randint(0, 5)
+            self.current_chamber = 0
             self.current_turn += 1
             
         if interaction:

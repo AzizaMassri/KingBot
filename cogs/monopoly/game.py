@@ -122,13 +122,21 @@ class MonopolyGame():
 		self._task = asyncio.create_task(self.run())
 		self._task.add_done_callback(self.error_callback) #Thanks Sinbad <3
 	
-	async def send_error(self):
+	async def send_error(self, exc=None):
 		"""Sends a message to the channel after an error."""
 		savename = str(self.ctx.message.id)
+		
+		err_msg = ''
+		if exc:
+			import traceback
+			error_text = ''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+			if len(error_text) > 1000:
+				error_text = "... " + error_text[-1000:]
+			err_msg = f'```py\n{error_text}\n```'
+
 		await self.channel.send(
-			'A fatal error has occurred, shutting down.\n'
-			'Please have the bot owner copy the error from console '
-			'and post it in the support channel of <https://discord.gg/bYqCjvu>.\n'
+			f'A fatal error has occurred, shutting down.\n'
+			f'{err_msg}\n'
 			f'Your game was saved to `{savename}`.\n'
 			f'You can load your save with `{self.ctx.prefix}monopoly {savename}`.'
 		)
@@ -155,7 +163,7 @@ class MonopolyGame():
 		except asyncio.TimeoutError:
 			asyncio.create_task(self.send_timeout())
 		except Exception as exc:
-			asyncio.create_task(self.send_error())
+			asyncio.create_task(self.send_error(exc))
 			msg = 'Error in Monopoly.\n'
 			self.log.exception(msg)
 			self.bot.dispatch('flamecogs_game_error', self, exc)

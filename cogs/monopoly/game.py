@@ -189,6 +189,11 @@ class MonopolyGame():
 			return uid
 		mem = self.channel.guild.get_member(uid)
 		if mem is None:
+			try:
+				mem = await self.channel.guild.fetch_member(uid)
+			except discord.HTTPException:
+				pass
+		if mem is None:
 			savename = str(self.ctx.message.id)
 			user = self.bot.get_user(uid)
 			if user:

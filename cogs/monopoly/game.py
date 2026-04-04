@@ -1517,7 +1517,7 @@ class MonopolyGame():
 		if self.imgcache['ismortgaged']['value'] != self.ismortgaged:
 			self.imgcache['ismortgaged']['value'] = self.ismortgaged.copy()
 			img = Image.new('RGBA', (750, 750), (0, 0, 0, 0))
-			m = Image.open(os.path.join(os.path.dirname(__file__), 'data') / 'mortgage.png')
+			m = Image.open(os.path.join(os.path.dirname(__file__), 'data', 'mortgage.png'))
 			for t in range(40):
 				if self.ismortgaged[t] == 1:
 					if 0 < t < 10:

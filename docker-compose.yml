@@ -22,8 +22,9 @@ services:
       POSTGRES_USER: kingbotuser
       POSTGRES_PASSWORD: kingbotdbpass
       POSTGRES_DB: kingbotdb
+    # Published on host 5433 so another service can keep 5432
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

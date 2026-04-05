@@ -3,9 +3,8 @@ services:
     image: rabbitmq:3-management
     container_name: kingbot_rabbitmq
     restart: unless-stopped # <-- Change this
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+    # No host ports: kingbot-app uses rabbitmq:5672 on kingbot_net (avoids clash with another AMQP on host 5672).
+    # Management UI (optional): add e.g. ports: - "127.0.0.1:15673:15672"
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
       interval: 10s
@@ -22,9 +21,8 @@ services:
       POSTGRES_USER: kingbotuser
       POSTGRES_PASSWORD: kingbotdbpass
       POSTGRES_DB: kingbotdb
-    # Published on host 5433 so another service can keep 5432
-    ports:
-      - "5433:5432"
+    # No host ports: kingbot-app uses postgres:5432 on kingbot_net only (avoids clashing with host/docker 5432).
+    # Shell: docker compose exec postgres psql -U kingbotuser -d kingbotdb
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

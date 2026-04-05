@@ -35,10 +35,9 @@ class ReactionRoleModal(discord.ui.Modal, title='Reaction Role Builder'):
         await interaction.response.defer(ephemeral=True)
         
         lines = self.roles_input.value.strip().split('\n')
-        view = discord.ui.View(timeout=None)
-        
-        added_roles = []
+        valid_items = []
         invalid_lines = []
+        added_roles = []
         
         for line in lines:
             line = line.strip()
@@ -67,6 +66,7 @@ class ReactionRoleModal(discord.ui.Modal, title='Reaction Role Builder'):
             else:
                 name_to_find = role_str[1:] if role_str.startswith('@') else role_str
                 role = discord.utils.get(interaction.guild.roles, name=name_to_find)
+                # Auto-create the role if it was a name input and didn't exist
                 if not role:
                     try:
                         role = await interaction.guild.create_role(
@@ -81,22 +81,39 @@ class ReactionRoleModal(discord.ui.Modal, title='Reaction Role Builder'):
                         continue
                         
             if role:
-                try:
-                    button = discord.ui.Button(
-                        custom_id=f"rr_{role.id}", 
-                        label=role.name, 
-                        emoji=emoji_str, 
-                        style=discord.ButtonStyle.secondary
-                    )
-                    view.add_item(button)
-                    added_roles.append(f"{emoji_str} {role.mention}")
-                except Exception as e:
-                    invalid_lines.append(f"`{line}` (Invalid Emoji or Button Limit Reached)")
+                valid_items.append((line, role, emoji_str))
             else:
                 invalid_lines.append(f"`{line}` (Role not found)")
 
-        if not added_roles:
+        if not valid_items:
             err_msg = "❌ Failed to create the menu. No valid roles were found in your input."
+            if invalid_lines:
+                err_msg += "\n\n⚠️ **Errors:**\n" + "\n".join(invalid_lines)
+            return await interaction.followup.send(err_msg, ephemeral=True)
+            
+        import math
+        n = len(valid_items)
+        num_rows = math.ceil(n / 5)
+        per_row = math.ceil(n / num_rows) if num_rows > 0 else 5
+        
+        view = discord.ui.View(timeout=None)
+        
+        for i, (line, role, emoji_str) in enumerate(valid_items):
+            try:
+                button = discord.ui.Button(
+                    custom_id=f"rr_{role.id}", 
+                    label=role.name, 
+                    emoji=emoji_str, 
+                    style=discord.ButtonStyle.secondary,
+                    row=i // per_row
+                )
+                view.add_item(button)
+                added_roles.append(f"{emoji_str} {role.mention}")
+            except Exception as e:
+                invalid_lines.append(f"`{line}` (Invalid Emoji or Button Limit Reached)")
+
+        if not added_roles:
+            err_msg = "❌ Failed to create the menu. No valid emojis were found in your input."
             if invalid_lines:
                 err_msg += "\n\n⚠️ **Errors:**\n" + "\n".join(invalid_lines)
             return await interaction.followup.send(err_msg, ephemeral=True)

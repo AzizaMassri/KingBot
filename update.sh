@@ -18,10 +18,7 @@ if docker compose up -d --build kingbot-app; then
 else
   echo "❌ docker compose failed."
   echo ""
-  echo "If you saw 'permission denied' stopping postgres, clear the stuck container then retry:"
-  echo "  sudo docker kill kingbot_postgres 2>/dev/null || true"
-  echo "  sudo docker rm -f kingbot_postgres kingbot_rabbitmq kingbot_app 2>/dev/null || true"
-  echo "  sudo docker ps -a --filter name=kingbot_postgres   # rm -f any extra Created duplicates by ID"
-  echo "  sudo docker compose up -d"
+  echo "Check: sudo docker compose ps && sudo docker logs kingbot_rabbitmq && sudo docker logs kingbot_postgres"
+  echo "If a dependency is stuck, recreate: sudo docker rm -f kingbot_rabbitmq kingbot_postgres kingbot_app 2>/dev/null; sudo docker compose up -d"
   exit 1
 fi

@@ -91,32 +91,33 @@ class ReactionRoleModal(discord.ui.Modal, title='Reaction Role Builder'):
                 err_msg += "\n\n⚠️ **Errors:**\n" + "\n".join(invalid_lines)
             return await interaction.followup.send(err_msg, ephemeral=True)
             
-        import math
-        n = len(valid_items)
-        num_rows = math.ceil(n / 5)
-        per_row = math.ceil(n / num_rows) if num_rows > 0 else 5
-        
-        view = discord.ui.View(timeout=None)
-        
+        options_list = []
         for i, (line, role, emoji_str) in enumerate(valid_items):
             try:
-                button = discord.ui.Button(
-                    custom_id=f"rr_{role.id}", 
-                    label=role.name, 
-                    emoji=emoji_str, 
-                    style=discord.ButtonStyle.secondary,
-                    row=i // per_row
-                )
-                view.add_item(button)
+                options_list.append(discord.SelectOption(
+                    label=role.name,
+                    value=str(role.id),
+                    emoji=emoji_str
+                ))
                 added_roles.append(f"{emoji_str} {role.mention}")
             except Exception as e:
-                invalid_lines.append(f"`{line}` (Invalid Emoji or Button Limit Reached)")
+                invalid_lines.append(f"`{line}` (Invalid Emoji or Limit Reached)")
 
         if not added_roles:
             err_msg = "❌ Failed to create the menu. No valid emojis were found in your input."
             if invalid_lines:
                 err_msg += "\n\n⚠️ **Errors:**\n" + "\n".join(invalid_lines)
             return await interaction.followup.send(err_msg, ephemeral=True)
+            
+        view = discord.ui.View(timeout=None)
+        select = discord.ui.Select(
+            custom_id="rr_select",
+            placeholder="Select your roles...",
+            min_values=0,
+            max_values=len(options_list),
+            options=options_list
+        )
+        view.add_item(select)
             
         embed = discord.Embed(
             title=self.menu_title.value,
@@ -189,40 +190,63 @@ class ReactionRoles(commands.Cog):
             return
             
         custom_id = interaction.data.get("custom_id", "")
-        if not custom_id.startswith("rr_"):
+        if custom_id != "rr_select":
             return
             
-        # The custom_id format is rr_{role.id}
-        try:
-            role_id = int(custom_id[3:])
-        except ValueError:
-            return # Malformed Custom ID
-            
-        role = interaction.guild.get_role(role_id)
-        if not role:
-            return await interaction.response.send_message("❌ This role no longer exists on the server!", ephemeral=True)
-            
-        # Check permissions to manage roles
         if not interaction.guild.me.guild_permissions.manage_roles:
-            return await interaction.response.send_message("❌ I lack the `Manage Roles` permission to assign this to you.", ephemeral=True)
-            
-        # Check if bot's top role is high enough
-        if interaction.guild.me.top_role <= role:
-            return await interaction.response.send_message("❌ My role hierarchy is too low! Please move the bot's role above the requested role in Server Settings.", ephemeral=True)
+            return await interaction.response.send_message("❌ I lack the `Manage Roles` permission to update your roles.", ephemeral=True)
 
-        # Toggle the role
-        if role in interaction.user.roles:
+        selected_role_ids = [int(v) for v in interaction.data.get("values", [])]
+        
+        # Get all role ids available in this specific select menu
+        component = interaction.message.components[0].children[0]
+        available_role_ids = [int(opt.value) for opt in component.options]
+        
+        roles_to_add = []
+        roles_to_remove = []
+        
+        for r_id in available_role_ids:
+            role = interaction.guild.get_role(r_id)
+            if not role: continue
+            
+            if interaction.guild.me.top_role <= role: continue
+            
+            if r_id in selected_role_ids:
+                if role not in interaction.user.roles:
+                    roles_to_add.append(role)
+            else:
+                if role in interaction.user.roles:
+                    roles_to_remove.append(role)
+
+        added_names = []
+        removed_names = []
+        
+        if roles_to_add:
             try:
-                await interaction.user.remove_roles(role, reason="Reaction Role Menu")
-                await interaction.response.send_message(f"➖ Removed **{role.name}**.", ephemeral=True)
-            except Exception as e:
-                await interaction.response.send_message(f"❌ Failed to remove role: {e}", ephemeral=True)
+                await interaction.user.add_roles(*roles_to_add, reason="Reaction Role Menu")
+                added_names = [r.name for r in roles_to_add]
+            except Exception:
+                pass
+                
+        if roles_to_remove:
+            try:
+                await interaction.user.remove_roles(*roles_to_remove, reason="Reaction Role Menu")
+                removed_names = [r.name for r in roles_to_remove]
+            except Exception:
+                pass
+                
+        msg_parts = []
+        if added_names:
+            msg_parts.append(f"➕ Added: {', '.join(added_names)}")
+        if removed_names:
+            msg_parts.append(f"➖ Removed: {', '.join(removed_names)}")
+            
+        if not msg_parts:
+            msg = "Your roles have been updated! (No changes made)"
         else:
-            try:
-                await interaction.user.add_roles(role, reason="Reaction Role Menu")
-                await interaction.response.send_message(f"➕ Added **{role.name}**.", ephemeral=True)
-            except Exception as e:
-                await interaction.response.send_message(f"❌ Failed to add role: {e}", ephemeral=True)
+            msg = "\n".join(msg_parts)
+            
+        await interaction.response.send_message(msg, ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(ReactionRoles(bot))

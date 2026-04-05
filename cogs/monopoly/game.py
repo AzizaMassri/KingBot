@@ -3,9 +3,15 @@ async def dict_pagify(channel, msg):
     for i in range(0, len(msg), 1900):
         await channel.send(msg[i:i+1900])
 
-async def dict_pagify(channel, msg):
-    for i in range(0, len(msg), 1900):
-        await channel.send(msg[i:i+1900])
+def pagify(text, shorten_by=8):
+    pages = []
+    while len(text) > 2000 - shorten_by:
+        idx = text.rfind('\n', 0, 2000 - shorten_by)
+        if idx == -1: idx = 2000 - shorten_by
+        pages.append(text[:idx])
+        text = text[idx:]
+    if text: pages.append(text)
+    return pages
 import os
 from .ai import MonopolyAI
 from .constants import TILENAME, PRICEBUY, RENTPRICE, RRPRICE, CCNAME, CHANCENAME, MORTGAGEPRICE, TENMORTGAGEPRICE, HOUSEPRICE, PROPGROUPS, PROPCOLORS

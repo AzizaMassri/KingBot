@@ -67,7 +67,19 @@ class ReactionRoleModal(discord.ui.Modal, title='Reaction Role Builder'):
             else:
                 name_to_find = role_str[1:] if role_str.startswith('@') else role_str
                 role = discord.utils.get(interaction.guild.roles, name=name_to_find)
-                
+                if not role:
+                    try:
+                        role = await interaction.guild.create_role(
+                            name=name_to_find, 
+                            reason="Reaction Role Builder automatic creation"
+                        )
+                    except discord.Forbidden:
+                        invalid_lines.append(f"`{line}` (Missing Manage Roles permission to create role)")
+                        continue
+                    except Exception as e:
+                        invalid_lines.append(f"`{line}` (Failed to create role)")
+                        continue
+                        
             if role:
                 try:
                     button = discord.ui.Button(

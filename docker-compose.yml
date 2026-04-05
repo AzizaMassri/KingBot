@@ -5,9 +5,12 @@ services:
     restart: unless-stopped # <-- Change this
     # No host ports: kingbot-app uses rabbitmq:5672 on kingbot_net (avoids clash with another AMQP on host 5672).
     # Management UI (optional): add e.g. ports: - "127.0.0.1:15673:15672"
-    # Erlang rejects short/empty cookies ("Too short cookie string"); explicit value avoids truncated .erlang.cookie after disk issues.
+    # OTP 28+ fails with "Too short cookie string" if cookie is empty (bad .env merge, corrupt file after disk-full, etc.).
+    # Use list form so nothing substitutes to empty; only [a-z0-9] to satisfy strict cookie parsing.
     environment:
-      RABBITMQ_ERLANG_COOKIE: kingbot_erlang_cookie_not_for_clustering_use_only_local_docker
+      - RABBITMQ_ERLANG_COOKIE=7d4e8a1f9c2b6e3a5d8f1c4e7a0b3d6e9f2a5c8b1e4d7f0a3c6e9b2d5f8a1c4e7f0a2b5d8e3f6a9c1
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
       interval: 10s
@@ -64,3 +67,4 @@ networks:
 
 volumes:
   postgres_data:
+  rabbitmq_data:

@@ -96,7 +96,10 @@ class ReactionRoleModal(discord.ui.Modal, title='Reaction Role Builder'):
                 invalid_lines.append(f"`{line}` (Role not found)")
 
         if not added_roles:
-            return await interaction.followup.send("❌ Failed to create the menu. No valid roles were found in your input.", ephemeral=True)
+            err_msg = "❌ Failed to create the menu. No valid roles were found in your input."
+            if invalid_lines:
+                err_msg += "\n\n⚠️ **Errors:**\n" + "\n".join(invalid_lines)
+            return await interaction.followup.send(err_msg, ephemeral=True)
             
         embed = discord.Embed(
             title=self.menu_title.value,

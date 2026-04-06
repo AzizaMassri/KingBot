@@ -279,9 +279,30 @@ class QuickTranslator(commands.Cog):
             await interaction.followup.send(f"❌ Translation failed. ({str(e)[:50]})")
 
     @commands.command()
-    async def translate(self, ctx, member: discord.Member = None):
-        """Configure per-server auto-translation directly into your DMs using a dropdown menu."""
-        from cogs.utils.ui import LanguageDropdown
+    async def translate(self, ctx, *, target: str = None):
+        """Configure per-server auto-translation directly into your DMs using a dropdown menu or directly specifying a language."""
+        from cogs.utils.ui import LanguageDropdown, LANGUAGES
+        
+        member = None
+        language = None
+        
+        if target:
+            try:
+                member_converter = commands.MemberConverter()
+                member = await member_converter.convert(ctx, target.split()[0])
+            except commands.MemberNotFound:
+                # Not a member, try resolving as a language
+                valid_langs = {}
+                for key, data in LANGUAGES.items():
+                    if key == "Off": continue
+                    valid_langs[key.lower()] = key
+                    if "code" in data:
+                        valid_langs[data["code"].lower()] = key
+                        
+                if target.lower() in valid_langs:
+                    language = valid_langs[target.lower()]
+                else:
+                    return await ctx.send(f"❌ Could not find member or language '{target}'.")
         
         if member and member.id != ctx.author.id:
             if not ctx.author.guild_permissions.administrator:
@@ -294,6 +315,13 @@ class QuickTranslator(commands.Cog):
             )
         else:
             target_id = ctx.author.id
+            if language:
+                try:
+                    await self.bot.db.hset(f"translator_subs:{ctx.guild.id}", str(target_id), language)
+                except:
+                    pass
+                return await ctx.send(f"✅ Your background auto-translation language has been set to **{language}**.\nMessages in translation channels will be direct messaged to you in {language}.")
+            
             embed = discord.Embed(
                 title="🌍 Translation Setup",
                 description="Select your preferred language from the dropdown below to receive auto-translated DMs.\nNote: You can also use this dropdown to disable auto-translations.",

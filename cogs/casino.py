@@ -27,8 +27,13 @@ class Casino(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["cf"])
-    async def coinflip(self, ctx, choice: str = None, bet: int = 0):
+    async def coinflip(self, ctx, choice: str = None, bet: str = "0"):
         """Flip a coin! Example: `!coinflip heads 100`"""
+        try:
+            bet = int(bet)
+        except ValueError:
+            return await ctx.send("❌ Please provide a valid number for your bet.")
+            
         if not choice or bet <= 0:
             return await ctx.send("❌ Usage: `!coinflip <heads/tails> <amount>`")
             
@@ -66,8 +71,13 @@ class Casino(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["bj", "21"])
-    async def blackjack(self, ctx, bet: int = 0):
+    async def blackjack(self, ctx, bet: str = "0"):
         """Play Blackjack against the dealer! Example: `!bj 100`"""
+        try:
+            bet = int(bet)
+        except ValueError:
+            return await ctx.send("❌ Please provide a valid number for your bet.")
+            
         if bet <= 0:
             return await ctx.send("❌ Usage: `!bj <amount>`")
             
@@ -87,8 +97,13 @@ class Casino(commands.Cog):
             return
 
     @commands.command()
-    async def roll(self, ctx, bet: int = 0):
+    async def roll(self, ctx, bet: str = "0"):
         """Roll a 100-sided die! Example: `!roll 100`"""
+        try:
+            bet = int(bet)
+        except ValueError:
+            return await ctx.send("❌ Please provide a valid number for your bet.")
+            
         if bet <= 0:
             return await ctx.send("❌ Usage: `!roll <amount>`")
             
@@ -127,8 +142,13 @@ class Casino(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["slotmachine"])
-    async def slots(self, ctx, bet: int = 0):
+    async def slots(self, ctx, bet: str = "0"):
         """Spin the slots! Example: `!slots 100`"""
+        try:
+            bet = int(bet)
+        except ValueError:
+            return await ctx.send("❌ Please provide a valid number for your bet.")
+            
         if bet <= 0:
             return await ctx.send("❌ Usage: `!slots <amount>`")
             
@@ -277,19 +297,28 @@ class BlackjackView(TranslatedView):
             self.stop()
             self.clear_items()
             embed = await self.generate_embed(game_over=True, draw=True)
-            await self.edit_translated(interaction, embed=embed)
+            if isinstance(interaction, discord.Interaction):
+                await self.edit_translated(interaction, embed=embed, view=self)
+            else:
+                await interaction.edit(embed=embed, view=self)
             return True
         elif p_score == 21:
             self.stop()
             self.clear_items()
             embed = await self.generate_embed(game_over=True, player_won=True, blackjack=True)
-            await self.edit_translated(interaction, embed=embed)
+            if isinstance(interaction, discord.Interaction):
+                await self.edit_translated(interaction, embed=embed, view=self)
+            else:
+                await interaction.edit(embed=embed, view=self)
             return True
         elif d_score == 21:
             self.stop()
             self.clear_items()
             embed = await self.generate_embed(game_over=True, player_won=False)
-            await self.edit_translated(interaction, embed=embed)
+            if isinstance(interaction, discord.Interaction):
+                await self.edit_translated(interaction, embed=embed, view=self)
+            else:
+                await interaction.edit(embed=embed, view=self)
             return True
             
         return False

@@ -64,12 +64,12 @@ class MonarchsMysteries(commands.Cog):
                 async with session.get("https://opentdb.com/api.php?amount=21") as resp:
                     if resp.status != 200:
                         self.active_games.remove(ctx.channel.id)
-                        return await ctx.send("The royal archives are temporarily sealed (API Error). Try again later!")
+                        return await ctx.channel.send("The royal archives are temporarily sealed (API Error). Try again later!")
                     data = await resp.json()
                     
             if data['response_code'] != 0:
                 self.active_games.remove(ctx.channel.id)
-                return await ctx.send("Failed to retrieve questions. Try again later.")
+                return await ctx.channel.send("Failed to retrieve questions. Try again later.")
                 
             questions = data['results']
             
@@ -90,7 +90,7 @@ class MonarchsMysteries(commands.Cog):
                 embed.set_footer(text=f"Category: {category} | Difficulty: {difficulty} | You have 30 seconds!")
                 
                 view = TriviaView(self.bot, q, timeout=30.0)
-                msg = await ctx.send(embed=embed, view=view)
+                msg = await ctx.channel.send(embed=embed, view=view)
                 
                 # Wait 30 seconds for the time limit
                 await asyncio.sleep(30.0)
@@ -150,12 +150,12 @@ class MonarchsMysteries(commands.Cog):
                     
                 leaderboard_embed.description = desc
                 
-            await ctx.send(embed=leaderboard_embed)
+            await ctx.channel.send(embed=leaderboard_embed)
             
         except Exception as e:
             if ctx.channel.id in self.active_games:
                 self.active_games.remove(ctx.channel.id)
-            await ctx.send(f"An error occurred: {e}")
+            await ctx.channel.send(f"An error occurred: {e}")
 
 async def setup(bot):
     await bot.add_cog(MonarchsMysteries(bot))

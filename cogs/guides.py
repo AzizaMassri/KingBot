@@ -86,6 +86,97 @@ class GuidesView(TranslatedView):
         self.bot = bot
         self.add_item(GuidesDropdown(data, title_prefix=title_prefix))
 
+class VikingView(discord.ui.View):
+    def __init__(self, bot):
+        super().__init__()
+        self.bot = bot
+
+    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="viking_mini")
+    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🛡️ Viking Vengeance (Mini Guide) 🛡️",
+            description=(
+                "🌊 **The Basics:** Defend against 20 waves (Tues/Thurs). Kill at least 50% to pass. 2 losses = you're out (but can still reinforce!).\n"
+                "🌊 **Wave Targets:** 1-6/8-9/11-13/15-16/18-19: All. 7/14/17: Online Only. 10/20: HQ.\n"
+                "🔄 **Troop Exchange:** Keep top 3 heroes home, send the rest away! This ensures reinforcers get MAX SCORE.\n"
+                "🚑 **HEALING:** DO NOT heal unless you are out or the event is over! Healing steals ally points.\n"
+                "📍 **Position:** Teleport close to allies to share support quickly."
+            ),
+            color=discord.Color.dark_red()
+        )
+        
+        target_lang = await self.get_target_lang(interaction.user.id)
+        if target_lang:
+            embed = await self.translate_embed(embed, target_lang)
+            
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="viking_full")
+    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🛡️ Viking Vengeance (Full) 🛡️",
+            color=discord.Color.dark_red()
+        )
+        embed.description = (
+            "**What is it?**\n"
+            "An invasion simulation taking place every two weeks (Tue/Thu). You must defend against 20 waves of Vikings. To pass a wave, you must kill at least 50% of attacking troops. (2 losses = you stop receiving attacks, but can still reinforce others!). Starts automatically if a time is set, or manually by R4/R5.\n\n"
+            
+            "**How Points Work**\n"
+            "Points depend on how many Viking troops die in your city (100% kills = 100% points). Reinforcing others doesn't steal their points, it creates EXTRA reinforcement points for you!\n\n"
+            
+            "**Wave Targets**\n"
+            "• **Waves 1-6, 8-9, 11-13, 15-16, 18-19:** All Members\n"
+            "• **Waves 7, 14, 17:** Online Members Only\n"
+            "• **Waves 10, 20:** HQ (Plains HQ preferred!)\n\n"
+            
+            "**A. Main Base Defense & Deployments**\n"
+            "• Keep strongest heroes home. Emptying your own troops allows supporters to maximize their score! If you have more troops than marches, keep archers home.\n\n"
+            
+            "**B. Troop Exchange Strategy**\n"
+            "• Keep top 3 heroes home. Exchange the rest with other players. If done correctly, your castle has 0 remaining troops, granting supporters maximum points.\n"
+            "• Coordinate with nearby allies for smooth HQ transfers. Reinforce online members during waves 7, 14, 17.\n\n"
+            
+            "**C. Healing & Timings**\n"
+            "• **Wait Periods:** 1 min by default, 3 mins for HQ (10 & 20).\n"
+            "• **HEALING:** DO NOT heal unless you are out, the event is over, or you can swap! Healing sends your troops home, which steals points from reinforcers!"
+        )
+        embed.set_image(url="https://i.imgur.com/rellg9X.jpeg")
+
+        target_lang = await self.get_target_lang(interaction.user.id)
+        if target_lang:
+            embed = await self.translate_embed(embed, target_lang)
+            
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    async def get_target_lang(self, user_id):
+        try:
+            return await self.bot.db.hget('global_translator_subs', str(user_id))
+        except Exception:
+            return None
+
+    async def translate_embed(self, embed, target_lang):
+        prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
+        try:
+            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            response = await client.aio.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            if response and response.text:
+                translation = response.text.strip()
+                t_embed = discord.Embed(
+                    title=f"🛡️ Viking Vengeance ({target_lang.capitalize()}) 🛡️",
+                    description=translation,
+                    color=embed.color
+                )
+                if embed.image and embed.image.url:
+                    t_embed.set_image(url=embed.image.url)
+                t_embed.set_footer(text="Translated via Global Translator")
+                return t_embed
+        except Exception as e:
+            print(f"Viking Auto-Translate Error: {e}")
+        return embed
+
 class ChampionshipView(discord.ui.View):
     def __init__(self, bot):
         super().__init__()
@@ -399,6 +490,7 @@ class GuidesCog(commands.Cog):
                 "`!guides events` - Information on major Kingshot events.\n"
                 "`!guides growth` - [Coming Soon] Player growth and progression guides.\n"
                 "`!guides timeline` - View the Server Kingdom Journey Timeline.\n"
+                "`!guides viking` - View the Viking Vengeance Defense Guide.\n"
                 "`!guides beartrap` - View the Bear Trap Event Guide & Formations.\n"
                 "`!guides championship` - View the Alliance Championship Guide & Strategies.\n"
                 "`!castle` - View information and strategies for the Kingdom of Power (KvK) Castle Battle.\n"
@@ -439,6 +531,46 @@ class GuidesCog(commands.Cog):
                  pass
                  
         await ctx.send(embed=embed)
+
+    @guides_command.command(name="viking")
+    async def guides_viking(self, ctx):
+        """View the Viking Vengeance Event Guide."""
+        embed = discord.Embed(
+            title="🛡️ Viking Vengeance Guide 🛡️",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.dark_red()
+        )
+        
+        view = VikingView(self.bot)
+        
+        user_id = str(ctx.author.id)
+        target_lang = None
+        try:
+             target_lang = await self.bot.db.hget('global_translator_subs', user_id)
+        except Exception:
+             pass
+             
+        if target_lang:
+             prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
+             try:
+                 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                 response = await client.aio.models.generate_content(
+                     model='gemini-2.5-flash',
+                     contents=prompt
+                 )
+                 if response and response.text:
+                     translation = response.text.strip()
+                     t_embed = discord.Embed(
+                         title=f"🛡️ Viking Vengeance Guide ({target_lang.capitalize()}) 🛡️",
+                         description=translation,
+                         color=discord.Color.dark_red()
+                     )
+                     t_embed.set_footer(text="Translated via Global Translator")
+                     return await ctx.send(embed=t_embed, view=view)
+             except:
+                 pass
+                 
+        await ctx.send(embed=embed, view=view)
         
     @guides_command.command(name="events")
     async def guides_events(self, ctx):

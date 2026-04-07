@@ -282,7 +282,7 @@ class BearTrapView(discord.ui.View):
                 "⚙️ **City Prep:** Maximize Lethality tech/gear, upgrade Command Center, and enhance Charms.\n"
                 "⚔️ **Rally Captains:** Best: Amadeus, Jabel, Saul (4⭐+ beats Quinn). Troop Ratio: 10% Inf / 10% Cav / 80% Arch.\n"
                 "🔥 **Top Joiners:** 1st Slot: Chenko (Lv 5 skill = +25% DMG), Amadeus, Yeonwoo (4⭐), or Amane.\n"
-                "⚠️ **Joiner Rules:** Max 4 joiner skills apply! If 4 Chenkos are already in, send a weak blue hero or no hero to avoid overriding strong skills. Use the yellow flag to check.\n"
+                "⚠️ **Joiner Rules:** Max 4 joiner skills apply! If 4 Chenkos are already in, send no heroes to avoid overriding strong skills. Use the yellow flag to check.\n"
                 "🎯 **Focus:** Prioritize Lethality and Pitfall donations!\n\n"
                 "*(For full details, select the Full Guide!)*"
             ),
@@ -322,7 +322,7 @@ class BearTrapView(discord.ui.View):
             
             "**Rally Joining Rules**\n"
             "• **< 4 Chenkos:** Send Chenko in your first slot.\n"
-            "• **4 Chenkos are in:** Do **NOT** send another high-skill hero in the 1st slot. Send a weak blue hero or troops with no hero so you don't override someone's stronger skill.\n"
+            "• **4 Chenkos are in:** Do **NOT** send another high-skill hero in the 1st slot. Send troops with no heroes so you don't override someone's stronger skill.\n"
             "• **Yellow Flag:** Tap it on the rally screen to check setup. Locked Lv 5 skills can't be overridden unless kicked.\n\n"
             
             "**Maximize Damage:** Prioritize Lethality, upgrade Pitfall, use premium joiners, and coordinate placements."

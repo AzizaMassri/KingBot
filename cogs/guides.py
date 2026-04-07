@@ -86,6 +86,98 @@ class GuidesView(TranslatedView):
         self.bot = bot
         self.add_item(GuidesDropdown(data, title_prefix=title_prefix))
 
+class ChampionshipView(discord.ui.View):
+    def __init__(self, bot):
+        super().__init__()
+        self.bot = bot
+
+    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="champ_mini")
+    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🏆 Alliance Championship Guide (Mini) 🏆",
+            description=(
+                "⚔️ **The Goal:** Win 2 of 3 lanes! 20 members max per lane. R4s arrange lanes. Combat is automatic and targets weakest first. Max 2 kills per player.\n"
+                "🛡️ **Lane Strategy:** Stack your strongest/offensive players in two main lanes to win. Put lower-power members in the 3rd 'Sacrifice' lane to stall.\n"
+                "🏹 **Formation:** 50% Inf, 20% Cav, 30% Arch (5:2:3). Set it up custom!\n"
+                "🔥 **PRO TIP:** Buffs (like pet buffs) active *when you register* apply to the whole event!\n\n"
+                "*(For full details, select the Full Guide!)*"
+            ),
+            color=discord.Color.brand_green()
+        )
+        
+        target_lang = await self.get_target_lang(interaction.user.id)
+        if target_lang:
+            embed = await self.translate_embed(embed, target_lang)
+            
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="champ_full")
+    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🏆 Alliance Championship Guide (Full) 🏆",
+            color=discord.Color.brand_green()
+        )
+        embed.description = (
+            "To play the Alliance Championship event, each alliance must assign 20 members to each of three lanes. The core strategy is to focus strength on two lanes to secure victory, as winning at least two out of three lanes is required for the overall win.\n\n"
+            
+            "**Event Mechanics**\n"
+            "• **Sign-up:** Each member signs up individually and sets their troop formation beforehand.\n"
+            "• **Lanes:** R4s can stack 20 members in each of 3 distinct lanes and adjust between rounds.\n"
+            "• **Automatic Combat:** Units in each lane move and attack automatically, targeting the enemy units with the lowest power first.\n"
+            "• **Player Limit:** A single player can only survive for 2 rounds after defeating an enemy unit (max 2 kills per player). This prevents one powerful player from clearing an entire lane alone.\n\n"
+            
+            "**Core Strategies (Lane Assignments)**\n"
+            "• **Main Lanes (2):** Assign your strongest players with offensive heroes to eliminate enemy units.\n"
+            "• **Secondary Lanes:** Use mid-tier members with balanced heroes to hold position and support.\n"
+            "• **Sacrifice Lane (1):** Assign lower-power members to slow down the enemy and buy time.\n\n"
+            
+            "**Troop Formations**\n"
+            "A highly effective troop formation is the **50% Infantry, 20% Cavalry, 30% Archers** ratio (5:2:3).\n"
+            "• **Infantry:** Acts as a shield with high HP.\n"
+            "• **Cavalry:** Provides healing and balanced attacks.\n"
+            "• **Archers:** Offers high damage from a distance.\n"
+            "*It is advisable to create custom formations.*\n\n"
+            
+            "**🔥 PRO TIP**\n"
+            "Buffs applied prior to registering will be applied to the entirety of the event. Activate pet buffs prior to deploying. Try to time other optional buffs with registering for the championship. This will give us a significant advantage versus higher power opponents."
+        )
+        embed.set_image(url="https://i.imgur.com/brtrDiQ.jpeg")
+
+        target_lang = await self.get_target_lang(interaction.user.id)
+        if target_lang:
+            embed = await self.translate_embed(embed, target_lang)
+            
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    async def get_target_lang(self, user_id):
+        try:
+            return await self.bot.db.hget('global_translator_subs', str(user_id))
+        except Exception:
+            return None
+
+    async def translate_embed(self, embed, target_lang):
+        prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
+        try:
+            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            response = await client.aio.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            if response and response.text:
+                translation = response.text.strip()
+                t_embed = discord.Embed(
+                    title=f"🏆 Alliance Championship ({target_lang.capitalize()}) 🏆",
+                    description=translation,
+                    color=embed.color
+                )
+                if embed.image and embed.image.url:
+                    t_embed.set_image(url=embed.image.url)
+                t_embed.set_footer(text="Translated via Global Translator")
+                return t_embed
+        except Exception as e:
+            print(f"Championship Auto-Translate Error: {e}")
+        return embed
+
 class BearTrapView(discord.ui.View):
     def __init__(self, bot):
         super().__init__()
@@ -308,6 +400,7 @@ class GuidesCog(commands.Cog):
                 "`!guides growth` - [Coming Soon] Player growth and progression guides.\n"
                 "`!guides timeline` - View the Server Kingdom Journey Timeline.\n"
                 "`!guides beartrap` - View the Bear Trap Event Guide & Formations.\n"
+                "`!guides championship` - View the Alliance Championship Guide & Strategies.\n"
                 "`!castle` - View information and strategies for the Kingdom of Power (KvK) Castle Battle.\n"
                 "`!facility` - View information and strategies for Sanctuaries, Outposts, and Fortresses."
             ),
@@ -356,6 +449,46 @@ class GuidesCog(commands.Cog):
             color=discord.Color.gold()
         )
         await ctx.send(embed=embed)
+
+    @guides_command.command(name="championship", aliases=["champ"])
+    async def guides_championship(self, ctx):
+        """View the Alliance Championship Event Guide."""
+        embed = discord.Embed(
+            title="🏆 Alliance Championship Guide 🏆",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.brand_green()
+        )
+        
+        view = ChampionshipView(self.bot)
+        
+        user_id = str(ctx.author.id)
+        target_lang = None
+        try:
+             target_lang = await self.bot.db.hget('global_translator_subs', user_id)
+        except Exception:
+             pass
+             
+        if target_lang:
+             prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
+             try:
+                 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                 response = await client.aio.models.generate_content(
+                     model='gemini-2.5-flash',
+                     contents=prompt
+                 )
+                 if response and response.text:
+                     translation = response.text.strip()
+                     t_embed = discord.Embed(
+                         title=f"🏆 Alliance Championship Guide ({target_lang.capitalize()}) 🏆",
+                         description=translation,
+                         color=discord.Color.brand_green()
+                     )
+                     t_embed.set_footer(text="Translated via Global Translator")
+                     return await ctx.send(embed=t_embed, view=view)
+             except:
+                 pass
+                 
+        await ctx.send(embed=embed, view=view)
 
     @guides_command.command(name="beartrap")
     async def guides_beartrap(self, ctx):

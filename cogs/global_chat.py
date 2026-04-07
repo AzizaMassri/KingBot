@@ -163,9 +163,18 @@ class GlobalChat(commands.Cog):
             if not subs:
                 return
             
+            try:
+                opt_outs = await cache.smembers(f"auto_translate_optout:{message.guild.id}")
+                opt_outs = {opt_out.decode() if isinstance(opt_out, bytes) else str(opt_out) for opt_out in opt_outs}
+            except:
+                opt_outs = set()
+            
             # Debug log to verify producer is running
             print(f"Producer found {len(subs)} translation subs for channel {message.channel.name}")
             for uid_str, target_language in subs.items():
+                if uid_str in opt_outs:
+                    continue
+                    
                 user_id = int(uid_str)
                 if message.author.id == user_id:
                     continue

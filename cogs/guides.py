@@ -4,9 +4,10 @@ import json
 import os
 import aiofiles
 from cogs.utils.views import TranslatedView
+from google import genai
 
-class EventsDropdown(discord.ui.Select):
-    def __init__(self, data, title_prefix="Event Info"):
+class GuidesDropdown(discord.ui.Select):
+    def __init__(self, data, title_prefix="Guide Info"):
         self.data = data
         self.title_prefix = title_prefix
         options = []
@@ -72,20 +73,111 @@ class EventsDropdown(discord.ui.Select):
                  t_embed.set_footer(text="Translated via Global Translator")
                  return await interaction.response.edit_message(embed=t_embed, view=view)
              except Exception as e:
-                 print(f"Events Cog Auto-Translate Error: {e}")
+                 print(f"Guides Cog Auto-Translate Error: {e}")
                  pass
                  
         # If no global auto-translator, we render the standard English with TranslatedView
         await view.send_translated(interaction, embed=embed, view=view)
 
 
-class EventsView(TranslatedView):
-    def __init__(self, data, bot, title_prefix="Event Info"):
+class GuidesView(TranslatedView):
+    def __init__(self, data, bot, title_prefix="Guide Info"):
         super().__init__()
         self.bot = bot
-        self.add_item(EventsDropdown(data, title_prefix=title_prefix))
+        self.add_item(GuidesDropdown(data, title_prefix=title_prefix))
 
-class EventsCog(commands.Cog):
+class TimelineView(discord.ui.View):
+    def __init__(self, bot):
+        super().__init__()
+        self.bot = bot
+
+    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="timeline_mini")
+    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🏰 Kingdom Journey Timeline (Mini) 🏰",
+            description=(
+                "⏳ **Day 0:** Gen 1 Heroes (SSR/SR/R)\n"
+                "🦁 **Day 40-60:** Gen 2 Heroes (Zoe/Marlin/Hilde) & Gen 1 Pets (Lynx/Bison)\n"
+                "👑 **Day 70-80:** TrueGold, KvK, Gen 2 Pets (Cheetah/Moose)\n"
+                "🐻 **Day 105-120:** Gen 3 Heroes (Eric/Jaeger/Petra) & Gen 3 Pets (Lion/Grizzly)\n"
+                "⚔️ **Day 150:** TrueGold 4/5 & Crucible\n"
+                "🦏 **Day 190-200:** Gen 4 Heroes (Alcar/Rosa/Margot) & Gen 4 Pets (Rhino/Bison)\n"
+                "🛡️ **Day 220:** War Academy T11\n"
+                "🐉 **Day 270-280:** Gen 5 Heroes (Long Fei/Vivian/Thrud) & Pets (Moose/Panther)\n"
+                "🔥 **Day 315:** TrueGold 6/7/8 & Super Refinement\n\n"
+                "*(For full timeline details, select the Full Guide!)*"
+            ),
+            color=discord.Color.gold()
+        )
+        
+        target_lang = await self.get_target_lang(interaction.user.id)
+        if target_lang:
+            embed = await self.translate_embed(embed, target_lang)
+            
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="timeline_full")
+    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🏰 Kingdom Journey Timeline (Full) 🏰",
+            description=(
+                "**Day 0** – SSR (gold) Gen 1 Heroes, SR (purple) Heroes, R (blue) Heroes\n"
+                "**Day 40–50** – Gen 2 Heroes SSR– Zoe, Marlin, Hilde\n"
+                "**Day 55–60** – Gen 1 Pets (Lynx, Bison)\n"
+                "**Day 70** – Age of TrueGold\n"
+                "**Day 70–80** – Kingdom of Power (KvK)\n"
+                "**Day 75–80** – Gen 2 Pets (Cheetah, Moose)\n"
+                "**Day 105–120** – Gen 3 Heroes SSR– Eric, Jaeger, Petra \n"
+                "**Day 105–115** – Gen 3 Pets (Lion, Grizzly Bear)\n"
+                "**Day 150** – TrueGold 4 & 5 / TrueGold Crucible\n"
+                "**Day 190–200** – Gen 4 Heroes SSR– Alcar, Rosa, Margot\n"
+                "**Day 195–200** – Gen 4 Pets (Giant Rhino, Mighty Bison)\n"
+                "**Day 220** – War Academy T11\n"
+                "**Day 270–280** – Gen 5 Heroes SSR– Long Fei, Vivian, Thrud\n"
+                "**Day 280** – Gen 5 Pets (Great Moose, Alpha Black Panther)\n"
+                "**Day 315** – TG 6, 7 & 8 / Super Refinement"
+            ),
+            color=discord.Color.gold()
+        )
+        # Note: You can replace this URL with the actual discord image link of the timeline infographic
+        embed.set_image(url="https://i.imgur.com/qtn62GE.png") 
+
+        target_lang = await self.get_target_lang(interaction.user.id)
+        if target_lang:
+            embed = await self.translate_embed(embed, target_lang)
+            
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    async def get_target_lang(self, user_id):
+        try:
+            return await self.bot.db.hget('global_translator_subs', str(user_id))
+        except Exception:
+            return None
+
+    async def translate_embed(self, embed, target_lang):
+        prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
+        try:
+            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            response = await client.aio.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            if response and response.text:
+                translation = response.text.strip()
+                t_embed = discord.Embed(
+                    title=f"🏰 Timeline ({target_lang.capitalize()}) 🏰",
+                    description=translation,
+                    color=embed.color
+                )
+                if embed.image and embed.image.url:
+                    t_embed.set_image(url=embed.image.url)
+                t_embed.set_footer(text="Translated via Global Translator")
+                return t_embed
+        except Exception as e:
+            print(f"Timeline Auto-Translate Error: {e}")
+        return embed
+
+class GuidesCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.castle_db_path = os.path.join(os.path.dirname(__file__), '..', 'kingshot_castle_battle_db.json')
@@ -102,25 +194,28 @@ class EventsCog(commands.Cog):
                  content = await f.read()
                  self.castle_db_data = json.loads(content)
         except Exception as e:
-             print(f"Failed to load Castle DB in events cog: {e}")
+             print(f"Failed to load Castle DB in guides cog: {e}")
              
         try:
              async with aiofiles.open(self.facility_db_path, mode='r', encoding='utf-8') as f:
                  content = await f.read()
                  self.facility_db_data = json.loads(content)
         except Exception as e:
-             print(f"Failed to load Facility DB in events cog: {e}")
+             print(f"Failed to load Facility DB in guides cog: {e}")
 
-    @commands.group(name="events", aliases=["event"], invoke_without_command=True)
-    async def events_command(self, ctx):
+    @commands.group(name="guides", aliases=["guide"], invoke_without_command=True)
+    async def guides_command(self, ctx):
         embed = discord.Embed(
-            title="🗺️ Kingshot Event Guides 🗺️",
+            title="🗺️ Kingshot Mini Guides 🗺️",
             description=(
-                "Welcome to the Events Directory! To view guide information, use one of the specific event subcommands below:\n\n"
+                "Welcome to the Guides Directory! Use the subcommands below to learn more:\n\n"
+                "`!guides events` - Information on major Kingshot events.\n"
+                "`!guides growth` - [Coming Soon] Player growth and progression guides.\n"
+                "`!guides timeline` - View the Server Kingdom Journey Timeline.\n"
                 "`!castle` - View information and strategies for the Kingdom of Power (KvK) Castle Battle.\n"
                 "`!facility` - View information and strategies for Sanctuaries, Outposts, and Fortresses."
             ),
-            color=discord.Color.brand_green()
+            color=discord.Color.green()
         )
         
         # Check auto-translator
@@ -145,9 +240,9 @@ class EventsCog(commands.Cog):
                  translation = response.text.strip()
                  
                  t_embed = discord.Embed(
-                     title=f"🗺️ Kingshot Event Guides ({target_lang.capitalize()}) 🗺️",
+                     title=f"🗺️ Kingshot Mini Guides ({target_lang.capitalize()}) 🗺️",
                      description=translation,
-                     color=discord.Color.brand_green()
+                     color=discord.Color.green()
                  )
                  t_embed.set_footer(text="Translated via Global Translator")
                  return await ctx.send(embed=t_embed)
@@ -156,15 +251,65 @@ class EventsCog(commands.Cog):
                  
         await ctx.send(embed=embed)
         
-    @events_command.command(name="castle")
-    async def events_castle_subcommand(self, ctx):
-        """View information and strategies for the Kingdom of Power (KvK) Castle Battle."""
-        await self.castle_command(ctx)
+    @guides_command.command(name="events")
+    async def guides_events(self, ctx):
+        """Placeholder for all events guides hub."""
+        embed = discord.Embed(
+            title="📅 Event Guides",
+            description="Event-specific guides are being categorized! Check back later, or use `!castle` and `!facility` directly for now.",
+            color=discord.Color.gold()
+        )
+        await ctx.send(embed=embed)
+
+    @guides_command.command(name="timeline")
+    async def guides_timeline(self, ctx):
+        """View the Server Kingdom Journey Timeline."""
+        embed = discord.Embed(
+            title="🏰 Kingdom Journey Timeline 🏰",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.gold()
+        )
         
-    @events_command.command(name="facility", aliases=["sanctuary", "outpost", "fortress"])
-    async def events_facility_subcommand(self, ctx):
-        """View information and strategies for Sanctuaries, Outposts, and Fortresses."""
-        await self.facility_command(ctx)
+        view = TimelineView(self.bot)
+        
+        user_id = str(ctx.author.id)
+        target_lang = None
+        try:
+             target_lang = await self.bot.db.hget('global_translator_subs', user_id)
+        except Exception:
+             pass
+             
+        if target_lang:
+             prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
+             try:
+                 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                 response = await client.aio.models.generate_content(
+                     model='gemini-2.5-flash',
+                     contents=prompt
+                 )
+                 if response and response.text:
+                     translation = response.text.strip()
+                     t_embed = discord.Embed(
+                         title=f"🏰 Kingdom Journey Timeline ({target_lang.capitalize()}) 🏰",
+                         description=translation,
+                         color=discord.Color.gold()
+                     )
+                     t_embed.set_footer(text="Translated via Global Translator")
+                     return await ctx.send(embed=t_embed, view=view)
+             except:
+                 pass
+                 
+        await ctx.send(embed=embed, view=view)
+
+    @guides_command.command(name="growth", aliases=["player"])
+    async def guides_growth(self, ctx):
+        """Placeholder for player growth guides."""
+        embed = discord.Embed(
+            title="📈 Player Growth Guides",
+            description="Player progression, resource management, and leveling guides will be added here soon!",
+            color=discord.Color.blue()
+        )
+        await ctx.send(embed=embed)
 
     @commands.group(name="castle", invoke_without_command=True)
     async def castle_command(self, ctx):
@@ -177,7 +322,7 @@ class EventsCog(commands.Cog):
             color=discord.Color.dark_purple()
         )
         
-        view = EventsView(self.castle_db_data, self.bot, title_prefix="Kingshot Castle Battle")
+        view = GuidesView(self.castle_db_data, self.bot, title_prefix="Kingshot Castle Battle")
         
         user_id = str(ctx.author.id)
         target_lang = None
@@ -222,7 +367,7 @@ class EventsCog(commands.Cog):
             color=discord.Color.blue()
         )
         
-        view = EventsView(self.facility_db_data, self.bot, title_prefix="Facility Battle")
+        view = GuidesView(self.facility_db_data, self.bot, title_prefix="Facility Battle")
         
         user_id = str(ctx.author.id)
         target_lang = None
@@ -353,4 +498,4 @@ class EventsCog(commands.Cog):
         await view.send_translated(ctx, embed=embed)
 
 async def setup(bot):
-    await bot.add_cog(EventsCog(bot))
+    await bot.add_cog(GuidesCog(bot))

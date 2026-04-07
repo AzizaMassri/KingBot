@@ -82,12 +82,13 @@ class LanguageDropdown(discord.ui.Select):
         
         if selected_lang == "Off":
             try:
-                await self.bot.db.hdel(f"translator_subs:{interaction.guild_id}", str(target_id))
+                await self.bot.db.sadd(f"auto_translate_optout:{interaction.guild_id}", str(target_id))
             except Exception as e:
                 print(e)
-            await interaction.followup.send(f"📴 Auto-translations disabled for {target_member.mention}.", ephemeral=True)
+            await interaction.followup.send(f"📴 Background auto-translations disabled for {target_member.mention}. (On-demand UI translations will still use your last chosen language)", ephemeral=True)
         else:
             try:
+                await self.bot.db.srem(f"auto_translate_optout:{interaction.guild_id}", str(target_id))
                 await self.bot.db.hset(f"translator_subs:{interaction.guild_id}", str(target_id), selected_lang)
             except Exception as e:
                 print(e)

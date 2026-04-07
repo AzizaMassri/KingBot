@@ -287,22 +287,25 @@ class QuickTranslator(commands.Cog):
         language = None
         
         if target:
-            try:
-                member_converter = commands.MemberConverter()
-                member = await member_converter.convert(ctx, target.split()[0])
-            except commands.MemberNotFound:
-                # Not a member, try resolving as a language
-                valid_langs = {}
-                for key, data in LANGUAGES.items():
-                    if key == "Off": continue
-                    valid_langs[key.lower()] = key
-                    if "code" in data:
-                        valid_langs[data["code"].lower()] = key
-                        
-                if target.lower() in valid_langs:
-                    language = valid_langs[target.lower()]
-                else:
-                    return await ctx.send(f"❌ Could not find member or language '{target}'.")
+            if target.lower() == "off":
+                language = "Off"
+            else:
+                try:
+                    member_converter = commands.MemberConverter()
+                    member = await member_converter.convert(ctx, target.split()[0])
+                except commands.MemberNotFound:
+                    # Not a member, try resolving as a language
+                    valid_langs = {}
+                    for key, data in LANGUAGES.items():
+                        if key == "Off": continue
+                        valid_langs[key.lower()] = key
+                        if "code" in data:
+                            valid_langs[data["code"].lower()] = key
+                            
+                    if target.lower() in valid_langs:
+                        language = valid_langs[target.lower()]
+                    else:
+                        return await ctx.send(f"❌ Could not find member or language '{target}'.")
         
         if member and member.id != ctx.author.id:
             if not ctx.author.guild_permissions.administrator:
@@ -316,11 +319,19 @@ class QuickTranslator(commands.Cog):
         else:
             target_id = ctx.author.id
             if language:
-                try:
-                    await self.bot.db.hset(f"translator_subs:{ctx.guild.id}", str(target_id), language)
-                except:
-                    pass
-                return await ctx.send(f"✅ Your background auto-translation language has been set to **{language}**.\nMessages in translation channels will be direct messaged to you in {language}.")
+                if language == "Off":
+                    try:
+                        await self.bot.db.sadd(f"auto_translate_optout:{ctx.guild.id}", str(target_id))
+                    except:
+                        pass
+                    return await ctx.send("✅ Background auto-translation has been **disabled** for you. (On-demand UI translations will still use your last chosen language)")
+                else:
+                    try:
+                        await self.bot.db.srem(f"auto_translate_optout:{ctx.guild.id}", str(target_id))
+                        await self.bot.db.hset(f"translator_subs:{ctx.guild.id}", str(target_id), language)
+                    except:
+                        pass
+                    return await ctx.send(f"✅ Your background auto-translation language has been set to **{language}**.\nMessages in translation channels will be direct messaged to you in {language}.")
             
             embed = discord.Embed(
                 title="🌍 Translation Setup",

@@ -71,13 +71,24 @@ class GuidesDropdown(discord.ui.Select):
                      color=discord.Color.dark_purple()
                  )
                  t_embed.set_footer(text="Translated via Global Translator")
-                 return await interaction.response.edit_message(embed=t_embed, view=view)
+                 if interaction.guild is None:
+                     content = f"**{t_embed.title}**\n\n{t_embed.description}"
+                     await interaction.response.edit_message(content=content, embed=None, view=view)
+                 else:
+                     await interaction.response.edit_message(embed=t_embed, view=view)
+                 return
              except Exception as e:
                  print(f"Guides Cog Auto-Translate Error: {e}")
                  pass
                  
         # If no global auto-translator, we render the standard English with TranslatedView
-        await view.send_translated(interaction, embed=embed, view=view)
+        if interaction.guild is None:
+            content = f"**{embed.title}**\n"
+            for field in embed.fields:
+                content += f"\n**{field.name}**\n{field.value}\n"
+            await interaction.response.edit_message(content=content, embed=None, view=view)
+        else:
+            await view.send_translated(interaction, embed=embed, view=view)
 
 
 class GuidesView(TranslatedView):
@@ -109,7 +120,13 @@ class VikingView(discord.ui.View):
         if target_lang:
             embed = await self.translate_embed(embed, target_lang)
             
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.guild is None:
+            content = f"**{embed.title}**\n\n{embed.description}"
+            if embed.image and getattr(embed.image, 'url', None):
+                content += f"\n{embed.image.url}"
+            await interaction.response.edit_message(content=content, embed=None, view=self)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="viking_full")
     async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -146,7 +163,13 @@ class VikingView(discord.ui.View):
         if target_lang:
             embed = await self.translate_embed(embed, target_lang)
             
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.guild is None:
+            content = f"**{embed.title}**\n\n{embed.description}"
+            if embed.image and getattr(embed.image, 'url', None):
+                content += f"\n{embed.image.url}"
+            await interaction.response.edit_message(content=content, embed=None, view=self)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     async def get_target_lang(self, user_id):
         try:
@@ -200,7 +223,13 @@ class ChampionshipView(discord.ui.View):
         if target_lang:
             embed = await self.translate_embed(embed, target_lang)
             
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.guild is None:
+            content = f"**{embed.title}**\n\n{embed.description}"
+            if embed.image and getattr(embed.image, 'url', None):
+                content += f"\n{embed.image.url}"
+            await interaction.response.edit_message(content=content, embed=None, view=self)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="champ_full")
     async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -238,7 +267,13 @@ class ChampionshipView(discord.ui.View):
         if target_lang:
             embed = await self.translate_embed(embed, target_lang)
             
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.guild is None:
+            content = f"**{embed.title}**\n\n{embed.description}"
+            if embed.image and getattr(embed.image, 'url', None):
+                content += f"\n{embed.image.url}"
+            await interaction.response.edit_message(content=content, embed=None, view=self)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     async def get_target_lang(self, user_id):
         try:
@@ -293,7 +328,13 @@ class BearTrapView(discord.ui.View):
         if target_lang:
             embed = await self.translate_embed(embed, target_lang)
             
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.guild is None:
+            content = f"**{embed.title}**\n\n{embed.description}"
+            if embed.image and getattr(embed.image, 'url', None):
+                content += f"\n{embed.image.url}"
+            await interaction.response.edit_message(content=content, embed=None, view=self)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="beartrap_full")
     async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -333,7 +374,13 @@ class BearTrapView(discord.ui.View):
         if target_lang:
             embed = await self.translate_embed(embed, target_lang)
             
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.guild is None:
+            content = f"**{embed.title}**\n\n{embed.description}"
+            if embed.image and getattr(embed.image, 'url', None):
+                content += f"\n{embed.image.url}"
+            await interaction.response.edit_message(content=content, embed=None, view=self)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     async def get_target_lang(self, user_id):
         try:
@@ -392,7 +439,13 @@ class TimelineView(discord.ui.View):
         if target_lang:
             embed = await self.translate_embed(embed, target_lang)
             
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.guild is None:
+            content = f"**{embed.title}**\n\n{embed.description}"
+            if embed.image and getattr(embed.image, 'url', None):
+                content += f"\n{embed.image.url}"
+            await interaction.response.edit_message(content=content, embed=None, view=self)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="timeline_full")
     async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -424,7 +477,13 @@ class TimelineView(discord.ui.View):
         if target_lang:
             embed = await self.translate_embed(embed, target_lang)
             
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.guild is None:
+            content = f"**{embed.title}**\n\n{embed.description}"
+            if embed.image and getattr(embed.image, 'url', None):
+                content += f"\n{embed.image.url}"
+            await interaction.response.edit_message(content=content, embed=None, view=self)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self)
 
     async def get_target_lang(self, user_id):
         try:

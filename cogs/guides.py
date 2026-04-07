@@ -86,6 +86,101 @@ class GuidesView(TranslatedView):
         self.bot = bot
         self.add_item(GuidesDropdown(data, title_prefix=title_prefix))
 
+class BearTrapView(discord.ui.View):
+    def __init__(self, bot):
+        super().__init__()
+        self.bot = bot
+
+    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="beartrap_mini")
+    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🐻 Bear Trap Guide (Mini) 🐻",
+            description=(
+                "⚙️ **City Prep:** Maximize Lethality tech/gear, upgrade Command Center, and enhance Charms.\n"
+                "⚔️ **Rally Captains:** Best: Amadeus, Jabel, Saul (4⭐+ beats Quinn). Troop Ratio: 10% Inf / 10% Cav / 80% Arch.\n"
+                "🔥 **Top Joiners:** 1st Slot: Chenko (Lv 5 skill = +25% DMG), Amadeus, Yeonwoo (4⭐), or Amane.\n"
+                "⚠️ **Joiner Rules:** Max 4 joiner skills apply! If 4 Chenkos are already in, send a weak blue hero or no hero to avoid overriding strong skills. Use the yellow flag to check.\n"
+                "🎯 **Focus:** Prioritize Lethality and Pitfall donations!\n\n"
+                "*(For full details, select the Full Guide!)*"
+            ),
+            color=discord.Color.dark_magenta()
+        )
+        
+        target_lang = await self.get_target_lang(interaction.user.id)
+        if target_lang:
+            embed = await self.translate_embed(embed, target_lang)
+            
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="beartrap_full")
+    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🐻 Bear Trap Guide (Full) 🐻",
+            color=discord.Color.dark_magenta()
+        )
+        embed.description = (
+            "**Preparing Your City**\n"
+            "• **Research:** Prioritize tech increasing Lethality and deployment capacity.\n"
+            "• **Buildings:** Upgrade Command Center for larger troop sends.\n"
+            "• **Gear & Charms:** Focus on Lethality boosts to improve base rally damage.\n\n"
+            
+            "**Best Heroes for Rally Captains**\n"
+            "Captain skills set the baseline for everyone. Recommended setups:\n"
+            "• **Best:** Amadeus, Jabel, Saul (Saul overtakes Quinn once 4-starred).\n"
+            "• **Mid:** Helga, Jabel, Quinn or Saul.\n"
+            "• **F2P:** Howard, Jabel, Quinn.\n"
+            "• **Troop Ratio:** 10% Infantry, 10% Cavalry, 80% Archers.\n\n"
+
+            "**Key Rally Joiner Heroes**\n"
+            "Only **four** joiner skills are applied!\n"
+            "• **Chenko:** Top choice. Lv 5 first skill gives +25% DMG (requires 1st slot placement).\n"
+            "• **Amadeus:** Gives major Lethality boost like Chenko.\n"
+            "• **Yeonwoo & Amane:** Yeonwoo gives 25% Lethality at 4⭐. Amane boosts Attack.\n\n"
+            
+            "**Rally Joining Rules**\n"
+            "• **< 4 Chenkos:** Send Chenko in your first slot.\n"
+            "• **4 Chenkos are in:** Do **NOT** send another high-skill hero in the 1st slot. Send a weak blue hero or troops with no hero so you don't override someone's stronger skill.\n"
+            "• **Yellow Flag:** Tap it on the rally screen to check setup. Locked Lv 5 skills can't be overridden unless kicked.\n\n"
+            
+            "**Maximize Damage:** Prioritize Lethality, upgrade Pitfall, use premium joiners, and coordinate placements."
+        )
+        embed.set_image(url="https://i.imgur.com/P7KLael.jpeg")
+
+        target_lang = await self.get_target_lang(interaction.user.id)
+        if target_lang:
+            embed = await self.translate_embed(embed, target_lang)
+            
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    async def get_target_lang(self, user_id):
+        try:
+            return await self.bot.db.hget('global_translator_subs', str(user_id))
+        except Exception:
+            return None
+
+    async def translate_embed(self, embed, target_lang):
+        prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
+        try:
+            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            response = await client.aio.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            if response and response.text:
+                translation = response.text.strip()
+                t_embed = discord.Embed(
+                    title=f"🐻 Bear Trap ({target_lang.capitalize()}) 🐻",
+                    description=translation,
+                    color=embed.color
+                )
+                if embed.image and embed.image.url:
+                    t_embed.set_image(url=embed.image.url)
+                t_embed.set_footer(text="Translated via Global Translator")
+                return t_embed
+        except Exception as e:
+            print(f"Bear Trap Auto-Translate Error: {e}")
+        return embed
+
 class TimelineView(discord.ui.View):
     def __init__(self, bot):
         super().__init__()
@@ -212,6 +307,7 @@ class GuidesCog(commands.Cog):
                 "`!guides events` - Information on major Kingshot events.\n"
                 "`!guides growth` - [Coming Soon] Player growth and progression guides.\n"
                 "`!guides timeline` - View the Server Kingdom Journey Timeline.\n"
+                "`!guides beartrap` - View the Bear Trap Event Guide & Formations.\n"
                 "`!castle` - View information and strategies for the Kingdom of Power (KvK) Castle Battle.\n"
                 "`!facility` - View information and strategies for Sanctuaries, Outposts, and Fortresses."
             ),
@@ -260,6 +356,46 @@ class GuidesCog(commands.Cog):
             color=discord.Color.gold()
         )
         await ctx.send(embed=embed)
+
+    @guides_command.command(name="beartrap")
+    async def guides_beartrap(self, ctx):
+        """View the Bear Trap Event Guide."""
+        embed = discord.Embed(
+            title="🐻 Bear Trap Guide 🐻",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.dark_magenta()
+        )
+        
+        view = BearTrapView(self.bot)
+        
+        user_id = str(ctx.author.id)
+        target_lang = None
+        try:
+             target_lang = await self.bot.db.hget('global_translator_subs', user_id)
+        except Exception:
+             pass
+             
+        if target_lang:
+             prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
+             try:
+                 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                 response = await client.aio.models.generate_content(
+                     model='gemini-2.5-flash',
+                     contents=prompt
+                 )
+                 if response and response.text:
+                     translation = response.text.strip()
+                     t_embed = discord.Embed(
+                         title=f"🐻 Bear Trap Guide ({target_lang.capitalize()}) 🐻",
+                         description=translation,
+                         color=discord.Color.dark_magenta()
+                     )
+                     t_embed.set_footer(text="Translated via Global Translator")
+                     return await ctx.send(embed=t_embed, view=view)
+             except:
+                 pass
+                 
+        await ctx.send(embed=embed, view=view)
 
     @guides_command.command(name="timeline")
     async def guides_timeline(self, ctx):

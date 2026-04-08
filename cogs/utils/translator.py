@@ -1,6 +1,7 @@
 import discord
 import hashlib
 import os
+import asyncio
 from google import genai
 
 
@@ -43,12 +44,16 @@ async def translate_content(text: str, target_locale: discord.Locale, bot=None) 
     prompt = f"Translate the following to {target_language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard. Keep exact formatting/emojis, and output ONLY the raw translation with no preamble.{exclusion_str}\n\n\"{text}\""
 
     try:
-        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        response = await client.aio.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt
-        )
-        translation = response.text.strip() if response.text else text
+        def translate_text():
+            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            response = client.models.generate_content(
+                model='gemini-2.5-flash-lite',
+                contents=prompt
+            )
+            return response.text
+        
+        translation = await asyncio.to_thread(translate_text)
+        translation = translation.strip() if translation else text
         
         # Save to redis, expire in 86400 (1 day)
         await cache.setex(cache_key, 86400, translation)

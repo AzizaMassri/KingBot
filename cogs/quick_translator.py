@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import os
+import asyncio
 from google import genai
 
 class TranslateModal(discord.ui.Modal, title='Translate Message'):
@@ -34,14 +35,18 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
         prompt = f"Translate the following text to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
         
         try:
-            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-            response = await client.aio.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt
-            )
-            if not response.text:
+            def translate_text():
+                client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=prompt
+                )
+                return response.text
+            
+            translation = await asyncio.to_thread(translate_text)
+            if not translation:
                 raise ValueError("Empty response from AI")
-            translation = response.text.strip()
+            translation = translation.strip()
             
             # Save language to the per-server synced background translation engine
             try:
@@ -130,14 +135,18 @@ class QuickTranslator(commands.Cog):
             prompt = f"Translate the following text to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
             
             try:
-                client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-                response = await client.aio.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=prompt
-                )
-                if not response.text:
+                def translate_text():
+                    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                    response = client.models.generate_content(
+                        model='gemini-2.5-flash',
+                        contents=prompt
+                    )
+                    return response.text
+                
+                translation = await asyncio.to_thread(translate_text)
+                if not translation:
                     raise ValueError("Empty response from AI")
-                translation = response.text.strip()
+                translation = translation.strip()
                 
                 embed = discord.Embed(
                     title=f"🌍 Translated to {target.capitalize()}",
@@ -194,14 +203,18 @@ class QuickTranslator(commands.Cog):
                 prompt = f"Translate the following text to {target_language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text_to_translate}\"{exclusion_str}"
                 
                 try:
-                    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-                    response = await client.aio.models.generate_content(
-                        model='gemini-2.5-flash',
-                        contents=prompt
-                    )
-                    if not response.text:
+                    def translate_text():
+                        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                        response = client.models.generate_content(
+                            model='gemini-2.5-flash',
+                            contents=prompt
+                        )
+                        return response.text
+                    
+                    translation = await asyncio.to_thread(translate_text)
+                    if not translation:
                         raise ValueError("Empty response from AI")
-                    translation = response.text.strip()
+                    translation = translation.strip()
                 except Exception as api_err:
                     import traceback
                     traceback.print_exc()
@@ -253,14 +266,18 @@ class QuickTranslator(commands.Cog):
             prompt = f"Translate the following text to {language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
             
             try:
-                client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-                response = await client.aio.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=prompt
-                )
-                if not response.text:
+                def translate_text():
+                    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                    response = client.models.generate_content(
+                        model='gemini-2.5-flash',
+                        contents=prompt
+                    )
+                    return response.text
+                
+                translation = await asyncio.to_thread(translate_text)
+                if not translation:
                     raise ValueError("Empty response from AI")
-                translation = response.text.strip()
+                translation = translation.strip()
             except Exception as api_err:
                 import traceback
                 traceback.print_exc()

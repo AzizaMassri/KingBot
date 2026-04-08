@@ -66,9 +66,12 @@ class DuelAcceptView(TranslatedView):
             await self.send_translated(interaction, content="This duel isn't for you!", ephemeral=True)
             return
 
-        await interaction.response.defer()
         self.stop()
-        await self.process_duel(interaction)
+        try:
+            await self.process_duel(interaction)
+        except Exception as e:
+            print(f"Dice Duel Error: {e}")
+            await self.send_translated(interaction, content="⚠️ Something went wrong while resolving the duel. Please try again later.", ephemeral=True)
 
     async def process_duel(self, interaction: discord.Interaction):
         c_wins = 0
@@ -99,7 +102,11 @@ class DuelAcceptView(TranslatedView):
         elif t_wins > c_wins:
             match_winner, match_loser = self.challenged, self.challenger
         else:
-            await self.send_translated(interaction, content="\n".join(log) + "\n\n**It's a dead tie! Both players survive today.**")
+            tie_msg = "\n".join(log) + "\n\n**It's a dead tie! Both players survive today.**"
+            if interaction.response.is_done():
+                await interaction.followup.send(content=tie_msg)
+            else:
+                await interaction.response.send_message(content=tie_msg)
             return
 
         result_msg = "\n".join(log) + f"\n\n👑 **{match_winner.mention} WINS THE DUEL!** 👑\n{match_loser.mention}, prepare to be renamed!"
@@ -114,7 +121,10 @@ class DuelAcceptView(TranslatedView):
                 await btn_interaction.response.send_modal(RenameModal(match_winner, match_loser))
                 self.stop()
 
-        await self.send_translated(interaction, content=result_msg, view=RenameView())
+        if interaction.response.is_done():
+            await interaction.followup.send(content=result_msg, view=RenameView())
+        else:
+            await interaction.response.send_message(content=result_msg, view=RenameView())
 
 class DiceGame(commands.Cog):
     def __init__(self, bot):

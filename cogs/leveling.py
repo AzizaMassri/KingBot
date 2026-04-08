@@ -91,7 +91,7 @@ class Leveling(commands.Cog):
 
         # Check for Level Up
         if new_level > old_level:
-            reward = 1000 + (new_level - 1) * 100
+            reward = (1000 + (new_level - 1) * 100) * 2
             current_balance = int(await self.db.get(f"ks_bucks:{user_id}") or 0)
             new_balance = current_balance + reward
             await self.db.set(f"ks_bucks:{user_id}", new_balance)

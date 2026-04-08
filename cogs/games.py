@@ -335,6 +335,43 @@ class RussianRouletteGameView(TranslatedView):
         if getattr(current_player, "bot", False):
             asyncio.create_task(self.bot_action(None))
 
+    async def on_timeout(self):
+        self.stop()
+
+        if self.bet > 0:
+            refunded = 0
+            refunded_names = []
+            for player in list(self.players):
+                if getattr(player, "bot", False):
+                    continue
+                await self.eco.add_balance(player.id, self.bet)
+                refunded += 1
+                refunded_names.append(player.display_name)
+
+            refund_text = f"\n\n⏱️ The game has been cancelled because the current player did not pull the trigger in time.\n"
+            if refunded:
+                refund_text += f"**Refunded {self.bet} 💰 to {refunded} player{'s' if refunded != 1 else ''}.**"
+                refund_text += f"\n{', '.join(refunded_names)}"
+            else:
+                refund_text += "No refunds were processed."
+        else:
+            refund_text = "\n\n⏱️ The game has been cancelled because the current player did not pull the trigger in time. No buy-in was used."
+
+        for child in self.children:
+            child.disabled = True
+
+        embed = discord.Embed(
+            title="🔫 Russian Roulette Cancelled",
+            description=refund_text,
+            color=discord.Color.red()
+        )
+
+        if self.message:
+            try:
+                await self.message.edit(embed=embed, view=self)
+            except:
+                pass
+
 class Games(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

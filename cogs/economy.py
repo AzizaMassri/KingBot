@@ -256,7 +256,7 @@ class Economy(commands.Cog):
                 minutes, _ = divmod(remainder, 60)
                 return await ctx.send(f"⏳ **{ctx.author.display_name}**, the vault is still generating your bucks! Come back in **{hours}h {minutes}m**.")
 
-        reward = random.randint(250, 500)
+        reward = random.randint(5000, 10000)
         new_balance = await self.add_balance(user_id, reward)
         
         await self.db.set(f"last_collect:{user_id}", str(current_time))

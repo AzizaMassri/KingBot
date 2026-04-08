@@ -323,6 +323,56 @@ class FacilityView(BaseGuideView):
         await self.update_message(interaction, embed)
 
 
+class OasisView(BaseGuideView):
+    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="oasis_mini")
+    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🌴 Oasis Island Guide (Mini) 🌴",
+            description=(
+                "💧 **Essence Farming:** Log in 2x/day. Rush Reservoir Lv.4 for 2nd worker. Place touching cacti/chests. Reset pathing by exit/re-enter. Clear for Purifiers.\n"
+                "🏗️ **Building:** Early buy T1 greys for quests. Then T3 blues. Avoid type limits & 50% recycle nerf.\n"
+                "📈 **Stats:** Phase 1: Economy boosts. Phase 2: Lethality/Health. Golden Sunset Wonder. Water allies daily.\n"
+                "⚔️ **Combat:** Rally leader gets island stats; joiners send damage heroes left. Bear Hunt: 10% Inf/10% Cav/80% Arch."
+            ),
+            color=discord.Color.teal()
+        )
+        await self.update_message(interaction, embed)
+
+    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="oasis_full")
+    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🌴 KINGSHOT MEGA-ALLIANCE: ULTIMATE OASIS ISLAND GUIDE 🌴",
+            color=discord.Color.teal()
+        )
+        embed.description = (
+            "Oasis Island (unlocks at Town Center Lv. 19) is Kingshot's hidden engine for massive, permanent stat scaling. Based on the current competitive meta and StratGameSloth's \"Build Smart & Grow FAST\" video, here is how our alliance will out-scale the server from Day 1.\n\n"
+            "💧 1. ESSENCE FARMING & WORKER PATHING HACKS\n"
+            "Water Essence is your island currency. The Fountain of Life caps at 12 hours of storage—log in twice a day or you are bleeding free progression!\n"
+            "Rush Reservoir Lv. 4: This is priority #1! It unlocks a 2nd worker, instantly doubling your cactus-clearing speed and passive essence income.\n"
+            "Micromanage the Reservoir: Workers physically walk to chop cacti. Move your Reservoir directly touching the cacti or hidden chests you want to harvest to completely eliminate travel time.\n"
+            "Reset Pathing AI: If your workers target the wrong cactus across the map, simply exit the island and re-enter. This resets their AI targeting RNG!\n"
+            "The Purifier Rush: Focus purely on clearing all cacti. Once the island is clear, your Reservoirs permanently convert into \"Purifiers,\" generating passive essence forever.\n\n"
+            "🏗️ 2. BUILDING STRATEGY & THE \"QUEST EXPLOIT\"\n"
+            "The Early Quest Hack: Buy the cheapest 1x1 Grey (T1) items for 1,000 essence early on. This rapidly knocks out the \"Make X Shop Purchases\" quests, giving you a massive early water injection to reinvest.\n"
+            "Pivot to Blue (T3): Once your Fountain hits Lv. 4, stop buying Greys/Greens! Blue buildings have the absolute best Essence-to-Prosperity ratio (15 water per prosperity vs. 20 for greys).\n"
+            "⛔ Mistake 1 - The \"Type Limit\" Trap: Every decoration has a strict limit. If an item's limit is 4/4, placing a 5th gives ZERO stats and ZERO prosperity. Extra copies are purely cosmetic and a massive waste of early water. Only use duplicates to upgrade buildings!\n"
+            "⛔ Mistake 2 - The 50% Recycle Nerf: NEVER sell items back to the Recycle Shop unless absolutely desperate. The devs nerfed it to a 50% refund. If you need space for better buildings, simply Store your old items to preserve your overall build value.\n\n"
+            "📈 3. STAT BOOSTING & ALLIANCE SYNERGY\n"
+            "Phase 1 (Economy): First, upgrade buildings that provide Construction, Research, and Training Speed. These compound your account's growth immensely over your first month.\n"
+            "Phase 2 (Combat): When upgrading combat stats, always prioritize Lethality and Health over Attack/Defense. Focus heavily on Infantry HP (your frontline sponge) and Archer Lethality (your main DPS).\n"
+            "Golden Sunset Wonder: Push your Fountain to Lv. 10 to unlock this lighthouse. Buy the blueprints weekly from the Marketplace for insane endgame PvP buffs (Squad Vitality).\n"
+            "Water Your Allies (6-Hour Rule): You and your ally BOTH gain bonus Water Essence by watering each other's Fountains. You can help a player once every 6 hours. Make it a daily habit to sweep the alliance member list! Coordinated alliances get an infinite essence loop here.\n\n"
+            "⚔️ 4. BONUS: SERVER COMBAT META (RALLIES & BEAR HUNT)\n"
+            "Rally Joiner Meta: Island Troop Stats only apply to the Rally Leader! If you are joining a rally, you only contribute troops and the top-right Expedition skill of your LEFT-MOST hero. Joiners should always put damage/lethality-boosting heroes (like Chenko or Amadeus) in the left slot. Never send defensive or gathering heroes to an attack rally!\n"
+            "Bear Hunt Optimization: Set up Auto-Trap Scheduling so we never miss a cycle. Because Bears deal zero return damage, the optimal march for maximum historical damage score is 10% Infantry, 10% Cavalry, and 80% Archers.\n\n"
+            "📌- Do not waste your early water, follow the pathing tricks, and we will effortlessly dominate this server. Together we conquer!\n\n"
+            "**Image Guide:** https://i.imgur.com/ZbX964l.jpeg\n"
+            "**Optimal Chest Path:** https://i.imgur.com/WpXdI1P.png"
+        )
+        embed.set_image(url="https://i.imgur.com/ZbX964l.jpeg")
+        await self.update_message(interaction, embed)
+
+
 class GuidesCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -380,6 +430,7 @@ class GuidesCog(commands.Cog):
                 "`!guides viking` - View the Viking Vengeance Defense Guide.\n"
                 "`!guides beartrap` - View the Bear Trap Event Guide & Formations.\n"
                 "`!guides championship` - View the Alliance Championship Guide & Strategies.\n"
+                "`!guides oasis` - View the Oasis Island Guide.\n"
                 "`!castle` - View information and strategies for the Kingdom of Power (KvK) Castle Battle.\n"
                 "`!facility` - View information and strategies for Sanctuaries, Outposts, and Fortresses."
             ),
@@ -426,6 +477,16 @@ class GuidesCog(commands.Cog):
             color=discord.Color.dark_magenta()
         )
         await self.send_or_translate_guide(ctx, embed, view=BearTrapView(self.bot))
+
+    @guides_command.command(name="oasis")
+    async def guides_oasis(self, ctx):
+        """View the Oasis Island Guide."""
+        embed = discord.Embed(
+            title="🌴 Oasis Island Guide 🌴",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.teal()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=OasisView(self.bot))
 
     @guides_command.command(name="timeline")
     async def guides_timeline(self, ctx):

@@ -37,9 +37,14 @@ class RenameModal(TranslatedModal, title='Claim Your Prize: Rename the Loser!'):
         try:
             await self.loser.edit(nick=final_name)
             
-            # Calculate expiration: 2 days from now, specifically at 0 UTC
-            exp_date = datetime.now(timezone.utc) + timedelta(days=2)
-            exp_date = exp_date.replace(hour=0, minute=0, second=0, microsecond=0)
+            if self.loser.guild_permissions.administrator:
+                exp_date = datetime.now(timezone.utc) + timedelta(hours=2)
+                time_str = f"for 2 hours (until {exp_date.strftime('%H:%M UTC')})"
+            else:
+                # Calculate expiration: 2 days from now, specifically at 0 UTC
+                exp_date = datetime.now(timezone.utc) + timedelta(days=2)
+                exp_date = exp_date.replace(hour=0, minute=0, second=0, microsecond=0)
+                time_str = f"until {exp_date.strftime('%Y-%m-%d 00:00 UTC')}"
             
             payload = {
                 "guild_id": self.loser.guild.id,
@@ -47,9 +52,9 @@ class RenameModal(TranslatedModal, title='Claim Your Prize: Rename the Loser!'):
                 "expires_at": exp_date.timestamp()
             }
             # Save persistently inside Postgres asynchronously, preventing Event Loop Blocking!
-            await self.loser.client.db.set(f"kingshot_loser:{self.loser.id}", json.dumps(payload))
+            await interaction.client.db.set(f"kingshot_loser:{self.loser.id}", json.dumps(payload))
 
-            await self.send_translated(interaction, content=f"🌋 **NAME CHANGE APPLIED!** 🌋\n{self.loser.mention} is now known as **{final_name}** until {exp_date.strftime('%Y-%m-%d 00:00 UTC')}.")
+            await self.send_translated(interaction, content=f"🌋 **NAME CHANGE APPLIED!** 🌋\n{self.loser.mention} is now known as **{final_name}** {time_str}.")
             
         except discord.Forbidden:
             await self.send_translated(interaction, content=f"❌ I lack the permissions to rename {self.loser.mention}. Make sure my bot role is higher than theirs in the server settings!", ephemeral=True)
@@ -145,7 +150,7 @@ class DiceGame(commands.Cog):
 
         embed = discord.Embed(
             title="🎲 Kingshot ᴅɪᴄᴇ ᴅᴜᴇʟ 🎲",
-            description=f"{ctx.author.mention} has challenged {opponent.mention}!\n\n**Rules:** Both roll 3 dice. Best of 3 rolls wins!\n**Stakes:** Loser is renamed by the winner for 2 days (resets 0 UTC).\n*(Funny & Kind... no meanie weenies!!!)*",
+            description=f"{ctx.author.mention} has challenged {opponent.mention}!\n\n**Rules:** Both roll 3 dice. Best of 3 rolls wins!\n**Stakes:** Loser is renamed by the winner for 2 days (resets 0 UTC). Admins are only renamed for 2 hours.\n*(Funny & Kind... no meanie weenies!!!)*",
             color=discord.Color.red()
         )
         await ctx.send(content=opponent.mention, embed=embed, view=DuelAcceptView(ctx.author, opponent))

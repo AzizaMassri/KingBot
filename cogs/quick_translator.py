@@ -35,10 +35,14 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
         prompt = f"Translate the following text to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
         
         try:
+            api_key = os.getenv("GEMINI_API_KEY")
+            if not api_key:
+                raise ValueError("GEMINI_API_KEY environment variable is not set")
+            
             def translate_text():
-                client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                client = genai.Client(api_key=api_key)
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash-lite',
+                    model='gemini-2.0-flash',
                     contents=prompt
                 )
                 return response.text
@@ -64,7 +68,11 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
         except Exception as e:
             import traceback
             traceback.print_exc()
-            await interaction.followup.send(f"❌ Translation failed. ({str(e)[:50]})", ephemeral=True)
+            error_msg = str(e)
+            if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
+                await interaction.followup.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has access to the Gemini models.", ephemeral=True)
+            else:
+                await interaction.followup.send(f"❌ Translation failed. ({error_msg[:50]})", ephemeral=True)
 
 class TransChannelSelect(discord.ui.ChannelSelect):
     def __init__(self, bot):
@@ -118,7 +126,7 @@ class QuickTranslator(commands.Cog):
         except:
             pass
 
-        if preferred_lang:
+            if preferred_lang:
             await interaction.response.defer(ephemeral=True)
             target = preferred_lang
             text = message.content
@@ -135,10 +143,14 @@ class QuickTranslator(commands.Cog):
             prompt = f"Translate the following text to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
             
             try:
+                api_key = os.getenv("GEMINI_API_KEY")
+                if not api_key:
+                    raise ValueError("GEMINI_API_KEY not configured")
+                
                 def translate_text():
-                    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                    client = genai.Client(api_key=api_key)
                     response = client.models.generate_content(
-                        model='gemini-2.5-flash-lite',
+                        model='gemini-2.0-flash',
                         contents=prompt
                     )
                     return response.text
@@ -158,7 +170,11 @@ class QuickTranslator(commands.Cog):
             except Exception as e:
                 import traceback
                 traceback.print_exc()
-                await interaction.followup.send(f"❌ Translation failed. ({str(e)[:50]})", ephemeral=True)
+                error_msg = str(e)
+                if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
+                    await interaction.followup.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has proper access.", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"❌ Translation failed. ({error_msg[:50]})", ephemeral=True)
         else:
             # Fallback: Open a modal to ask for language
             await interaction.response.send_modal(TranslateModal(message, self.bot))
@@ -203,10 +219,14 @@ class QuickTranslator(commands.Cog):
                 prompt = f"Translate the following text to {target_language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text_to_translate}\"{exclusion_str}"
                 
                 try:
+                    api_key = os.getenv("GEMINI_API_KEY")
+                    if not api_key:
+                        raise ValueError("GEMINI_API_KEY environment variable is not set")
+                    
                     def translate_text():
-                        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                        client = genai.Client(api_key=api_key)
                         response = client.models.generate_content(
-                            model='gemini-2.5-flash-lite',
+                            model='gemini-2.0-flash',
                             contents=prompt
                         )
                         return response.text
@@ -231,7 +251,11 @@ class QuickTranslator(commands.Cog):
             except Exception as e:
                 import traceback
                 traceback.print_exc()
-                await ctx.send(f"❌ Quick Translation failed. Please try again later. ({str(e)[:50]})")
+                error_msg = str(e)
+                if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
+                    await ctx.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has proper access.")
+                else:
+                    await ctx.send(f"❌ Quick Translation failed. Please try again later. ({error_msg[:50]})")
 
     @app_commands.command(name="translate", description="Instantly translate text to a targeted language")
     @app_commands.describe(language="The language to translate into", text="The text you want to translate")
@@ -266,10 +290,14 @@ class QuickTranslator(commands.Cog):
             prompt = f"Translate the following text to {language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
             
             try:
+                api_key = os.getenv("GEMINI_API_KEY")
+                if not api_key:
+                    raise ValueError("GEMINI_API_KEY not configured")
+                
                 def translate_text():
-                    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                    client = genai.Client(api_key=api_key)
                     response = client.models.generate_content(
-                        model='gemini-2.5-flash-lite',
+                        model='gemini-2.0-flash',
                         contents=prompt
                     )
                     return response.text
@@ -293,7 +321,11 @@ class QuickTranslator(commands.Cog):
         except Exception as e:
             import traceback
             traceback.print_exc()
-            await interaction.followup.send(f"❌ Translation failed. ({str(e)[:50]})")
+            error_msg = str(e)
+            if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
+                await interaction.followup.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has proper access.")
+            else:
+                await interaction.followup.send(f"❌ Translation failed. ({error_msg[:50]})")
 
     @commands.command()
     async def translate(self, ctx, *, target: str = None):

@@ -18,11 +18,11 @@ class TransferBucksModal(discord.ui.Modal, title='Bank Transfer (Admin)'):
             target_id = int(self.user_id.value.strip())
             amt = int(self.amount.value.strip())
             action = self.action_type.value.strip().upper()
-        except ValueError:
+        except (ValueError, OverflowError):
             return await interaction.response.send_message("❌ Invalid numbers provided.", ephemeral=True)
 
-        if amt <= 0:
-            return await interaction.response.send_message("❌ Amount must be positive.", ephemeral=True)
+        if amt <= 0 or amt > 5000000:
+            return await interaction.response.send_message("❌ Amount must be positive and under 5,000,000 Kingshot Bucks.", ephemeral=True)
             
         target = interaction.guild.get_member(target_id)
         if not target:
@@ -273,7 +273,8 @@ class Economy(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def givebucks(self, ctx, member: discord.Member, amount: int):
         """[Admin Only] Give Kingshot Bucks text-command."""
-        if amount <= 0: return await ctx.send("❌ Amount must be positive.")
+        if amount <= 0 or amount > 5000000:
+            return await ctx.send("❌ Amount must be positive and under 5,000,000 Kingshot Bucks.")
         current_time = time.time()
         cooldown_key = f"give_bucks_cd:{ctx.author.id}:{member.id}"
         last_give_str = await self.db.get(cooldown_key)
@@ -292,13 +293,21 @@ class Economy(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def takebucks(self, ctx, member: discord.Member, amount: int):
         """[Admin Only] Take Kingshot Bucks text-command."""
-        if amount <= 0: return await ctx.send("❌ Amount must be positive.")
+        if amount <= 0 or amount > 5000000:
+            return await ctx.send("❌ Amount must be positive and under 5,000,000 Kingshot Bucks.")
         success = await self.remove_balance(member.id, amount)
         current = await self.get_balance(member.id)
         if success:
             await ctx.send(f"💸 An admin confiscated **{amount} Kingshot Bucks** from **{member.display_name}**! (Net: {current})")
         else:
             await ctx.send(f"❌ **{member.display_name}** only has {current} Kingshot Bucks! You cannot take {amount}.")
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def clearbucks(self, ctx, member: discord.Member):
+        """[Admin Only] Completely clear a user's Kingshot Bucks balance."""
+        await self.db.set(f"ks_bucks:{member.id}", "0")
+        await ctx.send(f"💀 **{member.display_name}'s** balance has been wiped! (New Balance: 0)")
 
     @commands.Cog.listener()
     async def on_message(self, message):

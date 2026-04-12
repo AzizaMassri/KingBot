@@ -61,7 +61,8 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
             
             # Save language to the per-server synced background translation engine
             try:
-                await self.bot.db.hset(f"translator_subs:{interaction.guild_id}", str(interaction.user.id), target)
+                if interaction.guild_id:
+                    await self.bot.db.hset(f"translator_subs:{interaction.guild_id}", str(interaction.user.id), target)
             except Exception as e:
                 print(f"Failed to sync per-server setting: {e}")
             
@@ -125,6 +126,10 @@ class QuickTranslator(commands.Cog):
         self.bot.tree.add_command(self.ctx_menu)
 
     async def translate_context_menu(self, interaction: discord.Interaction, message: discord.Message):
+        # Always ask for language in DMs
+        if interaction.guild_id is None:
+            return await interaction.response.send_modal(TranslateModal(message, self.bot))
+
         # Check if user has a per-server preference
         preferred_lang = None
         try:

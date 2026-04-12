@@ -199,7 +199,8 @@ class QuickTranslator(commands.Cog):
     async def cog_unload(self):
         self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
 
-    @commands.hybrid_command(aliases=['qt'])
+    @commands.hybrid_command(aliases=['qt'], description="Instantly translates the provided text into the target language.")
+    @app_commands.describe(target_language="The language to translate into", text_to_translate="The text you want to translate")
     async def qtranslate(self, ctx, target_language: str = None, *, text_to_translate: str = None):
         """Instantly translates the provided text into the target language."""
         if not target_language or not text_to_translate:
@@ -277,81 +278,7 @@ class QuickTranslator(commands.Cog):
                 else:
                     await ctx.send(f"❌ Quick Translation failed. Please try again later. ({error_msg[:50]})")
 
-    @app_commands.command(name="translate", description="Instantly translate text to a targeted language")
-    @app_commands.describe(language="The language to translate into", text="The text you want to translate")
-    async def slash_translate(self, interaction: discord.Interaction, language: str, text: str):
-        """Instantly parses text via slash command and translates it into another language."""
-        from cogs.utils.ui import LANGUAGES
-        valid_langs = {}
-        for key, data in LANGUAGES.items():
-            if key == "Off": continue
-            valid_langs[key.lower()] = key
-            if "code" in data:
-                valid_langs[data["code"].lower()] = key
-                
-        if language.lower() not in valid_langs:
-            return await interaction.response.send_message(f"❌ \"{language}\" isn't a valid translation choice, unless you speak Elvish or Klingon! Please stick to Earth languages.", ephemeral=True)
-        language = valid_langs[language.lower()]
 
-        # Indicate the bot is "thinking" while it fetches the API natively in Discord's UI
-        # We use defer without ephemeral so the result is posted publicly in the channel
-        await interaction.response.defer(ephemeral=False)
-        try:
-            try:
-                exclusion_list = await self.bot.db.smembers("translator_exclusion_keywords")
-            except:
-                exclusion_list = []
-            exclusion_str = ""
-            if exclusion_list:
-                words = ", ".join([f"'{w}'" for w in exclusion_list])
-                exclusion_str = f" CRITICAL INSTRUCTION: Do NOT translate or alter these specific keywords under any circumstances: {words}."
-
-            prompt = f"Translate the following text to {language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
-            
-            # Quota Check
-            from cogs.utils.tiers import increment_translation_usage, build_premium_embed, Tier
-            if interaction.guild_id:
-                allowed = await increment_translation_usage(self.bot, interaction.guild_id, len(text))
-                if not allowed:
-                    return await interaction.followup.send(embed=build_premium_embed(Tier.PREMIUM), ephemeral=True)
-
-            try:
-                api_key = os.getenv("GEMINI_API_KEY")
-                if not api_key:
-                    raise ValueError("GEMINI_API_KEY not configured")
-                
-                def translate_text():
-                    client = genai.Client(api_key=api_key)
-                    response = client.models.generate_content(
-                        model='gemini-2.0-flash',
-                        contents=prompt
-                    )
-                    return response.text
-                
-                translation = await asyncio.to_thread(translate_text)
-                if not translation:
-                    raise ValueError("Empty response from AI")
-                translation = translation.strip()
-            except Exception as api_err:
-                import traceback
-                traceback.print_exc()
-                raise api_err
-            
-            try:
-                await self.bot.db.hset(f"translator_subs:{interaction.guild_id}", str(interaction.user.id), language)
-            except:
-                pass
-            
-            await interaction.followup.send(f"🌍 **{language.capitalize()}:** {translation}")
-
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            error_msg = str(e)
-            if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
-                await interaction.followup.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has proper access.")
-            else:
-                await interaction.followup.send(f"❌ Translation failed. ({error_msg[:50]})")
 
     @commands.hybrid_command()
     async def translate(self, ctx, *, target: str = None):

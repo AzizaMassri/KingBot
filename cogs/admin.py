@@ -3,6 +3,7 @@ from discord.ext import commands
 import sys
 import datetime
 from cogs.utils.views import TranslatedView
+from cogs.utils.tiers import requires_tier, Tier
 
 class AdminConfirmView(TranslatedView):
     def __init__(self, ctx, action_name: str, callback_coro):
@@ -232,6 +233,7 @@ class Admin(commands.Cog):
 
     @commands.command(name="control_panel", aliases=["admin_suite", "cpanel"])
     @commands.has_permissions(administrator=True)
+    @requires_tier(Tier.PREMIUM)
     async def control_panel(self, ctx):
         """Summons the Master Admin Control Panel."""
         embed = discord.Embed(
@@ -274,6 +276,7 @@ class Admin(commands.Cog):
 
     @commands.command(name="toggle_command", aliases=["toggle"])
     @commands.has_permissions(administrator=True)
+    @requires_tier(Tier.PREMIUM)
     async def toggle_command(self, ctx, command_name: str = None):
         """Toggles any bot command to be Admin-only. Type '!toggle list' to see all disabled commands."""
         if not command_name:
@@ -301,6 +304,7 @@ class Admin(commands.Cog):
 
     @commands.command(name="toggle_cog", aliases=["togglecog"])
     @commands.has_permissions(administrator=True)
+    @requires_tier(Tier.PREMIUM)
     async def toggle_cog(self, ctx, cog_name: str = None):
         """Toggles an entire cog on or off for this server."""
         if not cog_name: return await ctx.send("❌ Usage: `!togglecog <CogName>`")
@@ -321,6 +325,7 @@ class Admin(commands.Cog):
 
     @commands.command(name="toggle_invisible", aliases=["invisible"], hidden=True)
     @commands.has_permissions(administrator=True)
+    @requires_tier(Tier.PREMIUM)
     async def toggle_invisible(self, ctx):
         is_invisible = await self.bot.db.get("kingbot_global_invisible")
         if is_invisible == "1":

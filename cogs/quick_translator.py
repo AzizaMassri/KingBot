@@ -34,6 +34,13 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
 
         prompt = f"Translate the following text to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
         
+        # Quota Check
+        from cogs.utils.tiers import increment_translation_usage, build_premium_embed, Tier
+        if interaction.guild_id:
+            allowed = await increment_translation_usage(self.bot, interaction.guild_id, len(text))
+            if not allowed:
+                return await interaction.followup.send(embed=build_premium_embed(Tier.PREMIUM), ephemeral=True)
+
         try:
             api_key = os.getenv("GEMINI_API_KEY")
             if not api_key:
@@ -115,7 +122,6 @@ class QuickTranslator(commands.Cog):
             name="Translate to...",
             callback=self.translate_context_menu,
         )
-        self.ctx_menu.default_permissions = discord.Permissions(administrator=True)
         self.bot.tree.add_command(self.ctx_menu)
 
     async def translate_context_menu(self, interaction: discord.Interaction, message: discord.Message):
@@ -142,6 +148,13 @@ class QuickTranslator(commands.Cog):
 
             prompt = f"Translate the following text to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
             
+            # Quota Check
+            from cogs.utils.tiers import increment_translation_usage, build_premium_embed, Tier
+            if interaction.guild_id:
+                allowed = await increment_translation_usage(self.bot, interaction.guild_id, len(text))
+                if not allowed:
+                    return await interaction.followup.send(embed=build_premium_embed(Tier.PREMIUM), ephemeral=True)
+
             try:
                 api_key = os.getenv("GEMINI_API_KEY")
                 if not api_key:
@@ -218,6 +231,13 @@ class QuickTranslator(commands.Cog):
 
                 prompt = f"Translate the following text to {target_language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text_to_translate}\"{exclusion_str}"
                 
+                # Quota Check
+                from cogs.utils.tiers import increment_translation_usage, build_premium_embed, Tier
+                if ctx.guild:
+                    allowed = await increment_translation_usage(self.bot, ctx.guild.id, len(text_to_translate))
+                    if not allowed:
+                        return await ctx.send(embed=build_premium_embed(Tier.PREMIUM))
+
                 try:
                     api_key = os.getenv("GEMINI_API_KEY")
                     if not api_key:
@@ -259,7 +279,6 @@ class QuickTranslator(commands.Cog):
 
     @app_commands.command(name="translate", description="Instantly translate text to a targeted language")
     @app_commands.describe(language="The language to translate into", text="The text you want to translate")
-    @app_commands.default_permissions(administrator=True)
     async def slash_translate(self, interaction: discord.Interaction, language: str, text: str):
         """Instantly parses text via slash command and translates it into another language."""
         from cogs.utils.ui import LANGUAGES
@@ -289,6 +308,13 @@ class QuickTranslator(commands.Cog):
 
             prompt = f"Translate the following text to {language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
             
+            # Quota Check
+            from cogs.utils.tiers import increment_translation_usage, build_premium_embed, Tier
+            if interaction.guild_id:
+                allowed = await increment_translation_usage(self.bot, interaction.guild_id, len(text))
+                if not allowed:
+                    return await interaction.followup.send(embed=build_premium_embed(Tier.PREMIUM), ephemeral=True)
+
             try:
                 api_key = os.getenv("GEMINI_API_KEY")
                 if not api_key:

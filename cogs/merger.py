@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import io
 import re
+from cogs.utils.tiers import requires_tier, Tier
 
 POWER_REGEX = re.compile(r'^(.*?)[,\s]+([\d,\.]+[mMkKbB]?)$')
 
@@ -239,6 +240,7 @@ class AllianceMerger(commands.Cog):
         return parsed_data
 
     @commands.command(name="merger", description="Calculates an alliance merger roster.", aliases=["projectmeteor"])
+    @requires_tier(Tier.ELITE)
     async def merger(self, ctx, *, input_text: str = None):
         """Calculates an alliance merger roster and provides formatted setup files."""
         alliance1_name = "Alliance 1"

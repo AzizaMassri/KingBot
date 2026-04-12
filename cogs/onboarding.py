@@ -3,6 +3,7 @@ from discord.ext import commands
 import aiohttp
 import asyncio
 import datetime
+from cogs.utils.tiers import requires_tier, Tier
 
 class OnboardingModal(discord.ui.Modal, title='Setup Your Profile'):
     in_game_name = discord.ui.TextInput(
@@ -275,6 +276,7 @@ class Onboarding(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
+    @requires_tier(Tier.PREMIUM)
     async def setonboardingchannel(self, ctx, channel: discord.TextChannel = None):
         """Sets the channel where onboarding members can talk."""
         if not channel:
@@ -308,6 +310,7 @@ class Onboarding(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
+    @requires_tier(Tier.PREMIUM)
     async def onboarding_admin(self, ctx):
         """Configure which roles appear in the onboarding dropdown for this server."""
         try:
@@ -333,6 +336,7 @@ class Onboarding(commands.Cog):
 
     @commands.command(name="onboarding_roles")
     @commands.has_permissions(administrator=True)
+    @requires_tier(Tier.PREMIUM)
     async def onboarding_roles_list(self, ctx):
         """View the list of roles currently configured for the onboarding menu."""
         try:
@@ -357,6 +361,7 @@ class Onboarding(commands.Cog):
 
     @commands.command(name="onboarding_add")
     @commands.has_permissions(administrator=True)
+    @requires_tier(Tier.PREMIUM)
     async def onboarding_add_role(self, ctx, *, role_name: str):
         """Add a role to the onboarding dropdown menu."""
         role = discord.utils.get(ctx.guild.roles, name=role_name)
@@ -374,6 +379,7 @@ class Onboarding(commands.Cog):
 
     @commands.command(name="onboarding_remove")
     @commands.has_permissions(administrator=True)
+    @requires_tier(Tier.PREMIUM)
     async def onboarding_remove_role(self, ctx, *, role_name: str):
         """Remove a role from the onboarding dropdown menu."""
         try:

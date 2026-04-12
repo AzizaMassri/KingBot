@@ -11,7 +11,7 @@ def get_cache_key(text: str, language: str) -> str:
     normalized_string = f"{text.strip().lower()}_{language.lower()}"
     return hashlib.md5(normalized_string.encode()).hexdigest()
 
-async def translate_content(text: str, target_locale: discord.Locale, bot=None) -> str:
+async def translate_content(text: str, target_locale: discord.Locale, bot=None, guild_id=None) -> str:
     """
     Translates the given text to the target locale. 
     Skips Translation if locale is English. 
@@ -42,6 +42,14 @@ async def translate_content(text: str, target_locale: discord.Locale, bot=None) 
         exclusion_str = f" CRITICAL INSTRUCTION: Do NOT translate or alter these specific keywords under any circumstances: {words}."
 
     prompt = f"Translate the following to {target_language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard. Keep exact formatting/emojis, and output ONLY the raw translation with no preamble.{exclusion_str}\n\n\"{text}\""
+
+    # Quota check
+    if guild_id:
+        from cogs.utils.tiers import increment_translation_usage
+        allowed = await increment_translation_usage(bot, guild_id, len(text))
+        if not allowed:
+            # Drop the translation if they hit their quota
+            return text
 
     try:
         def translate_text():

@@ -44,9 +44,10 @@ class UniversalContext(commands.Context):
         
         tasks = []
         
+        guild_id = self.guild.id if hasattr(self, 'guild') and self.guild else None
         # 1. Translate string content
         if content:
-            tasks.append(translate_content(content, target_locale, bot=self.bot))
+            tasks.append(translate_content(content, target_locale, bot=self.bot, guild_id=guild_id))
             
         # 2. Translate Embeds
         embeds = kwargs.get('embeds', [])
@@ -56,15 +57,15 @@ class UniversalContext(commands.Context):
             
         for e in embeds:
             if e.title:
-                tasks.append(translate_content(e.title, target_locale, bot=self.bot))
+                tasks.append(translate_content(e.title, target_locale, bot=self.bot, guild_id=guild_id))
             if e.description:
-                tasks.append(translate_content(e.description, target_locale, bot=self.bot))
+                tasks.append(translate_content(e.description, target_locale, bot=self.bot, guild_id=guild_id))
             # Support field translations as well    
             for field in e.fields:
                 if field.name:
-                    tasks.append(translate_content(field.name, target_locale, bot=self.bot))
+                    tasks.append(translate_content(field.name, target_locale, bot=self.bot, guild_id=guild_id))
                 if field.value:
-                    tasks.append(translate_content(field.value, target_locale, bot=self.bot))
+                    tasks.append(translate_content(field.value, target_locale, bot=self.bot, guild_id=guild_id))
                     
         # Execute all translations concurrently
         results = await asyncio.gather(*tasks) if tasks else []

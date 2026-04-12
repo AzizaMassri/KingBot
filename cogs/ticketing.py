@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import asyncio
+from cogs.utils.tiers import requires_tier, Tier
 
 class PanelConfigModal(discord.ui.Modal, title='Customize Ticket Panel'):
     panel_title = discord.ui.TextInput(label='Panel Title', default="📞 Contact Server Support", max_length=100)
@@ -166,6 +167,7 @@ class Ticketing(commands.Cog):
 
     @commands.command(name="setup_tickets", aliases=["tickets_admin", "ticketconfig"])
     @commands.has_permissions(administrator=True)
+    @requires_tier(Tier.PREMIUM)
     async def setup_tickets(self, ctx):
         """Interactive Admin Dashboard for configuring and deploying the Ticket System."""
         embed = discord.Embed(

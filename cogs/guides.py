@@ -377,6 +377,15 @@ class GuidesCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    async def cog_check(self, ctx):
+        if not ctx.guild:
+            return True
+        from cogs.utils.tiers import get_guild_tier, Tier, PremiumRequiredError
+        tier = await get_guild_tier(self.bot, ctx.guild.id)
+        if tier < Tier.ELITE:
+            raise PremiumRequiredError(Tier.ELITE)
+        return True
+
     async def send_or_translate_guide(self, ctx, embed, view=None):
         target_lang = None
         try:

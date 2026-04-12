@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import re
+from cogs.utils.tiers import requires_tier, Tier
 
 class ReactionRoleModal(discord.ui.Modal, title='Reaction Role Builder'):
     menu_title = discord.ui.TextInput(
@@ -162,6 +163,7 @@ class ReactionRoles(commands.Cog):
 
     @commands.command(name="reactionroles", aliases=["rr", "build_roles", "rrbuilder"])
     @commands.has_permissions(administrator=True)
+    @requires_tier(Tier.PREMIUM)
     async def reactionroles(self, ctx, channel: discord.TextChannel = None):
         """Launches the modern, interactive Reaction Role Builder Modal."""
         if not channel:

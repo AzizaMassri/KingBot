@@ -12,7 +12,7 @@ RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
 RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
 RABBITMQ_PASS = os.getenv("RABBITMQ_PASS", "guest")
 RABBITMQ_URL = f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}/"
-QUEUE_NAME = "kingbot_tasks"
+QUEUE_NAME = "kingbot_tasks_v2" # Updated to allow x-max-priority
 
 class GlobalChat(commands.Cog):
     def __init__(self, bot):
@@ -38,7 +38,7 @@ class GlobalChat(commands.Cog):
 
             channel = await self.bot.mq_connection.channel()
             await channel.set_qos(prefetch_count=10)
-            queue = await channel.declare_queue(QUEUE_NAME, durable=True)
+            queue = await channel.declare_queue(QUEUE_NAME, durable=True, arguments={"x-max-priority": 10})
 
             print("🐇 Consumer Online: Watching ALL channels...")
 
@@ -188,9 +188,18 @@ class GlobalChat(commands.Cog):
                     "guild_name": message.guild.name,
                     "context_str": context_str
                 }
+                
+                # Fetch guild tier to determine message routing priority
+                from cogs.utils.tiers import get_guild_tier, Tier
+                tier = await get_guild_tier(self.bot, message.guild.id)
+                priority = 10 if tier >= Tier.ELITE else 0
+
                 # Publish using the persistent global connection
                 await self.bot.mq_channel.default_exchange.publish(
-                    aio_pika.Message(body=json.dumps(payload).encode()),
+                    aio_pika.Message(
+                        body=json.dumps(payload).encode(),
+                        priority=priority
+                    ),
                     routing_key=QUEUE_NAME
                 )
         except Exception as e:

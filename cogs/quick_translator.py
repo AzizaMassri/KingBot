@@ -49,7 +49,7 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
             def translate_text():
                 client = genai.Client(api_key=api_key)
                 response = client.models.generate_content(
-                    model='gemini-2.0-flash',
+                    model='gemini-2.5-flash',
                     contents=prompt
                 )
                 return response.text
@@ -163,7 +163,7 @@ class QuickTranslator(commands.Cog):
                 def translate_text():
                     client = genai.Client(api_key=api_key)
                     response = client.models.generate_content(
-                        model='gemini-2.0-flash',
+                        model='gemini-2.5-flash',
                         contents=prompt
                     )
                     return response.text
@@ -247,7 +247,7 @@ class QuickTranslator(commands.Cog):
                     def translate_text():
                         client = genai.Client(api_key=api_key)
                         response = client.models.generate_content(
-                            model='gemini-2.0-flash',
+                            model='gemini-2.5-flash',
                             contents=prompt
                         )
                         return response.text

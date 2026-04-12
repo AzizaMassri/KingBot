@@ -1917,7 +1917,7 @@ class Calculators(commands.Cog):
         # Synchronous client for quick on-demand translation tasks
         self.gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-    @commands.command(aliases=["troop_calculator", "tc", "troops"])
+    @commands.hybrid_command(aliases=["troop_calculator", "tc", "troops"])
     async def troopcalculator(self, ctx):
         """Interactive Troop Training and Promotion Calculator for Kingshot."""
         view = TroopCalculatorView(self.bot, self.gemini_client)
@@ -1936,7 +1936,7 @@ class Calculators(commands.Cog):
         # For a standard command, we send the message using ctx instead of interaction.response
         await ctx.send(embed=embed, view=view)
 
-    @commands.command(aliases=["building_calculator", "bc", "buildings"])
+    @commands.hybrid_command(aliases=["building_calculator", "bc", "buildings"])
     async def buildingcalculator(self, ctx):
         """Interactive Building Calculator for Kingshot."""
         view = BuildingCalculatorView(self.bot, self.gemini_client)
@@ -1954,7 +1954,7 @@ class Calculators(commands.Cog):
         await ctx.send(embed=embed, view=view)
 
 
-    @commands.command(aliases=["governor_calculator", "gc", "gear"])
+    @commands.hybrid_command(aliases=["governor_calculator", "gc", "gear"])
     async def governorcalc(self, ctx):
         """Interactive Governor Gear Calculator for Kingshot."""
         view = GovernorGearCalculatorView(self.bot, self.gemini_client)
@@ -1971,7 +1971,7 @@ class Calculators(commands.Cog):
         await ctx.send(embed=embed, view=view)
 
 
-    @commands.command(aliases=["governor_calculator", "gc", "gear"])
+    @commands.hybrid_command(aliases=["governor_calculator", "gc", "gear"])
     async def governorcalc(self, ctx):
         """Interactive Governor Gear Calculator for Kingshot."""
         view = GovernorGearCalculatorView(self.bot, self.gemini_client)
@@ -1988,7 +1988,7 @@ class Calculators(commands.Cog):
         await ctx.send(embed=embed, view=view)
 
 
-    @commands.command(aliases=["governor_calculator", "gc", "gear"])
+    @commands.hybrid_command(aliases=["governor_calculator", "gc", "gear"])
     async def governorcalc(self, ctx):
         """Interactive Governor Gear Calculator for Kingshot."""
         view = GovernorGearCalculatorView(self.bot, self.gemini_client)
@@ -2004,7 +2004,7 @@ class Calculators(commands.Cog):
         )
         await ctx.send(embed=embed, view=view)
 
-    @commands.group(invoke_without_command=True, aliases=["calc", "calculators"])
+    @commands.hybrid_group(invoke_without_command=True, aliases=["calc", "calculators"])
     async def calculator(self, ctx):
         """Interactive Calculators!"""
         embed = discord.Embed(
@@ -2022,7 +2022,7 @@ class Calculators(commands.Cog):
         embed.add_field(name="🧩 `!shardcalc`", value="Calculate Hero Shard Micro-Phases and Lucky Wheel Gem Conversion Costs!", inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["shard_calculator", "sc", "shards"])
+    @commands.hybrid_command(aliases=["shard_calculator", "sc", "shards"])
     async def shardcalc(self, ctx):
         """Interactive Hero Shard Calculator for Kingshot."""
         view = HeroShardCalculatorView(self.bot, self.gemini_client)
@@ -2038,7 +2038,7 @@ class Calculators(commands.Cog):
         )
         await ctx.send(embed=embed, view=view)
 
-    @commands.command(aliases=["hero_calculator", "hc", "herogear"])
+    @commands.hybrid_command(aliases=["hero_calculator", "hc", "herogear"])
     async def herocalc(self, ctx):
         """Interactive Hero Gear Calculator for Kingshot."""
         view = HeroGearCalculatorView(self.bot, self.gemini_client)
@@ -2055,7 +2055,7 @@ class Calculators(commands.Cog):
         )
         await ctx.send(embed=embed, view=view)
 
-    @commands.command(aliases=["charm_calculator", "cc", "charms"])
+    @commands.hybrid_command(aliases=["charm_calculator", "cc", "charms"])
     async def charmcalc(self, ctx):
         """Interactive Governor Charm Calculator for Kingshot."""
         view = GovernorCharmCalculatorView(self.bot, self.gemini_client)

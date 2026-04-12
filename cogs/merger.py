@@ -239,9 +239,9 @@ class AllianceMerger(commands.Cog):
         
         return parsed_data
 
-    @commands.command(name="merger", description="Calculates an alliance merger roster.", aliases=["projectmeteor"])
+    @commands.hybrid_command(name="merger", description="Calculates an alliance merger roster.", aliases=["projectmeteor"])
     @requires_tier(Tier.ELITE)
-    async def merger(self, ctx, *, input_text: str = None):
+    async def merger(self, ctx, file1: discord.Attachment = None, file2: discord.Attachment = None, *, input_text: str = None):
         """Calculates an alliance merger roster and provides formatted setup files."""
         alliance1_name = "Alliance 1"
         alliance2_name = "Alliance 2"
@@ -269,8 +269,17 @@ class AllianceMerger(commands.Cog):
             parsed_lists.append(self.parse_data(raw_data, "Mixed/Unknown"))
             
         # Check for attachments (.txt or .csv files)
-        if ctx.message.attachments:
-            for i, attachment in enumerate(ctx.message.attachments):
+        attachments = []
+        if ctx.message and ctx.message.attachments:
+            attachments.extend(ctx.message.attachments)
+        if file1: attachments.append(file1)
+        if file2: attachments.append(file2)
+        
+        # Deduplicate to avoid processing the same file twice
+        attachments = list({a.id: a for a in attachments}.values())
+        
+        if attachments:
+            for i, attachment in enumerate(attachments):
                 if attachment.filename.endswith(('.txt', '.csv')):
                     try:
                         file_content = await attachment.read()
@@ -278,7 +287,7 @@ class AllianceMerger(commands.Cog):
                         
                         # Assign alliance name to files if we have exactly 2 files
                         a_name = None
-                        if len(ctx.message.attachments) == 2:
+                        if len(attachments) == 2:
                             if i == 0: a_name = alliance1_name
                             elif i == 1: a_name = alliance2_name
                             

@@ -292,7 +292,7 @@ class Music(commands.Cog):
                 asyncio.run_coroutine_threadsafe(channel.send(f"❌ Failed to play next track: `{e}`"), self.bot.loop)
             asyncio.run_coroutine_threadsafe(self.play_next(interaction_or_ctx), self.bot.loop)
 
-    @commands.command(name="music", aliases=["play"])
+    @commands.hybrid_command(name="music", aliases=["play"])
     async def music_dashboard(self, ctx):
         """Summons the Music Dashboard. Allows playing and streaming audio with interactive buttons."""
         embed = discord.Embed(
@@ -306,7 +306,7 @@ class Music(commands.Cog):
         embed.set_footer(text="Settings controlled strictly by Server Administrators")
         await ctx.send(embed=embed, view=MusicControlView(self))
 
-    @commands.command(name="music_admin")
+    @commands.hybrid_command(name="music_admin")
     @commands.has_permissions(administrator=True)
     async def music_admin(self, ctx):
         """[Admin Only] Central Music Configuration Dashboard."""

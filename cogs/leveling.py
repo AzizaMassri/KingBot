@@ -117,7 +117,7 @@ class Leveling(commands.Cog):
                     pass
 
 
-    @commands.command()
+    @commands.hybrid_command()
     async def rank(self, ctx, member: discord.Member = None):
         """Displays your current rank, level, and XP."""
         member = member or ctx.author
@@ -166,7 +166,7 @@ class Leveling(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def leaderboard(self, ctx):
         """Displays the top 10 most active members currently in the server."""
         guild_id = ctx.guild.id
@@ -212,7 +212,7 @@ class Leveling(commands.Cog):
         embed.description += desc
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def setcolor(self, ctx, hex_code: str = None):
         """Sets your custom profile embed color (e.g., !setcolor #FF0000)."""
         if not hex_code:
@@ -239,7 +239,7 @@ class Leveling(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["setbg", "setbackground"])
+    @commands.hybrid_command(aliases=["setbg", "setbackground"])
     async def setimage(self, ctx, url: str = None):
         """Sets a custom background image for your !rank card."""
         if not url:
@@ -260,7 +260,7 @@ class Leveling(commands.Cog):
         except Exception:
             await ctx.send("❌ Discord could not load that image URL. Please try a different direct link.")
 
-    @commands.command(name="leveling_admin", aliases=["levelingconfig", "setlevelupchannel"])
+    @commands.hybrid_command(name="leveling_admin", aliases=["levelingconfig", "setlevelupchannel"])
     @commands.has_permissions(administrator=True)
     async def leveling_admin(self, ctx):
         """[Admin Only] Interactive Dashboard to configure Level Up notifications."""
@@ -274,7 +274,7 @@ class Leveling(commands.Cog):
         )
         await ctx.send(embed=embed, view=LevelUpConfigView(self.bot))
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def givexp(self, ctx, member: discord.Member, amount: int):
         """[Admin Only] Instantly grants XP to a user, bypassing cooldowns."""

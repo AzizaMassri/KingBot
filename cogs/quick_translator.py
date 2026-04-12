@@ -132,7 +132,7 @@ class QuickTranslator(commands.Cog):
         except:
             pass
 
-            if preferred_lang:
+        if preferred_lang:
             await interaction.response.defer(ephemeral=True)
             target = preferred_lang
             text = message.content
@@ -199,7 +199,7 @@ class QuickTranslator(commands.Cog):
     async def cog_unload(self):
         self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
 
-    @commands.command(aliases=['qt'])
+    @commands.hybrid_command(aliases=['qt'])
     async def qtranslate(self, ctx, target_language: str = None, *, text_to_translate: str = None):
         """Instantly translates the provided text into the target language."""
         if not target_language or not text_to_translate:
@@ -353,7 +353,7 @@ class QuickTranslator(commands.Cog):
             else:
                 await interaction.followup.send(f"❌ Translation failed. ({error_msg[:50]})")
 
-    @commands.command()
+    @commands.hybrid_command()
     async def translate(self, ctx, *, target: str = None):
         """Configure per-server auto-translation directly into your DMs using a dropdown menu or directly specifying a language."""
         from cogs.utils.ui import LanguageDropdown, LANGUAGES
@@ -420,7 +420,7 @@ class QuickTranslator(commands.Cog):
         
         await ctx.send(embed=embed, view=view)
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def spawntranslator(self, ctx):
         """Spawns a persistent dropdown menu for users to self-assign their translation language."""
@@ -433,7 +433,7 @@ class QuickTranslator(commands.Cog):
         )
         await ctx.send(embed=embed, view=PersistentLanguageView(self.bot))
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def addtranschannel(self, ctx, channel: discord.TextChannel = None):
         """Allow auto-translations in a specific channel."""
@@ -442,7 +442,7 @@ class QuickTranslator(commands.Cog):
         await self.bot.db.sadd(f"translation_channels:{ctx.guild.id}", str(channel.id))
         await ctx.send(f"✅ Auto-translation has been **enabled** for {channel.mention}.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def removetranschannel(self, ctx, channel: discord.TextChannel = None):
         """Disallow auto-translations in a specific channel."""
@@ -454,7 +454,7 @@ class QuickTranslator(commands.Cog):
         else:
             await ctx.send(f"⚠️ {channel.mention} is not currently in the translation allowlist.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def transconfig(self, ctx):
         """Interactive dropdown menu to configure translation allowlisted channels."""
@@ -471,7 +471,7 @@ class QuickTranslator(commands.Cog):
         )
         await ctx.send(embed=embed, view=TransConfigView(self.bot))
 
-    @commands.command(aliases=["toggleauto", "autotoggle"])
+    @commands.hybrid_command(aliases=["toggleauto", "autotoggle"])
     @commands.has_permissions(administrator=True)
     async def toggle_auto_translator(self, ctx):
         """Admin command to toggle the Auto-Translator in this server WITHOUT affecting the manual translating options."""

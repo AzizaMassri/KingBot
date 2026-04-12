@@ -427,7 +427,7 @@ class GuidesCog(commands.Cog):
             else:
                 await ctx.send(embed=embed)
 
-    @commands.group(name="guides", aliases=["guide"], invoke_without_command=True)
+    @commands.hybrid_group(name="guides", aliases=["guide"], invoke_without_command=True)
     async def guides_command(self, ctx):
         embed = discord.Embed(
             title="🗺️ Kingshot Mini Guides 🗺️",
@@ -507,7 +507,7 @@ class GuidesCog(commands.Cog):
         )
         await self.send_or_translate_guide(ctx, embed, view=TimelineView(self.bot))
 
-    @commands.group(name="castle", aliases=["kvk"], invoke_without_command=True)
+    @commands.hybrid_group(name="castle", aliases=["kvk"], invoke_without_command=True)
     async def castle_command(self, ctx):
         embed = discord.Embed(
             title="🏰 King's Castle & KvK Guide 🏰",
@@ -516,7 +516,7 @@ class GuidesCog(commands.Cog):
         )
         await self.send_or_translate_guide(ctx, embed, view=CastleView(self.bot))
 
-    @commands.group(name="facility", aliases=["sanctuary", "outpost", "fortress"], invoke_without_command=True)
+    @commands.hybrid_group(name="facility", aliases=["sanctuary", "outpost", "fortress"], invoke_without_command=True)
     async def facility_command(self, ctx):
         embed = discord.Embed(
             title="🗺️ Sanctuaries, Outposts & Fortresses Guide 🗺️",

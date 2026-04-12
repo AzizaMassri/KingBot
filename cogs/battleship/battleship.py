@@ -77,7 +77,7 @@ class KingsArmada(commands.Cog):
 		self.config = BasicConfig(bot)
 	
 	@commands.guild_only()
-	@commands.command(aliases=["battleship"])
+	@commands.hybrid_command(aliases=["battleship"])
 	async def armada(self, ctx, opponent: discord.Member=None):
 		"""Start a game of King's Armada."""
 		if [game for game in self.games if game.channel == ctx.channel]:
@@ -138,7 +138,7 @@ class KingsArmada(commands.Cog):
 	
 	@commands.guild_only()
 	@commands.has_permissions(administrator=True)
-	@commands.command()
+	@commands.hybrid_command()
 	async def armadastop(self, ctx):
 		"""Stop the game of King's Armada in this channel."""
 		wasGame = False
@@ -150,7 +150,7 @@ class KingsArmada(commands.Cog):
 		else:
 			await ctx.send('There is no ongoing game in this channel.')
 	
-	@commands.command()
+	@commands.hybrid_command()
 	async def armadaboard(self, ctx, channel: discord.TextChannel=None):
 		"""
 		View your current board from an ongoing game in your DMs.
@@ -173,7 +173,7 @@ class KingsArmada(commands.Cog):
 	
 	@commands.guild_only()
 	@commands.has_permissions(administrator=True)
-	@commands.group(invoke_without_command=True)
+	@commands.hybrid_group(invoke_without_command=True)
 	async def armadaset(self, ctx):
 		"""Config options for King's Armada."""
 		await ctx.send_help()

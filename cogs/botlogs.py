@@ -22,7 +22,7 @@ class BotLogs(commands.Cog):
             return channel
         return None
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def setlogchannel(self, ctx, channel: discord.TextChannel = None):
         """Sets the channel where all bot activity will be logged."""
@@ -44,9 +44,10 @@ class BotLogs(commands.Cog):
         if not channel:
             return
 
+        cmd_text = ctx.message.content if ctx.message else f"/{ctx.command.name}"
         embed = discord.Embed(
             title="❌ Command Error",
-            description=f"**User**: {ctx.author.mention} (`{ctx.author.id}`)\n**Command**: `{ctx.message.content}`\n**Error**: {str(error)}",
+            description=f"**User**: {ctx.author.mention} (`{ctx.author.id}`)\n**Command**: `{cmd_text}`\n**Error**: {str(error)}",
             color=discord.Color.red(),
             timestamp=discord.utils.utcnow()
         )

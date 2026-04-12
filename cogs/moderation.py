@@ -5,7 +5,7 @@ class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def purge(self, ctx, amount: int = None):
         """Purges a specified number of recent messages in the channel."""
@@ -16,7 +16,7 @@ class Moderation(commands.Cog):
         resp = await ctx.send(f"✅ Purged **{amount}** messages.")
         await resp.delete(delay=3)
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, member: discord.Member = None, *, reason: str = None):
         """Kicks a user from the server."""
@@ -28,7 +28,7 @@ class Moderation(commands.Cog):
         except discord.Forbidden:
             await ctx.send("❌ I don't have permission to kick this user (They might have a higher role than me).")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def ban(self, ctx, member: discord.Member = None, *, reason: str = None):
         """Bans a user from the server."""
@@ -42,7 +42,7 @@ class Moderation(commands.Cog):
         except discord.Forbidden:
             await ctx.send("❌ I don't have permission to ban this user.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def unban(self, ctx, user_id: int = None):
         """Unbans a user by their user ID."""
@@ -61,7 +61,7 @@ class Moderation(commands.Cog):
         except ValueError:
             await ctx.send("❌ Invalid User ID. Must be a number.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def addrole(self, ctx, member: discord.Member = None, *, role_name: str = None):
         """Assigns a role to a user."""
@@ -78,7 +78,7 @@ class Moderation(commands.Cog):
         except discord.Forbidden:
             await ctx.send("❌ I don't have permission to assign that role.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def removerole(self, ctx, member: discord.Member = None, *, role_name: str = None):
         """Removes a role from a user."""
@@ -95,7 +95,7 @@ class Moderation(commands.Cog):
         except discord.Forbidden:
             await ctx.send("❌ I don't have permission to remove that role.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def forcename(self, ctx, member: discord.Member = None, *, new_name: str = None):
         """Force changes a user's nickname."""
@@ -108,7 +108,7 @@ class Moderation(commands.Cog):
         except discord.Forbidden:
             await ctx.send("❌ I don't have permission to change their nickname.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def mute(self, ctx, member: discord.Member = None, minutes: int = None, *, reason: str = None):
         """Mutes (timeouts) a user for a specific number of minutes."""
@@ -126,7 +126,7 @@ class Moderation(commands.Cog):
         except discord.Forbidden:
             await ctx.send("❌ I don't have permission to timeout this user.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def unmute(self, ctx, member: discord.Member = None):
         """Removes a timeout from a user."""
@@ -140,7 +140,7 @@ class Moderation(commands.Cog):
         except discord.Forbidden:
             await ctx.send("❌ I don't have permission to remove timeouts.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def lock(self, ctx, channel: discord.TextChannel = None):
         """Locks a channel so @everyone cannot send messages."""
@@ -153,7 +153,7 @@ class Moderation(commands.Cog):
         except discord.Forbidden:
             await ctx.send("❌ I don't have permission to lock channels.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def unlock(self, ctx, channel: discord.TextChannel = None):
         """Unlocks a channel so @everyone can send messages."""

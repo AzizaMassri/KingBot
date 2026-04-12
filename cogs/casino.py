@@ -12,7 +12,7 @@ class Casino(commands.Cog):
     def eco(self):
         return self.bot.get_cog("Economy")
 
-    @commands.group(invoke_without_command=True, aliases=["bet"])
+    @commands.hybrid_group(invoke_without_command=True, aliases=["bet"])
     async def casino(self, ctx):
         """Play Casino games for Kingshot Bucks!"""
         embed = discord.Embed(
@@ -26,7 +26,7 @@ class Casino(commands.Cog):
         embed.add_field(name="🎰 `!slots <bet>`", value="Spin the slot machine! Match 2 for 2x, Match 3 for 5x, Match 3 🍒 for 10x!", inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["cf"])
+    @commands.hybrid_command(aliases=["cf"])
     async def coinflip(self, ctx, choice: str = None, bet: str = "0"):
         """Flip a coin! Example: `!coinflip heads 100`"""
         try:
@@ -70,7 +70,7 @@ class Casino(commands.Cog):
             
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["bj", "21"])
+    @commands.hybrid_command(aliases=["bj", "21"])
     async def blackjack(self, ctx, bet: str = "0"):
         """Play Blackjack against the dealer! Example: `!bj 100`"""
         try:
@@ -96,7 +96,7 @@ class Casino(commands.Cog):
         if await view.check_blackjack(msg):
             return
 
-    @commands.command()
+    @commands.hybrid_command()
     async def roll(self, ctx, bet: str = "0"):
         """Roll a 100-sided die! Example: `!roll 100`"""
         try:
@@ -141,7 +141,7 @@ class Casino(commands.Cog):
             
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["slotmachine"])
+    @commands.hybrid_command(aliases=["slotmachine"])
     async def slots(self, ctx, bet: str = "0"):
         """Spin the slots! Example: `!slots 100`"""
         try:

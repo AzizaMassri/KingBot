@@ -216,7 +216,7 @@ class Economy(commands.Cog):
 
 
 
-    @commands.command(aliases=["bank", "bal"])
+    @commands.hybrid_command(aliases=["bank", "bal"])
     async def economy(self, ctx, member: discord.Member = None):
         """Check your Kingshot Bucks balance and stats!"""
         target = member or ctx.author
@@ -226,7 +226,7 @@ class Economy(commands.Cog):
         embed.description = f"**{target.display_name}** currently has **{bal}** Kingshot Bucks 💰!\n\nUse `!collect` to claim idle funds."
         await ctx.send(embed=embed)
 
-    @commands.command(name="economy_admin", aliases=["ecoconfig"])
+    @commands.hybrid_command(name="economy_admin", aliases=["ecoconfig"])
     @commands.has_permissions(administrator=True)
     async def economy_admin(self, ctx):
         """[Admin Only] Central Economy Dashboard."""
@@ -237,7 +237,7 @@ class Economy(commands.Cog):
         )
         await ctx.send(embed=embed, view=EconomyAdminView(self, ctx.guild.id))
 
-    @commands.command()
+    @commands.hybrid_command()
     async def collect(self, ctx):
         """Collect passive Kingshot Bucks."""
         user_id = ctx.author.id
@@ -269,7 +269,7 @@ class Economy(commands.Cog):
         await ctx.send(embed=embed)
 
     # Legacy commands strictly wrapping the logic (for backup functionality as requested)
-    @commands.command(aliases=["givemoney"])
+    @commands.hybrid_command(aliases=["givemoney"])
     @commands.has_permissions(administrator=True)
     async def givebucks(self, ctx, member: discord.Member, amount: int):
         """[Admin Only] Give Kingshot Bucks text-command."""
@@ -289,7 +289,7 @@ class Economy(commands.Cog):
         await self.db.set(cooldown_key, str(current_time))
         await ctx.send(f"💸 An admin gave **{amount} Kingshot Bucks** to **{member.display_name}**! (New: {new_balance})")
 
-    @commands.command(aliases=["takemoney"])
+    @commands.hybrid_command(aliases=["takemoney"])
     @commands.has_permissions(administrator=True)
     async def takebucks(self, ctx, member: discord.Member, amount: int):
         """[Admin Only] Take Kingshot Bucks text-command."""
@@ -302,7 +302,7 @@ class Economy(commands.Cog):
         else:
             await ctx.send(f"❌ **{member.display_name}** only has {current} Kingshot Bucks! You cannot take {amount}.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def clearbucks(self, ctx, member: discord.Member):
         """[Admin Only] Completely clear a user's Kingshot Bucks balance."""

@@ -6,7 +6,7 @@ class Aliases(commands.Cog):
         self.bot = bot
         self.db = bot.db
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def alias(self, ctx, original_command: str = None, new_alias: str = None):
         """Creates a custom shortcut/alias for an existing command."""
@@ -32,7 +32,7 @@ class Aliases(commands.Cog):
         display_alias = new_alias if new_alias.startswith('<@') else f"!{new_alias}"
         await ctx.send(f"✅ Created alias! Typing `{display_alias}` will now execute `!{original_command}`.")
 
-    @commands.command(name="aliases")
+    @commands.hybrid_command(name="aliases")
     @commands.has_permissions(administrator=True)
     async def list_aliases(self, ctx):
         """Displays all active aliases for this server in two columns."""

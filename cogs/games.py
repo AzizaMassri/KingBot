@@ -403,7 +403,7 @@ class Games(commands.Cog):
             track_str += f"`{name}` | {line}\n"
         return track_str
 
-    @commands.command(name="race")
+    @commands.hybrid_command(name="race")
     async def race_command(self, ctx, arg1: str = None, arg2: int = None):
         """Host a multiplayer space race! Others can join. Example: `!race 🚀 100`"""
         user_id = ctx.author.id
@@ -505,7 +505,7 @@ class Games(commands.Cog):
 
         await ctx.send(win_msg)
 
-    @commands.command(name="heist", aliases=["raid"])
+    @commands.hybrid_command(name="heist", aliases=["raid"])
     async def bear_raid(self, ctx, difficulty: int = None):
         """Host a multiplayer bear raid! Need 2+ players. `!heist 1-5`"""
         if not difficulty or difficulty < 1 or difficulty > 5:
@@ -704,7 +704,7 @@ class Games(commands.Cog):
         )
         await ctx.send(embed=results_embed)
 
-    @commands.command(name="roulette")
+    @commands.hybrid_command(name="roulette")
     async def roulette_command(self, ctx, bet: int = 0):
         """Host a game of Russian Roulette! Up to 5 players. Example: `!roulette 100`"""
         user_id = ctx.author.id

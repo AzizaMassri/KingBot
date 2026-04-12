@@ -5,7 +5,7 @@ class CoreCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["help"])
+    @commands.hybrid_command(aliases=["help"])
     async def bothelp(self, ctx, command_name: str = None):
         """Displays the comprehensive bot command guide or specific help for a command."""
         if command_name:
@@ -67,7 +67,7 @@ class CoreCommands(commands.Cog):
         except Exception as e:
             await ctx.send(f"⚠️ {ctx.author.mention}, I cannot send you a DM due to your privacy settings. Here is the guide:", embed=embed)
 
-    @commands.command(name="adminhelp", aliases=["helpadmin"])
+    @commands.hybrid_command(name="adminhelp", aliases=["helpadmin"])
     @commands.has_permissions(administrator=True)
     async def adminhelp(self, ctx):
         """Displays the comprehensive administrative command guide."""
@@ -105,7 +105,7 @@ class CoreCommands(commands.Cog):
         except Exception as e:
             await ctx.send(f"⚠️ {ctx.author.mention}, I cannot send you a DM due to your privacy settings. Here is the admin guide:", embed=embed)
 
-    @commands.command(name="invite")
+    @commands.hybrid_command(name="invite")
     @commands.has_permissions(administrator=True)
     async def get_invite(self, ctx):
         """Generates an invite link for server administrators to add this bot to other servers."""

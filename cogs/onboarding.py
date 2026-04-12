@@ -274,7 +274,7 @@ class Onboarding(commands.Cog):
                 modal = OnboardingModal(self.bot, target_guild.id)
                 await interaction.response.send_modal(modal)
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     @requires_tier(Tier.PREMIUM)
     async def setonboardingchannel(self, ctx, channel: discord.TextChannel = None):
@@ -308,7 +308,7 @@ class Onboarding(commands.Cog):
         await self.bot.db.set(f"onboarding_channel:{guild.id}", channel.id)
         await msg.edit(content=f"✅ Onboarding members will now only be able to speak in {channel.mention}.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     @requires_tier(Tier.PREMIUM)
     async def onboarding_admin(self, ctx):
@@ -334,7 +334,7 @@ class Onboarding(commands.Cog):
             print(f"Error in onboarding admin: {e}")
             await ctx.send(f"❌ An error occurred connecting to configuration data.")
 
-    @commands.command(name="onboarding_roles")
+    @commands.hybrid_command(name="onboarding_roles")
     @commands.has_permissions(administrator=True)
     @requires_tier(Tier.PREMIUM)
     async def onboarding_roles_list(self, ctx):
@@ -359,7 +359,7 @@ class Onboarding(commands.Cog):
         except Exception as e:
             await ctx.send(f"❌ An error occurred connecting to configuration data: {e}")
 
-    @commands.command(name="onboarding_add")
+    @commands.hybrid_command(name="onboarding_add")
     @commands.has_permissions(administrator=True)
     @requires_tier(Tier.PREMIUM)
     async def onboarding_add_role(self, ctx, *, role_name: str):
@@ -377,7 +377,7 @@ class Onboarding(commands.Cog):
         except Exception as e:
             await ctx.send(f"❌ Error saving role: {e}")
 
-    @commands.command(name="onboarding_remove")
+    @commands.hybrid_command(name="onboarding_remove")
     @commands.has_permissions(administrator=True)
     @requires_tier(Tier.PREMIUM)
     async def onboarding_remove_role(self, ctx, *, role_name: str):

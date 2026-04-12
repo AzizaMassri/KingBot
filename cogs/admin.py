@@ -231,7 +231,7 @@ class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="control_panel", aliases=["admin_suite", "cpanel"])
+    @commands.hybrid_command(name="control_panel", aliases=["admin_suite", "cpanel"])
     @commands.has_permissions(administrator=True)
     @requires_tier(Tier.PREMIUM)
     async def control_panel(self, ctx):
@@ -245,7 +245,7 @@ class Admin(commands.Cog):
         embed.set_footer(text="Requires High Administrator Clearance. Interactions logged securely.")
         await ctx.send(embed=embed, view=AdminSuiteView(self.bot))
 
-    @commands.command(name="restart", aliases=["reboot"], hidden=True)
+    @commands.hybrid_command(name="restart", aliases=["reboot"], hidden=True)
     @commands.has_permissions(administrator=True)
     async def restart_bot(self, ctx):
         async def do_restart():
@@ -254,7 +254,7 @@ class Admin(commands.Cog):
         view = AdminConfirmView(ctx, "bot restart", do_restart)
         await ctx.send("Are you sure you want to restart the bot?", view=view)
 
-    @commands.command(name="reload", hidden=True)
+    @commands.hybrid_command(name="reload", hidden=True)
     @commands.has_permissions(administrator=True)
     async def reload_cog(self, ctx, extension: str):
         async def do_reload():
@@ -266,7 +266,7 @@ class Admin(commands.Cog):
         view = AdminConfirmView(ctx, f"reload of cogs.{extension}", do_reload)
         await ctx.send(f"Are you sure you want to reload `cogs.{extension}`?", view=view)
 
-    @commands.command(hidden=True)
+    @commands.hybrid_command(hidden=True)
     @commands.has_permissions(administrator=True)
     async def sync(self, ctx):
         synced = await self.bot.tree.sync(guild=ctx.guild)
@@ -274,7 +274,7 @@ class Admin(commands.Cog):
         synced = await self.bot.tree.sync(guild=ctx.guild)
         await ctx.send(f"✅ Fast-Synced **{len(synced)}** app commands.")
 
-    @commands.command(name="toggle_command", aliases=["toggle"])
+    @commands.hybrid_command(name="toggle_command", aliases=["toggle"])
     @commands.has_permissions(administrator=True)
     @requires_tier(Tier.PREMIUM)
     async def toggle_command(self, ctx, command_name: str = None):
@@ -302,7 +302,7 @@ class Admin(commands.Cog):
             await self.bot.db.set(key, "1")
             await ctx.send(f"🚫 Disabled `{cmd.name}`")
 
-    @commands.command(name="toggle_cog", aliases=["togglecog"])
+    @commands.hybrid_command(name="toggle_cog", aliases=["togglecog"])
     @commands.has_permissions(administrator=True)
     @requires_tier(Tier.PREMIUM)
     async def toggle_cog(self, ctx, cog_name: str = None):
@@ -323,7 +323,7 @@ class Admin(commands.Cog):
             await self.bot.db.set(f"cog_disabled:{ctx.guild.id}:{target_cog.qualified_name}", "1")
             await ctx.send(f"🚫 REQUIRED ADMIN FOR `{target_cog.qualified_name}`.")
 
-    @commands.command(name="toggle_invisible", aliases=["invisible"], hidden=True)
+    @commands.hybrid_command(name="toggle_invisible", aliases=["invisible"], hidden=True)
     @commands.has_permissions(administrator=True)
     @requires_tier(Tier.PREMIUM)
     async def toggle_invisible(self, ctx):
@@ -337,6 +337,28 @@ class Admin(commands.Cog):
             await self.bot.change_presence(status=discord.Status.invisible)
             await ctx.send("👻 **KingBot is now INVISIBLE globally.**")
 
+
+    @commands.command(name="sync", hidden=True)
+    @commands.has_permissions(administrator=True)
+    async def sync(self, ctx, spec: str = None):
+        """Syncs the slash command tree.
+        Syntax: !sync, !sync ~, !sync *, !sync ^
+        """
+        try:
+            if spec == "~":
+                synced = await self.bot.tree.sync(guild=ctx.guild)
+            elif spec == "*":
+                self.bot.tree.copy_global_to(guild=ctx.guild)
+                synced = await self.bot.tree.sync(guild=ctx.guild)
+            elif spec == "^":
+                self.bot.tree.clear_commands(guild=ctx.guild)
+                await self.bot.tree.sync(guild=ctx.guild)
+                synced = []
+            else:
+                synced = await self.bot.tree.sync()
+            await ctx.send(f"✅ Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild'}.")
+        except Exception as e:
+            await ctx.send(f"❌ Failed to sync commands: {e}")
 
 async def setup(bot):
     await bot.add_cog(Admin(bot))

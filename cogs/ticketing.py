@@ -165,7 +165,7 @@ class Ticketing(commands.Cog):
         except:
             pass
 
-    @commands.command(name="setup_tickets", aliases=["tickets_admin", "ticketconfig"])
+    @commands.hybrid_command(name="setup_tickets", aliases=["tickets_admin", "ticketconfig"])
     @commands.has_permissions(administrator=True)
     @requires_tier(Tier.PREMIUM)
     async def setup_tickets(self, ctx):

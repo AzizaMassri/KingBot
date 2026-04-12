@@ -17,7 +17,9 @@ A comprehensive, multi-purpose Discord bot tailored specifically for complex ser
 * **Century Games Arcade (Minigames):** A fully loaded Modal UI hub (`!minigames`) containing comprehensive categories of interactive games: King's Monopoly, Casino (Blackjack, Slots, Coinflip), Armada (Battleship), King's Execution (Hangman), Knight's Row (Connect 4), Swords & Shields (Tic-Tac-Toe), and Monarch's Mysteries. Commands seamlessly support both fully automated Button/Modal Dropdowns and standard text prefixes for complete backwards compatibility.
 * **Advanced Music System:** High-quality, multithreaded audio playback via `!music`. Features a fully interactive UI, Apple Music/Spotify DRM-bypass parsing, and 24/7 internet radio streaming support.
 * **Alliance Merger Tool:** Advanced data parsing system (`!merger`) capable of evaluating `.txt` and `.csv` rosters to sort members by power and distribute them optimally into Main and Academy alliances.
-* **Educational Guides:** Work-in-progress manuals providing extensive information on Player Growth, Events, Facilities, Castles, and more, efficiently replacing the old custom calculators.
+* **Hybrid Command Ecosystem:** Every single command across all 26 extensions natively supports both traditional text `!` prefixes and interactive Discord `/slash` commands interchangeably!
+* **Enterprise SaaS Subscription Tiers:** Granular, database-enforced feature gating. Guilds can be manually upgraded via `!set_tier` securely mapped dynamically to 3 distinct tiers (Free, Premium, Elite) affecting High Priority routing and translation limits!
+* **Educational Guides:** Organized modules providing extensive information on Player Growth, Events, Facilities, Castles, and more, gracefully replacing the old custom calculators.
 * **Voice Broadcasting:** Experimental `!karaoke` streaming that safely pipes audio feeds into Discord Voice Channels.
 
 ## 🛠️ Architecture & Technology Stack
@@ -59,6 +61,7 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=password
 POSTGRES_DB=kingbot
 RABBITMQ_HOST=localhost
+ADMIN_TIER_PASSWORD=your_secure_password_here
 ```
 
 ### Installation

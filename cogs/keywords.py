@@ -6,7 +6,7 @@ class TranslationKeywords(commands.Cog):
         self.bot = bot
         self.db_key = "translator_exclusion_keywords"
 
-    @commands.group(invoke_without_command=True)
+    @commands.hybrid_group(invoke_without_command=True)
     @commands.has_permissions(administrator=True)
     async def keyword(self, ctx):
         """Manage global keywords that should NOT be translated by the AI."""

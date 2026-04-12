@@ -161,7 +161,7 @@ class ReactionRoles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="reactionroles", aliases=["rr", "build_roles", "rrbuilder"])
+    @commands.hybrid_command(name="reactionroles", aliases=["rr", "build_roles", "rrbuilder"])
     @commands.has_permissions(administrator=True)
     @requires_tier(Tier.PREMIUM)
     async def reactionroles(self, ctx, channel: discord.TextChannel = None):
@@ -179,9 +179,10 @@ class ReactionRoles(commands.Cog):
         view = BuilderLaunchView(channel, ctx.author)
         message = await ctx.send(embed=embed, view=view)
         
-        # Optionally delete the command invocation to keep it clean
+        # Optionally delete the command invocation to keep it clean if ran via prefix
         try:
-            await ctx.message.delete()
+            if ctx.message:
+                await ctx.message.delete()
         except:
             pass
 

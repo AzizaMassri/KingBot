@@ -57,7 +57,7 @@ class Welcome(commands.Cog):
         self.bot = bot
         self.db = bot.db
 
-    @commands.command(name="welcome_admin", aliases=["welcomeconfig", "setwelcomechannel", "setwelcome"])
+    @commands.hybrid_command(name="welcome_admin", aliases=["welcomeconfig", "setwelcomechannel", "setwelcome"])
     @commands.has_permissions(administrator=True)
     async def welcome_admin(self, ctx):
         """Interactive Admin Dashboard for configuring Welcome Messages."""

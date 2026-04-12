@@ -163,7 +163,7 @@ class KingsExecution(commands.Cog):
         p += ')'
         return p
 
-    @commands.command(aliases=["hangman"])
+    @commands.hybrid_command(aliases=["hangman"])
     async def execution(self, ctx):
         """Play Kings Execution! Guess the password to save the peasant.
         

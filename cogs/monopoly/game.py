@@ -130,7 +130,7 @@ class MonopolyGame():
 	
 	async def send_error(self, exc=None):
 		"""Sends a message to the channel after an error."""
-		savename = str(self.ctx.message.id)
+		savename = str(self.ctx.interaction.id) if self.ctx.interaction else str(self.ctx.message.id)
 		
 		err_msg = ''
 		if exc:
@@ -151,7 +151,7 @@ class MonopolyGame():
 	
 	async def send_timeout(self):
 		"""Cleanup code when a user times out."""
-		savename = str(self.ctx.message.id)
+		savename = str(self.ctx.interaction.id) if self.ctx.interaction else str(self.ctx.message.id)
 		await self.channel.send(
 			'You did not respond in time.\n'
 			f'Your game was saved to `{savename}`.\n'
@@ -208,7 +208,7 @@ class MonopolyGame():
 			except discord.HTTPException:
 				pass
 		if mem is None:
-			savename = str(self.ctx.message.id)
+			savename = str(self.ctx.interaction.id) if self.ctx.interaction else str(self.ctx.message.id)
 			user = self.bot.get_user(uid)
 			if user:
 				msg = f'Player "{user}" (`{user.id}`)'

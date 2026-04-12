@@ -149,7 +149,7 @@ class Monopoly(commands.Cog):
 		self.config = BasicConfig(bot)
 
 	@commands.guild_only()
-	@commands.group(invoke_without_command=True) 
+	@commands.hybrid_group(invoke_without_command=True) 
 	async def monopoly(self, ctx, savefile: str=None):
 		"""
 		Play monopoly with 2-8 people.
@@ -261,7 +261,7 @@ class Monopoly(commands.Cog):
 
 	@commands.guild_only()
 	@commands.has_permissions(administrator=True)
-	@commands.command()
+	@commands.hybrid_command()
 	async def monopolystop(self, ctx):
 		"""Stop the game of monopoly in this channel."""
 		wasGame = False
@@ -275,7 +275,7 @@ class Monopoly(commands.Cog):
 	
 	@commands.guild_only()
 	@commands.has_permissions(administrator=True)
-	@commands.group(invoke_without_command=True)
+	@commands.hybrid_group(invoke_without_command=True)
 	async def monopolyset(self, ctx):
 		"""Config options for monopoly."""
 		await ctx.send_help()

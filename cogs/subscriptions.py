@@ -8,7 +8,7 @@ class Subscriptions(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="set_tier")
+    @commands.hybrid_command(name="set_tier")
     async def set_tier(self, ctx, guild_id: int = None, tier: int = None, password: str = None):
         """Authorizes a given guild for a specific Subscription Tier."""
         if not guild_id or not tier or not password:
@@ -43,7 +43,7 @@ class Subscriptions(commands.Cog):
         except Exception as e:
             await ctx.send(f"❌ Database update failed: {e}")
 
-    @commands.command(name="check_quota")
+    @commands.hybrid_command(name="check_quota")
     async def check_quota(self, ctx, guild_id: int = None):
         """Check the translation limits and usage for a guild."""
         if not guild_id:

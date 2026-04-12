@@ -282,7 +282,7 @@ class QuickTranslator(commands.Cog):
 
     @commands.hybrid_command()
     async def translate(self, ctx, *, target: str = None):
-        """Configure per-server auto-translation directly into your DMs using a dropdown menu or directly specifying a language."""
+        """Configure background auto-translation into your DMs via dropdown or language code."""
         from cogs.utils.ui import LanguageDropdown, LANGUAGES
         
         member = None
@@ -401,7 +401,7 @@ class QuickTranslator(commands.Cog):
     @commands.hybrid_command(aliases=["toggleauto", "autotoggle"])
     @commands.has_permissions(administrator=True)
     async def toggle_auto_translator(self, ctx):
-        """Admin command to toggle the Auto-Translator in this server WITHOUT affecting the manual translating options."""
+        """Admin command to toggle the Auto-Translator on or off for this server."""
         disabled = await self.bot.db.get(f"auto_translator_disabled:{ctx.guild.id}")
         if disabled == "1":
             await self.bot.db.delete(f"auto_translator_disabled:{ctx.guild.id}")

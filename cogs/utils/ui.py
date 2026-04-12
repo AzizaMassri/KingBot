@@ -12,6 +12,8 @@ LANGUAGES = {
     "Japanese": {"native": "日本語", "code": "JA", "emoji": "🇯🇵"},
     "Korean": {"native": "한국어", "code": "KO", "emoji": "🇰🇷"},
     "Chinese Simplified": {"native": "简体中文", "code": "ZH", "emoji": "🇨🇳"},
+    "Chinese Traditional": {"native": "繁體中文", "code": "TW", "emoji": "🇹🇼"},
+    "Cantonese": {"native": "粵語", "code": "YUE", "emoji": "🇭🇰"},
     "Arabic": {"native": "العربية", "code": "AR", "emoji": "🇸🇦"},
     "Hindi": {"native": "हिन्दी", "code": "HI", "emoji": "🇮🇳"},
     "Turkish": {"native": "Türkçe", "code": "TR", "emoji": "🇹🇷"},

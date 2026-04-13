@@ -41,21 +41,23 @@ async def get_guild_tier(bot, guild_id: int) -> int:
 async def increment_translation_usage(bot, guild_id: int, char_count: int) -> bool:
     """
     Increments translation quota and checks against the current tier limit.
-    Returns True if allowed, False if exceeded.
+    Returns (True/False if allowed, current_usage as int).
     """
     if not hasattr(bot, 'db') or bot.db is None:
-        return True # Fail-open if DB down
+        return True, 0 # Fail-open if DB down
         
     tier = await get_guild_tier(bot, guild_id)
     limit = TRANSLATION_LIMITS.get(tier, 5000)
     
     if limit == float('inf'):
-        return True
+        pass # We still track usage rather than early returning here
         
     key = f"trans_chars:{guild_id}"
     
     # We increment directly. 
     current_usage = await bot.db.incr(key, amount=char_count)
+    if isinstance(current_usage, bytes):
+        current_usage = int(current_usage)
     
     # If this is the very first time we are incrementing this cycle (or the key just reset), it will equal char_count.
     # In a fully robust Postgres environment via our PostgresCache wrapper, to set an expiry cleanly we can do an async wrapper:
@@ -77,7 +79,11 @@ async def increment_translation_usage(bot, guild_id: int, char_count: int) -> bo
         except ValueError:
             pass
 
-    return current_usage <= limit
+    allowed = True
+    if limit != float('inf') and current_usage > limit:
+        allowed = False
+
+    return allowed, current_usage
 
 def build_premium_embed(required_tier: int) -> discord.Embed:
     tier_map = {1: "Community", 2: "Premium", 3: "Elite"}

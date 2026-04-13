@@ -36,8 +36,9 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
         
         # Quota Check
         from cogs.utils.tiers import increment_translation_usage, build_premium_embed, Tier
+        current_usage = 0
         if interaction.guild_id:
-            allowed = await increment_translation_usage(self.bot, interaction.guild_id, len(text))
+            allowed, current_usage = await increment_translation_usage(self.bot, interaction.guild_id, len(text))
             if not allowed:
                 return await interaction.followup.send(embed=build_premium_embed(Tier.PREMIUM), ephemeral=True)
 
@@ -47,16 +48,25 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
                 raise ValueError("GEMINI_API_KEY environment variable is not set")
             
             def translate_text():
+                from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback
+                model_choice = decide_translation_route(text, current_usage)
+                
+                if model_choice == 'googletrans':
+                    result = perform_google_translate_fallback(text, target)
+                    if not result:
+                        raise ValueError("Google Translate service temporarily unavailable. Please try again in a moment.")
+                    return result
+                
                 client = genai.Client(api_key=api_key)
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model=model_choice,
                     contents=prompt
                 )
                 return response.text
             
             translation = await asyncio.to_thread(translate_text)
             if not translation:
-                raise ValueError("Empty response from AI")
+                raise ValueError("Empty response from translation service")
             translation = translation.strip()
             
             # Save language to the per-server synced background translation engine
@@ -77,10 +87,16 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
             import traceback
             traceback.print_exc()
             error_msg = str(e)
+            
+            # Handle specific error cases
             if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
-                await interaction.followup.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has access to the Gemini models.", ephemeral=True)
+                await interaction.followup.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has proper access.", ephemeral=True)
+            elif "temporarily unavailable" in error_msg.lower() or "service unavailable" in error_msg.lower():
+                await interaction.followup.send("⏳ Translation service is temporarily unavailable. Please try again in a few seconds.", ephemeral=True)
+            elif "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
+                await interaction.followup.send("⚠️ Translation quota exceeded. Please try again later.", ephemeral=True)
             else:
-                await interaction.followup.send(f"❌ Translation failed. ({error_msg[:50]})", ephemeral=True)
+                await interaction.followup.send(f"❌ Translation failed. Please try again. ({error_msg[:40]})", ephemeral=True)
 
 class TransChannelSelect(discord.ui.ChannelSelect):
     def __init__(self, bot):
@@ -155,8 +171,9 @@ class QuickTranslator(commands.Cog):
             
             # Quota Check
             from cogs.utils.tiers import increment_translation_usage, build_premium_embed, Tier
+            current_usage = 0
             if interaction.guild_id:
-                allowed = await increment_translation_usage(self.bot, interaction.guild_id, len(text))
+                allowed, current_usage = await increment_translation_usage(self.bot, interaction.guild_id, len(text))
                 if not allowed:
                     return await interaction.followup.send(embed=build_premium_embed(Tier.PREMIUM), ephemeral=True)
 
@@ -166,16 +183,25 @@ class QuickTranslator(commands.Cog):
                     raise ValueError("GEMINI_API_KEY not configured")
                 
                 def translate_text():
+                    from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback
+                    model_choice = decide_translation_route(text, current_usage)
+                    
+                    if model_choice == 'googletrans':
+                        result = perform_google_translate_fallback(text, target)
+                        if not result:
+                            raise ValueError("Google Translate service temporarily unavailable. Please try again in a moment.")
+                        return result
+                        
                     client = genai.Client(api_key=api_key)
                     response = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model=model_choice,
                         contents=prompt
                     )
                     return response.text
                 
                 translation = await asyncio.to_thread(translate_text)
                 if not translation:
-                    raise ValueError("Empty response from AI")
+                    raise ValueError("Empty response from translation service")
                 translation = translation.strip()
                 
                 embed = discord.Embed(
@@ -189,10 +215,16 @@ class QuickTranslator(commands.Cog):
                 import traceback
                 traceback.print_exc()
                 error_msg = str(e)
+                
+                # Handle specific error cases
                 if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
                     await interaction.followup.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has proper access.", ephemeral=True)
+                elif "temporarily unavailable" in error_msg.lower() or "service unavailable" in error_msg.lower():
+                    await interaction.followup.send("⏳ Translation service is temporarily unavailable. Please try again in a few seconds.", ephemeral=True)
+                elif "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
+                    await interaction.followup.send("⚠️ Translation quota exceeded. Please try again later.", ephemeral=True)
                 else:
-                    await interaction.followup.send(f"❌ Translation failed. ({error_msg[:50]})", ephemeral=True)
+                    await interaction.followup.send(f"❌ Translation failed. Please try again. ({error_msg[:40]})", ephemeral=True)
         else:
             # Fallback: Open a modal to ask for language
             await interaction.response.send_modal(TranslateModal(message, self.bot))
@@ -239,8 +271,9 @@ class QuickTranslator(commands.Cog):
                 
                 # Quota Check
                 from cogs.utils.tiers import increment_translation_usage, build_premium_embed, Tier
+                current_usage = 0
                 if ctx.guild:
-                    allowed = await increment_translation_usage(self.bot, ctx.guild.id, len(text_to_translate))
+                    allowed, current_usage = await increment_translation_usage(self.bot, ctx.guild.id, len(text_to_translate))
                     if not allowed:
                         return await ctx.send(embed=build_premium_embed(Tier.PREMIUM))
 
@@ -250,16 +283,25 @@ class QuickTranslator(commands.Cog):
                         raise ValueError("GEMINI_API_KEY environment variable is not set")
                     
                     def translate_text():
+                        from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback
+                        model_choice = decide_translation_route(text_to_translate, current_usage)
+                        
+                        if model_choice == 'googletrans':
+                            result = perform_google_translate_fallback(text_to_translate, target_language)
+                            if not result:
+                                raise ValueError("Google Translate service temporarily unavailable. Please try again in a moment.")
+                            return result
+
                         client = genai.Client(api_key=api_key)
                         response = client.models.generate_content(
-                            model='gemini-2.5-flash',
+                            model=model_choice,
                             contents=prompt
                         )
                         return response.text
                     
                     translation = await asyncio.to_thread(translate_text)
                     if not translation:
-                        raise ValueError("Empty response from AI")
+                        raise ValueError("Empty response from translation service")
                     translation = translation.strip()
                 except Exception as api_err:
                     import traceback
@@ -278,8 +320,14 @@ class QuickTranslator(commands.Cog):
                 import traceback
                 traceback.print_exc()
                 error_msg = str(e)
+                
+                # Handle specific error cases
                 if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
                     await ctx.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has proper access.")
+                elif "temporarily unavailable" in error_msg.lower() or "service unavailable" in error_msg.lower():
+                    await ctx.send("⏳ Translation service is temporarily unavailable. Please try again in a few seconds.")
+                elif "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
+                    await ctx.send("⚠️ Translation quota exceeded. Please try again later.")
                 else:
                     await ctx.send(f"❌ Quick Translation failed. Please try again later. ({error_msg[:50]})")
 

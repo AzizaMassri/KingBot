@@ -55,7 +55,7 @@ class VikingView(BaseGuideView):
     @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="viking_mini")
     async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="🛡️ Viking Vengeance (Mini Guide) 🛡️",
+            title="🛡️ Viking Vengeance Guide 🛡️",
             description=(
                 "🌊 **The Basics:** Defend against 20 waves (Tues/Thurs). Kill at least 50% to pass. 2 losses = you're out (but can still reinforce!).\n"
                 "🌊 **Wave Targets:** 1-6/8-9/11-13/15-16/18-19: All. 7/14/17: Online Only. 10/20: HQ.\n"
@@ -99,7 +99,7 @@ class ChampionshipView(BaseGuideView):
     @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="champ_mini")
     async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="🏆 Alliance Championship Guide (Mini) 🏆",
+            title="🏆 Alliance Championship Guide 🏆",
             description=(
                 "⚔️ **The Goal:** Win 2 of 3 lanes! 20 members max per lane. R4s arrange lanes. Combat is automatic and targets weakest first. Max 2 kills per player.\n"
                 "🛡️ **Lane Strategy:** Stack your strongest/offensive players in two main lanes to win. Put lower-power members in the 3rd 'Sacrifice' lane to stall.\n"
@@ -145,7 +145,7 @@ class BearTrapView(BaseGuideView):
     @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="beartrap_mini")
     async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="🐻 Bear Trap Guide (Mini) 🐻",
+            title="🐻 Bear Trap Guide 🐻",
             description=(
                 "⚙️ **City Prep:** Maximize Lethality tech/gear, upgrade Command Center, and enhance Charms.\n"
                 "⚔️ **Rally Captains:** Best: Amadeus, Jabel, Saul (4⭐+ beats Quinn). Troop Ratio: 10% Inf / 10% Cav / 80% Arch.\n"
@@ -194,7 +194,7 @@ class TimelineView(BaseGuideView):
     @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="timeline_mini")
     async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="🏰 Kingdom Journey Timeline (Mini) 🏰",
+            title="🏰 Kingdom Journey Timeline 🏰",
             description=(
                 "⏳ **Day 0:** Gen 1 Heroes (SSR/SR/R)\n"
                 "🦁 **Day 40-60:** Gen 2 Heroes (Zoe/Marlin/Hilde) & Gen 1 Pets (Lynx/Bison)\n"
@@ -242,7 +242,7 @@ class CastleView(BaseGuideView):
     @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="castle_mini")
     async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="🏰 King's Castle & KvK (Mini Guide) 🏰",
+            title="🏰 King's Castle & KvK Guide 🏰",
             description=(
                 "👑 **Goal:** First to occupy for 2.5hrs continuously, or longest total accumulation.\n"
                 "🎯 **Defenses:** Hold Castle & Turrets (Turrets fire on occupants unless you hold BOTH!). Red Zone teleports random cities!\n"
@@ -285,7 +285,7 @@ class FacilityView(BaseGuideView):
     @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="fac_mini")
     async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="🗺️ Sancs, Forts & Outposts (Mini Guide) 🗺️",
+            title="🗺️ Sancs, Forts & Outposts Guide 🗺️",
             description=(
                 "🚩 **Connection:** Outposts MUST touch alliance Banners. Sanctuaries & Fortresses DO NOT (just teleport)!\n"
                 "⏱️ **Winning:** Outposts require 15-30 mins depending on level. Sancs/Forts need 30 mins continuous! Or hold at 2hr expiry.\n"
@@ -327,7 +327,7 @@ class OasisView(BaseGuideView):
     @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="oasis_mini")
     async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
-            title="🌴 Oasis Island Guide (Mini) 🌴",
+            title="🌴 Oasis Island Guide 🌴",
             description=(
                 "💧 **Essence Farming:** Log in 2x/day. Rush Reservoir Lv.4 for 2nd worker. Place touching cacti/chests. Reset pathing by exit/re-enter. Clear for Purifiers.\n"
                 "🏗️ **Building:** Early buy T1 greys for quests. Then T3 blues. Avoid type limits & 50% recycle nerf.\n"
@@ -370,6 +370,156 @@ class OasisView(BaseGuideView):
             "**Optimal Chest Path:** https://i.imgur.com/WpXdI1P.png"
         )
         embed.set_image(url="https://i.imgur.com/ZbX964l.jpeg")
+        await self.update_message(interaction, embed)
+
+
+class DrillCampView(BaseGuideView):
+    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="drillcamp_mini")
+    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="⛺ Drill Camp Guide ⛺",
+            description=(
+                "⛺ **Rule:** Only level 5 heroes! Everyone else copies their level in Drill Camp.\n"
+                "🚫 **Warning:** XP from leveling non-instructors is NOT refunded in Drill Camp! Reset them first.\n"
+                "⭐ **Stats:** Hero level matters less (mostly Troop cap). Core combat strength is from Stars & Gear.\n"
+                "❌ **Shop:** NEVER buy XP from shops. It's less valuable late game.\n"
+                "🔄 **Slots:** Keep important rally joiners leveled. Drop unused/weak PvE heroes first."
+            ),
+            color=discord.Color.orange()
+        )
+        await self.update_message(interaction, embed)
+
+    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="drillcamp_full")
+    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="⛺ Drill Camp Guide ⛺",
+            color=discord.Color.orange()
+        )
+        embed.description = (
+            "**What Drill Camp Does**\n"
+            "Drill Camp lets you level only 5 heroes and have the rest copy their level.\n"
+            "• **Instructors:** Your 5 main leveled heroes\n"
+            "• **Drill Slots:** Other heroes match the lowest instructor level\n\n"
+            "**Core Rule: Only level 5 heroes. Ever.**\n"
+            "Everyone else goes into Drill Camp. If you’re leveling extra heroes outside of that, you’re wasting XP.\n\n"
+            "**Avoid This Mistake**\n"
+            "If you level a hero, then put them into Drill Camp, that XP is **NOT** refunded. It’s stuck there.\n"
+            "*Fix it:* Remove the hero from Drill Camp, reset their level, and put them back in (has a cooldown).\n\n"
+            "**Does Hero Level Even Matter?**\n"
+            "Not as much as you think. It affects Conquest stats, Troop capacity, and Escort size. It does NOT affect Expedition attack/defense, Health/lethality, or Core combat strength (these come from Star level, Gear & Widgets).\n\n"
+            "**Who Should Be Instructors / Go in Drill Camp?**\n"
+            "Instructors don't matter much. Don't overthink it. For slots, prioritize heroes you actively use. Ignore low-impact or unused heroes.\n\n"
+            "**Mid/Late Game Shift**\n"
+            "Eventually, you max your 5 instructors (~Level 80) and XP becomes slower to gain/less valuable short-term. **Do NOT waste currency buying XP from shops.**\n\n"
+            "**Late Game Problem: Too Many Heroes**\n"
+            "You’ll hit a point where you have more heroes than Drill slots. Keep core combat/rally heroes inside. Leave unused PvE heroes at level 1.\n"
+            "*Sneaky Optimization:* Even a level 1 hero can use maxed skills in rallies (but lower level = fewer troops sent). Keep important rally/join heroes leveled, drop low-impact PvE heroes first."
+        )
+        embed.set_image(url="https://i.imgur.com/placeholder.jpeg") # Placeholder for the requested image link
+        await self.update_message(interaction, embed)
+
+
+class ExpeditionCombatView(BaseGuideView):
+    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="expedition_mini")
+    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="⚔️ Expedition Combat Guide ⚔️",
+            description=(
+                "⚔️ **Roles:** Infantry (Tanks/Soak Damage) > Cavalry (Counter) > Archers (DPS/Win Fights).\n"
+                "⚙️ **Stats:** Lethality & Health are best! Archers need Lethality; Infantry need Health.\n"
+                "📈 **Buffs:** Multiplicative buffs (Heroes/Widgets) decide outcomes. They scale harder late game.\n"
+                "🔥 **Rallies:** Rally leader stats matter most! Joiners' troop buffs don't apply. Send correct heroes.\n"
+                "🏥 **Losses:** ALWAYS have infirmary space! High-risk fights with a full infirmary = permanent troop loss."
+            ),
+            color=discord.Color.red()
+        )
+        await self.update_message(interaction, embed)
+
+    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="expedition_full")
+    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="⚔️ Expedition Combat Guide ⚔️",
+            color=discord.Color.red()
+        )
+        embed.description = (
+            "**Troop Roles (Core Foundation)**\n"
+            "Combat follows a loose counter system:\n"
+            "• **Infantry → beats Cavalry:** Tanks. High health/defense. Front line.\n"
+            "• **Cavalry → beats Archers:** Balanced stats. Can bypass frontline (20% chance).\n"
+            "• **Archers → beats Infantry:** Main damage dealers. High attack/lethality, low survivability.\n"
+            "👉 *Takeaway:* Infantry = soak damage, Archers = deal damage, Cavalry = situational counter.\n\n"
+            "**Key Combat Stats & Mechanics**\n"
+            "Battles are automated, turn-based simulations. Most units hit the frontline first. If your frontline dies, your backline gets exposed fast.\n"
+            "• **Health & defense:** How much damage a troop can take.\n"
+            "• **Lethality & attack:** Damage dealt, weakens enemy troops.\n"
+            "Health & defense vs lethality & attack are multiplied together. The narrower the stat difference, the higher the multiplier! Since defense/attack are usually naturally higher, prioritize Health and Lethality.\n"
+            "👉 *Best focus:* Archers → Lethality, Infantry → Health.\n\n"
+            "**Buffs & Rallies**\n"
+            "• **Standard (Additive):** Research, gear, buildings.\n"
+            "• **Multiplicative:** Hero abilities, titles, widgets (Game-changing!).\n"
+            "• **Rallies:** Rally leader stats = everything. Joiners' standard buffs do NOT apply! If joining, send correct troops and the correct hero.\n\n"
+            "**Troop Casualties**\n"
+            "Lightly Injured return immediately. Injured go to the infirmary. Losses are permanently gone. If infirmary is full, extra troops DIE. Always keep space!\n"
+            "👉 *High-Risk:* Attacking player cities, Level 4 outposts. *Safer:* Defending structures, PvE."
+        )
+        embed.set_image(url="https://i.imgur.com/placeholder.jpeg")
+        await self.update_message(interaction, embed)
+
+
+class PlaybookView(BaseGuideView):
+    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="playbook_mini")
+    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="👑 The Definitive Kingshot Playbook 👑",
+            description=(
+                "👑 **The Golden Rule:** HOARD EVERYTHING! Spend gems/speedups only on high-yield events.\n"
+                "🏗️ **Economy:** Rush TC19, then prioritize military at TC23/26/30. Alt farm accounts are mandatory!\n"
+                "💎 **VIP:** Rush VIP 6 for 2nd march queue. Never buy mystery items at full price.\n"
+                "🧬 **Heroes:** Hoard for 120 HoG spins. Don't waste gems on Gen 1.\n"
+                "⚔️ **Rallies:** Put strong joiner heroes in the left slot. Bear Hunt: 10% Inf / 10% Cav / 80% Arch.\n"
+                "⚖️ **Endgame:** The TrueGold T11 wall is huge. Stop at TG5 if F2P!"
+            ),
+            color=discord.Color.gold()
+        )
+        await self.update_message(interaction, embed)
+
+    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="playbook_full")
+    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="👑 THE DEFINITIVE KINGSHOT PLAYBOOK 👑",
+            color=discord.Color.gold()
+        )
+        embed.description = (
+            "📜 **THE GOLDEN RULE**\n"
+            "**HOARD EVERYTHING.** Patience is your primary currency. Spreading resources thinly across daily activities = catastrophic late-game failure. Only spend Gems, speedups, and assets during high-yield, designated events.\n\n"
+            "🏗️ **BASE & RESOURCE ECONOMY**\n"
+            "• **TC Rushing:** Push relentlessly to TC19 (unlocks Island).\n"
+            "• **Military Spikes:** At TC23, TC26, and TC30, immediately pivot all focus to military buildings (Barracks, Range, Stable) over economy.\n"
+            "• **Speedups:** DO NOT use troop training speedups until you unlock T7 troops.\n"
+            "• **Farm Accounts (Mandatory):** For the TC28-30 resource drought, build an alt account. Keep the farm's storehouse at Level 1 (no protection cap) and attack it with your main to siphon RSS.\n"
+            "• **Decree Exploit:** Stack them in this exact order: Urgent Mobilization ➡️ Productivity Day (100% buff) ➡️ Rush Job (doubles the 5-day instant yield).\n\n"
+            "💎 **VIP & STORE PRIORITIES**\n"
+            "• **VIP 6:** Rush this ASAP (unlocks 2nd march queue).\n"
+            "• **VIP 7:** Next priority (daily Mythic hero shard).\n"
+            "• **Artisan's Vision:** The ultimate late-game bottleneck for gear. Buy with Gilded Threads/Satin (100% value). NEVER break down Artisan's Vision into lower materials. Max buy from Swordland & KvK shops.\n"
+            "• **Mystery Store:** Buy Widget Chests (50% off). Never buy full price.\n\n"
+            "🧬 **HERO GENERATIONAL META**\n"
+            "• **Gen 1:** Ignore premium heroes (Helga/Amadeus) if F2P. Stick to Jabel, Quinn, and Howard. Get Saul to 3-stars strictly for his massive building speed buff.\n"
+            "• **Gen 2 Prep:** Hoard 465 Mythic Shards for Day 70-80 to instantly drop a 4-star Zoe or Marlin.\n"
+            "• **Hero Roulette / HoG:** Save Gems for exactly 120 spins (max milestones). Split your spins across HoG Day 2 & Day 3 to double-dip on points. Stop spending the second you hit the final milestone.\n\n"
+            "⚔️ **COMBAT & RALLY DYNAMICS**\n"
+            "• **Rally Joiners (The Lead Hero Trick):** The game ignores joiner hero gear. It only calculates your Lead Hero's top-right skill (Lethality/Attack). Put Chenko, Yeonwoo, or Amane in your primary left slot to massively buff the whale leading the rally.\n"
+            "• **The Pitfall (Bear Hunt) 1/1/8 Rule:** Maximum damage ratio is 10% Infantry / 10% Cavalry / 80% Archers. You need the 10% melee to bypass the game's hidden \"zero-troop\" damage penalty.\n"
+            "• **Arena Snipe:** Save your 10 daily attacks for the last 1-10 minutes before 00:00 UTC server reset to secure your rank.\n\n"
+            "🛡️ **GEAR & PETS**\n"
+            "• **Gear Focus:** Only upgrade your top 3 main march heroes. Priority: Infantry Gloves & Chest (Survivability) ➡️ Cavalry/Archers Helmets & Boots (Lethality).\n"
+            "• **Pets:** Bison is vital for instantly draining RSS tiles. Lynx gives 35-60 instant Stamina.\n"
+            "• **Note on Stamina:** It has a hidden overcap! Use Lynx/items to hoard past 200/200 before major events. Keep re-rolling Pet Refining until you lock in Infantry Health and Archer Lethality.\n\n"
+            "⚖️ **ENDGAME: THE TRUEGOLD ERA (TC30+)**\n"
+            "• **Gathering:** Force your marches to gather Iron and Stone. The Truegold Crucible demands equal RSS, and those two are the slowest to farm. Do your 6x daily Crucible refinements without fail.\n"
+            "• **The F2P T11 Wall:** The Truegold Dust cost for T11 is astronomical (13.4k Dust). If you are a low spender, STOP at Truegold 5 (TG5). Maximize your T10 troops—a fully scaled TG8 T10 march will destroy an under-researched T11 march."
+        )
+        embed.set_image(url="https://i.imgur.com/placeholder.jpeg")
         await self.update_message(interaction, embed)
 
 
@@ -440,6 +590,9 @@ class GuidesCog(commands.Cog):
                 "`!guides beartrap` - View the Bear Trap Event Guide & Formations.\n"
                 "`!guides championship` - View the Alliance Championship Guide & Strategies.\n"
                 "`!guides oasis` - View the Oasis Island Guide.\n"
+                "`!guides drillcamp` - View the Drill Camp Hero Leveling Guide.\n"
+                "`!guides expedition` - View the Expedition Combat & Stats Guide.\n"
+                "`!guides playbook` - View the Definitive Kingshot Playbook.\n"
                 "`!castle` - View information and strategies for the Kingdom of Power (KvK) Castle Battle.\n"
                 "`!facility` - View information and strategies for Sanctuaries, Outposts, and Fortresses."
             ),
@@ -497,6 +650,36 @@ class GuidesCog(commands.Cog):
         )
         await self.send_or_translate_guide(ctx, embed, view=OasisView(self.bot))
 
+    @guides_command.command(name="drillcamp", aliases=["drill"])
+    async def guides_drillcamp(self, ctx):
+        """View the Drill Camp Guide."""
+        embed = discord.Embed(
+            title="⛺ Drill Camp Guide ⛺",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.orange()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=DrillCampView(self.bot))
+
+    @guides_command.command(name="expedition", aliases=["combat"])
+    async def guides_expedition(self, ctx):
+        """View the Expedition Combat Guide."""
+        embed = discord.Embed(
+            title="⚔️ Expedition Combat Guide ⚔️",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.red()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=ExpeditionCombatView(self.bot))
+
+    @guides_command.command(name="playbook", aliases=["definitive"])
+    async def guides_playbook(self, ctx):
+        """View the Definitive Kingshot Playbook."""
+        embed = discord.Embed(
+            title="👑 The Definitive Kingshot Playbook 👑",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.gold()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=PlaybookView(self.bot))
+
     @guides_command.command(name="timeline")
     async def guides_timeline(self, ctx):
         """View the Server Kingdom Journey Timeline."""
@@ -524,6 +707,36 @@ class GuidesCog(commands.Cog):
             color=discord.Color.blue()
         )
         await self.send_or_translate_guide(ctx, embed, view=FacilityView(self.bot))
+
+    @commands.hybrid_command(name="drillcamp", aliases=["drill"])
+    async def drillcamp_command(self, ctx):
+        """View the Drill Camp Guide."""
+        embed = discord.Embed(
+            title="⛺ Drill Camp Guide ⛺",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.orange()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=DrillCampView(self.bot))
+
+    @commands.hybrid_command(name="expedition", aliases=["combat"])
+    async def expedition_command(self, ctx):
+        """View the Expedition Combat Guide."""
+        embed = discord.Embed(
+            title="⚔️ Expedition Combat Guide ⚔️",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.red()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=ExpeditionCombatView(self.bot))
+
+    @commands.hybrid_command(name="playbook", aliases=["definitive"])
+    async def playbook_command(self, ctx):
+        """View the Definitive Kingshot Playbook."""
+        embed = discord.Embed(
+            title="👑 The Definitive Kingshot Playbook 👑",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.gold()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=PlaybookView(self.bot))
 
 async def setup(bot):
     await bot.add_cog(GuidesCog(bot))

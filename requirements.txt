@@ -9,3 +9,4 @@ aiofiles
 pandas
 asyncpg
 pillow
+deep-translator

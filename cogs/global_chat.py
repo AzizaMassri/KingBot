@@ -79,9 +79,22 @@ class GlobalChat(commands.Cog):
 
                                 prompt = f"Context: {context_str}\nProvide a strictly literal and accurate translation to {target_language} while sounding natural. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present. CRITICAL INSTRUCTION: If the original text is already primarily in {target_language}, output EXACTLY 'SAME_LANGUAGE_DETECTED' and nothing else. Otherwise, output ONLY the translation: \"{content}\"{exclusion_str}"
                                 
+                                # Increment Usage & Get Routing Model
+                                guild_id = task.get('guild_id')
+                                current_usage = 0
+                                if guild_id:
+                                    from cogs.utils.tiers import increment_translation_usage
+                                    allowed, current_usage = await increment_translation_usage(self.bot, guild_id, len(content))
+
                                 def fetch_global_translation():
+                                    from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback
+                                    model_choice = decide_translation_route(content, current_usage)
+                                    
+                                    if model_choice == 'googletrans':
+                                        return perform_google_translate_fallback(content, target_language)
+
                                     response = self.client.models.generate_content(
-                                        model='gemini-2.5-flash',
+                                        model=model_choice,
                                         contents=prompt
                                     )
                                     return response.text.strip()
@@ -181,6 +194,7 @@ class GlobalChat(commands.Cog):
                 
                 payload = {
                     "user_id": user_id,
+                    "guild_id": message.guild.id,
                     "target_language": target_language,
                     "content": message.content,
                     "author_name": message.author.display_name,

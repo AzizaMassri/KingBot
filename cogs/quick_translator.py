@@ -4,6 +4,13 @@ from discord import app_commands
 import os
 import asyncio
 from google import genai
+import logging
+
+logger = logging.getLogger('KingBot.QuickTranslator')
+
+# Constants
+MAX_TRANSLATION_LENGTH = 5000
+API_TIMEOUT = 15
 
 class TranslateModal(discord.ui.Modal, title='Translate Message'):
     language = discord.ui.TextInput(
@@ -20,13 +27,25 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        target = self.language.value
-        text = self.message_to_translate.content
+        target = self.language.value.strip()
+        text = self.message_to_translate.content.strip()
+
+        # Input validation
+        if not text:
+            return await interaction.followup.send("❌ Cannot translate empty message.", ephemeral=True)
+        
+        if len(text) > MAX_TRANSLATION_LENGTH:
+            return await interaction.followup.send(f"❌ Message too long (max {MAX_TRANSLATION_LENGTH} characters).", ephemeral=True)
+
+        if not target:
+            return await interaction.followup.send("❌ Please specify a language.", ephemeral=True)
 
         try:
             exclusion_list = await self.bot.db.smembers("translator_exclusion_keywords")
-        except:
+        except Exception as e:
+            logger.debug(f"Failed to fetch exclusion list: {e}")
             exclusion_list = []
+        
         exclusion_str = ""
         if exclusion_list:
             words = ", ".join([f"'{w}'" for w in exclusion_list])
@@ -38,9 +57,12 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
         from cogs.utils.tiers import increment_translation_usage, build_premium_embed, Tier
         current_usage = 0
         if interaction.guild_id:
-            allowed, current_usage = await increment_translation_usage(self.bot, interaction.guild_id, len(text))
-            if not allowed:
-                return await interaction.followup.send(embed=build_premium_embed(Tier.PREMIUM), ephemeral=True)
+            try:
+                allowed, current_usage = await increment_translation_usage(self.bot, interaction.guild_id, len(text))
+                if not allowed:
+                    return await interaction.followup.send(embed=build_premium_embed(Tier.PREMIUM), ephemeral=True)
+            except Exception as e:
+                logger.error(f"Quota check error: {e}")
 
         try:
             api_key = os.getenv("GEMINI_API_KEY")
@@ -48,7 +70,13 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
                 raise ValueError("GEMINI_API_KEY environment variable is not set")
             
             def translate_text():
-                from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback
+                from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback, validate_translation_input
+                
+                # Validate input
+                is_valid, error_msg = validate_translation_input(text, target)
+                if not is_valid:
+                    raise ValueError(error_msg or "Invalid translation input")
+                
                 model_choice = decide_translation_route(text, current_usage)
                 
                 if model_choice == 'googletrans':
@@ -62,39 +90,54 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
                     model=model_choice,
                     contents=prompt
                 )
-                return response.text
+                return response.text if response and hasattr(response, 'text') else None
             
-            translation = await asyncio.to_thread(translate_text)
-            if not translation:
+            translation = await asyncio.wait_for(
+                asyncio.to_thread(translate_text),
+                timeout=API_TIMEOUT
+            )
+            
+            if not translation or not isinstance(translation, str):
                 raise ValueError("Empty response from translation service")
+            
             translation = translation.strip()
+            if not translation:
+                raise ValueError("Translation resulted in empty text")
             
             # Save language to the per-server synced background translation engine
             try:
                 if interaction.guild_id:
                     await self.bot.db.hset(f"translator_subs:{interaction.guild_id}", str(interaction.user.id), target)
             except Exception as e:
-                print(f"Failed to sync per-server setting: {e}")
+                logger.debug(f"Failed to sync per-server setting: {e}")
             
             embed = discord.Embed(
                 title=f"🌍 Translated to {target.capitalize()}",
                 description=translation,
                 color=discord.Color.green()
             )
-            embed.set_author(name=self.message_to_translate.author.display_name, icon_url=self.message_to_translate.author.display_avatar.url if self.message_to_translate.author.display_avatar else None)
+            embed.set_author(
+                name=self.message_to_translate.author.display_name, 
+                icon_url=self.message_to_translate.author.display_avatar.url if self.message_to_translate.author.display_avatar else None
+            )
             await interaction.followup.send(embed=embed, ephemeral=True)
+            
+        except asyncio.TimeoutError:
+            logger.warning("Translation request timed out")
+            await interaction.followup.send("⏳ Translation timed out. Service may be temporarily slow. Please try again.", ephemeral=True)
         except Exception as e:
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Translation error in modal: {e}", exc_info=True)
             error_msg = str(e)
             
             # Handle specific error cases
             if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
-                await interaction.followup.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has proper access.", ephemeral=True)
+                await interaction.followup.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY configuration.", ephemeral=True)
             elif "temporarily unavailable" in error_msg.lower() or "service unavailable" in error_msg.lower():
-                await interaction.followup.send("⏳ Translation service is temporarily unavailable. Please try again in a few seconds.", ephemeral=True)
+                await interaction.followup.send("⏳ Translation service temporarily unavailable. Please try again in a few seconds.", ephemeral=True)
             elif "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
                 await interaction.followup.send("⚠️ Translation quota exceeded. Please try again later.", ephemeral=True)
+            elif "invalid" in error_msg.lower():
+                await interaction.followup.send(f"❌ {error_msg}", ephemeral=True)
             else:
                 await interaction.followup.send(f"❌ Translation failed. Please try again. ({error_msg[:40]})", ephemeral=True)
 

@@ -42,7 +42,9 @@ class YTDLSource(discord.PCMVolumeTransformer):
             raise Exception("Invalid missing search query.")
             
         if "spotify.com" in query or "apple.com" in query:
-            query = f"ytsearch:{query}"
+            query = f"ytsearch:{query} lyric video"
+        elif not query.startswith("http") and not query.startswith("ytsearch:"):
+            query = f"ytsearch:{query} lyric video"
             
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(query, download=not stream))
         
@@ -131,8 +133,10 @@ class PlayModal(discord.ui.Modal, title='Add to Queue'):
             
             def extract():
                 search_query = query
-                if "spotify.com" in query or "apple.com" in query:
-                    search_query = f"ytsearch:{query}"
+                if "spotify.com" in search_query or "apple.com" in search_query:
+                    search_query = f"ytsearch:{search_query} lyric video"
+                elif not search_query.startswith("http") and not search_query.startswith("ytsearch:"):
+                    search_query = f"ytsearch:{search_query} lyric video"
                 return ytdl.extract_info(search_query, download=False)
                 
             data = await loop.run_in_executor(None, extract)

@@ -529,11 +529,11 @@ class WhaleView(BaseGuideView):
         embed = discord.Embed(
             title="🐳 Whale Guide 🐳",
             description=(
-                "👑 **Leadership:** Whales lead strong rallies for max damage, boosting alliance rewards. Success requires active rally joiners!\n"
-                "🛡️ **Stability:** Maintain order, enforce rules, and protect the kingdom. Support player growth to keep the alliance strong.\n"
-                "⚙️ **Investment:** Prioritize **Hero Gear**! It provides massive stat boosts without diminishing returns.\n"
-                "🛑 **Bottlenecks:** Plan for Mid-Game (Mithril & Gold gear) and Late-Game (Gold gear).\n"
-                "🛒 **Priority:** Gold Gear/Lucky Chests > Mithril > Hammers > XP."
+                "👑 **Leadership:** Whales lead strong rallies. Success requires active, well-coordinated joiners!\n"
+                "⚙️ **Investment 1:** Prioritize **Hero Gear**, it gives huge stat boosts. Gold Gear/Lucky Chests > Mithril.\n"
+                "🧬 **Investment 2:** Max season heroes/widgets early. 5-star Amadeus ASAP (Top tier hero into Gen 6).\n"
+                "📈 **Stats:** Prioritize Health & Lethality (Inf Health / Arch Lethality). Use Charms, Tech, and Pets for this.\n"
+                "⚔️ **Troops:** POWER ≠ STATS! Troops boost event points but inflate matchmaking. Invest in evergreen stats!"
             ),
             color=discord.Color.blue()
         )
@@ -548,24 +548,27 @@ class WhaleView(BaseGuideView):
         embed.description = (
             "**Core Responsibilities**\n"
             "A whale’s role goes far beyond raw power. It’s about leadership, consistency, and creating value for the entire alliance.\n\n"
-            "**Rally Leadership**\n"
-            "A whale’s primary responsibility is leading rallies that consistently win and deal maximum damage. Success is a two-way system: reliable leadership combined with active, well-coordinated joiners creates a win-win environment.\n\n"
-            "**Alliance & Kingdom Stability**\n"
-            "Whales play a key role in maintaining order, enforcing rules, and protecting the alliance. Smaller players look up to whales. Being approachable and supporting growth encourages retention, while addressing toxic behavior prevents instability.\n\n"
+            "**Rally Leadership & Stability**\n"
+            "A whale’s primary responsibility is leading rallies that consistently win and deal maximum damage. Success is a two-way system: reliable leadership combined with active, well-coordinated joiners creates a win-win environment. Furthermore, whales play a key role in maintaining order and protecting the alliance.\n\n"
             "**Your Most Important Investment: Hero Gear**\n"
-            "Unlike other stats (governor gear, charms, tech, pets) that provide diminishing returns, hero gear provides massive stat boosts even as upgrades get expensive. Highly recommended to focus investment here.\n\n"
-            "**Maxing 1 Hero Gear Piece Costs:**\n"
-            "• XP: 574,370\n"
-            "• Forgehammers: 2,100\n"
-            "• Mithril: 150\n"
-            "• Mythic Gear Pieces: 90\n"
-            "*(Multiply by 4 pieces per hero & 3 main heroes!)*\n\n"
-            "**Hero Gear Bottlenecks**\n"
-            "• **Early Game:** XP & Hammers (Easiest to consistently purchase).\n"
-            "• **Mid Game:** Mithril & Gold Gear Pieces (Mithril is rare for free; usually $4.99/ea).\n"
-            "• **Late Game:** Gold Gear Pieces (Free only weekly in Arena Shop; 1/100 from Lucky Chests. Can purchase in weekly deal or special events).\n\n"
-            "**Purchase Priority:**\n"
-            "Gold gear (and lucky hero chests) > Mithril > hammers > XP"
+            "Unlike other stats (governor gear, charms, tech, pets) that provide diminishing returns, hero gear provides massive stat boosts even as upgrades get expensive. Highly recommended to focus investment here.\n"
+            "**Cost (1 Piece):** XP (574.3k), Hammers (2.1k), Mithril (150), Mythic Pieces (90).\n"
+            "**Purchase Priority:** Gold gear/lucky chests > Mithril > hammers > XP.\n\n"
+            "**Next Investment Tier: Heroes**\n"
+            "• **Season Heroes:** Always max the heroes of the season. Refer to kingdom timeline to plan for next gen.\n"
+            "• **Generational Advantage:** Massive advantage to having max heroes at the start of a new generation.\n"
+            "• **Widgets:** Always max widgets (the most important investment of the game as they add multiplicative stats). Purchased at $1 per widget ($825 to max 3 season heroes). Discounted in: Mystery shop, Buccaneer Bounty, Champaign Fair.\n\n"
+            "**Amadeus**\n"
+            "The most important hero of the game, relevant into generation 6. He can only be obtained by competing in the first 3 Hall of Governors event or purchased after VIP7. Strongly recommended to 5-star him as quickly as possible.\n\n"
+            "**Priority Stats & Items**\n"
+            "Health and lethality stats are most important. It is recommended to always use optimizer tools when planning upgrades.\n"
+            "• **Stat Priority:** 1) Inf Health 2) Arch Lethality 3) Inf Def 4) Arch Atk 5) Cav Lethality 6) Cav Atk 7) Inf Lethality 8) Inf Atk 9) Arch Health 10) Arch Def 11) Cav Health 12) Cav Def\n"
+            "• Focus on items that provide these stat boosts. These include: Charms, Certain tech upgrades, Certain oasis island upgrades, and Taming marks for pets. These items are forever.\n\n"
+            "**Troops (The Non-Evergreen Investment)**\n"
+            "After ~1.5 million troops, there is very little they do for account progression.\n"
+            "• **PROS:** Massive points for events like KvK and Strongest Governor. More troops = more kills for rewards.\n"
+            "• **CONS:** Artificial stat boosts. Event matchmaking (KvK) uses overall power. POWER DOES NOT EQUAL STATS. Focus on troops drains speedups that could go to tech/stats. In Vikings, you score *less* points for having more troops at home.\n"
+            "• **VERDICT:** Don't hold back from training troops, but don't hold back from using them! Focus investment on evergreen stats. They are forever, troops are not."
         )
         embed.set_image(url="https://i.imgur.com/placeholder.jpeg")
         await self.update_message(interaction, embed)

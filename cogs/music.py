@@ -26,14 +26,23 @@ ffmpeg_options = {
 
 ytdl = yt_dlp.YoutubeDL(ytdl_format_options)
 
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
-        super().__init__(source, volume)
+class YTDLSource(discord.AudioSource):
+    def __init__(self, source, *, data):
+        self.source = source
         self.data = data
         self.title = data.get('title')
         self.url = data.get('url')
         self.duration = data.get('duration')
         self.is_live = data.get('is_live')
+
+    def read(self):
+        return self.source.read()
+
+    def is_opus(self):
+        return self.source.is_opus()
+
+    def cleanup(self):
+        self.source.cleanup()
 
     @classmethod
     async def create_source(cls, query, loop=None, stream=True):
@@ -62,7 +71,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         if not filename:
             raise Exception("Could not find a valid streamable audio URL.")
             
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+        return cls(discord.FFmpegOpusAudio(filename, **ffmpeg_options), data=data)
 
 class MusicConfigModal(discord.ui.Modal, title='Music Configuration'):
     authorized_text = discord.ui.TextInput(label='Restricted Text Channel ID (Blank = Any)', placeholder='e.g. 123456789', required=False)

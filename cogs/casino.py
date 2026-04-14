@@ -164,7 +164,13 @@ class Casino(commands.Cog):
             description="**[ ⏳ | ⏳ | ⏳ ]**\n\n*Rolling the reels...*",
             color=discord.Color.gold()
         )
-        msg = await ctx.send(embed=spin_embed)
+        
+        try:
+            msg = await ctx.send(embed=spin_embed)
+        except discord.HTTPException:
+            # Refund if we can't even send the message
+            await self.eco.add_balance(user_id, bet)
+            return
         
         import asyncio
         await asyncio.sleep(1.5)
@@ -209,7 +215,14 @@ class Casino(commands.Cog):
             title = "🎰 Slots: LOSS 🎰"
             
         embed = discord.Embed(title=title, description=desc, color=color)
-        await msg.edit(embed=embed)
+        
+        try:
+            await msg.edit(embed=embed)
+        except discord.HTTPException:
+            try:
+                await ctx.send(content=ctx.author.mention, embed=embed)
+            except discord.HTTPException:
+                pass
 
 class BlackjackView(TranslatedView):
     def __init__(self, ctx, bet: int, eco):

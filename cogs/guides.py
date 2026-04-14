@@ -523,6 +523,118 @@ class PlaybookView(BaseGuideView):
         await self.update_message(interaction, embed)
 
 
+class WhaleView(BaseGuideView):
+    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="whale_mini")
+    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🐳 Whale Guide 🐳",
+            description=(
+                "👑 **Leadership:** Whales lead strong rallies for max damage, boosting alliance rewards. Success requires active rally joiners!\n"
+                "🛡️ **Stability:** Maintain order, enforce rules, and protect the kingdom. Support player growth to keep the alliance strong.\n"
+                "⚙️ **Investment:** Prioritize **Hero Gear**! It provides massive stat boosts without diminishing returns.\n"
+                "🛑 **Bottlenecks:** Plan for Mid-Game (Mithril & Gold gear) and Late-Game (Gold gear).\n"
+                "🛒 **Priority:** Gold Gear/Lucky Chests > Mithril > Hammers > XP."
+            ),
+            color=discord.Color.blue()
+        )
+        await self.update_message(interaction, embed)
+
+    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="whale_full")
+    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🐳 Whale Guide (Full) 🐳",
+            color=discord.Color.blue()
+        )
+        embed.description = (
+            "**Core Responsibilities**\n"
+            "A whale’s role goes far beyond raw power. It’s about leadership, consistency, and creating value for the entire alliance.\n\n"
+            "**Rally Leadership**\n"
+            "A whale’s primary responsibility is leading rallies that consistently win and deal maximum damage. Success is a two-way system: reliable leadership combined with active, well-coordinated joiners creates a win-win environment.\n\n"
+            "**Alliance & Kingdom Stability**\n"
+            "Whales play a key role in maintaining order, enforcing rules, and protecting the alliance. Smaller players look up to whales. Being approachable and supporting growth encourages retention, while addressing toxic behavior prevents instability.\n\n"
+            "**Your Most Important Investment: Hero Gear**\n"
+            "Unlike other stats (governor gear, charms, tech, pets) that provide diminishing returns, hero gear provides massive stat boosts even as upgrades get expensive. Highly recommended to focus investment here.\n\n"
+            "**Maxing 1 Hero Gear Piece Costs:**\n"
+            "• XP: 574,370\n"
+            "• Forgehammers: 2,100\n"
+            "• Mithril: 150\n"
+            "• Mythic Gear Pieces: 90\n"
+            "*(Multiply by 4 pieces per hero & 3 main heroes!)*\n\n"
+            "**Hero Gear Bottlenecks**\n"
+            "• **Early Game:** XP & Hammers (Easiest to consistently purchase).\n"
+            "• **Mid Game:** Mithril & Gold Gear Pieces (Mithril is rare for free; usually $4.99/ea).\n"
+            "• **Late Game:** Gold Gear Pieces (Free only weekly in Arena Shop; 1/100 from Lucky Chests. Can purchase in weekly deal or special events).\n\n"
+            "**Purchase Priority:**\n"
+            "Gold gear (and lucky hero chests) > Mithril > hammers > XP"
+        )
+        embed.set_image(url="https://i.imgur.com/placeholder.jpeg")
+        await self.update_message(interaction, embed)
+
+
+class TransferView(BaseGuideView):
+    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="transfer_mini")
+    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🌐 Kingdom Transfer Event 🌐",
+            description=(
+                "♻️ **Timing:** Every 30–45 days. Takes a week with prep, invite, and open ticket phases.\n"
+                "📝 **Requirements:** Must be under power limit, leave alliance, and lack active battles/roles (King). Requires Transfer Passes!\n"
+                "🕰️ **Phases:** Sun-Tue: Pre-Transfer. Wed-Thu: Invitational. Fri-Sat: Open Transfer.\n"
+                "💳 **Passes:** Price scales up from $5 to $100. Resets monthly!\n"
+                "⚙️ **Effects:** City moves to Badland with 24h shield. Arena points reset, shop resets, and unprotected resources are lost."
+            ),
+            color=discord.Color.blue()
+        )
+        await self.update_message(interaction, embed)
+
+    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="transfer_full")
+    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🌐 Kingdom Transfer Event (Full) 🌐",
+            color=discord.Color.blue()
+        )
+        embed.description = (
+            "**Event Time:** 2026.4.12 00:00:00(UTC) - 2026.4.18 23:59:59(UTC)\n"
+            "**Frequency:** Every 30–45 days\n\n"
+            "**Kingdom Groups**\n"
+            "• Group 1: 1 to 175\n"
+            "• Group 2: 176 to 417\n"
+            "• Group 3: 418 to 674\n"
+            "• Group 4: 675 to 1007\n"
+            "• Group 5: 1008 to 1159\n"
+            "• Group 6: 1160 to 1221\n"
+            "• Group 7: 1222 to 1331\n\n"
+            "**Transfer Requirements**\n"
+            "• Power must be below the transfer limit\n"
+            "• Town Center must meet level requirement (depends on kingdom age)\n"
+            "• No active battles during transfer\n"
+            "• Must leave your alliance first\n"
+            "• Cannot be King or Transfer Manager\n"
+            "• At least 25 days since last transfer\n"
+            "• Max 4 characters per kingdom\n"
+            "• Requires Transfer Passes (1–50 depending on Power and rank)\n"
+            "• Both kingdoms must be from the same generation\n\n"
+            "**Event Phases**\n"
+            "1️⃣ **Pre-Transfer (3 days, Sun–Tue):** Kings set Power limits, open chat, and players plan transfers.\n"
+            "2️⃣ **Invitational Transfer (2 days, Wed–Thu):**\n"
+            "  - Leading Kingdoms: 20 invites + 10 open slots.\n"
+            "  - Ordinary Kingdoms: 35 invites + 3 special slots (for players above Power limit).\n"
+            "3️⃣ **Open Transfer (2 days, Fri–Sat):**\n"
+            "  - Leading Kingdoms: 10 open slots.\n"
+            "  - Ordinary Kingdoms: 20 open slots. First come, first served.\n\n"
+            "💳 **Transfer Pass Packs:** 1 Pass $5, 2 Passes $10, 3 Passes $20, 4 Passes $50, 5 Passes $100 (15 available). Resets monthly.\n\n"
+            "**Transfer Effects**\n"
+            "• City moves to Badland + 24h shield\n"
+            "• Removed from chats\n"
+            "• Arena Points reset to 1000\n"
+            "• Event progress continues if active in both kingdoms; otherwise rewards sent by mail\n"
+            "• Shop and bundle purchases reset\n"
+            "• Excess resources beyond Storehouse protection are lost"
+        )
+        embed.set_image(url="https://i.imgur.com/placeholder.jpeg")
+        await self.update_message(interaction, embed)
+
+
 class GuidesCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -593,6 +705,8 @@ class GuidesCog(commands.Cog):
                 "`!guides drillcamp` - View the Drill Camp Hero Leveling Guide.\n"
                 "`!guides expedition` - View the Expedition Combat & Stats Guide.\n"
                 "`!guides playbook` - View the Definitive Kingshot Playbook.\n"
+                "`!guides whale` - View the Whale Guide.\n"
+                "`!guides transfer` - View the Kingdom Transfer Event Guide.\n"
                 "`!castle` - View information and strategies for the Kingdom of Power (KvK) Castle Battle.\n"
                 "`!facility` - View information and strategies for Sanctuaries, Outposts, and Fortresses."
             ),
@@ -680,6 +794,26 @@ class GuidesCog(commands.Cog):
         )
         await self.send_or_translate_guide(ctx, embed, view=PlaybookView(self.bot))
 
+    @guides_command.command(name="whale")
+    async def guides_whale(self, ctx):
+        """View the Whale Guide."""
+        embed = discord.Embed(
+            title="🐳 Whale Guide 🐳",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.blue()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=WhaleView(self.bot))
+
+    @guides_command.command(name="transfer")
+    async def guides_transfer(self, ctx):
+        """View the Kingdom Transfer Guide."""
+        embed = discord.Embed(
+            title="🌐 Kingdom Transfer Event 🌐",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.blue()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=TransferView(self.bot))
+
     @guides_command.command(name="timeline")
     async def guides_timeline(self, ctx):
         """View the Server Kingdom Journey Timeline."""
@@ -737,6 +871,26 @@ class GuidesCog(commands.Cog):
             color=discord.Color.gold()
         )
         await self.send_or_translate_guide(ctx, embed, view=PlaybookView(self.bot))
+
+    @commands.hybrid_command(name="whale")
+    async def whale_command(self, ctx):
+        """View the Whale Guide."""
+        embed = discord.Embed(
+            title="🐳 Whale Guide 🐳",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.blue()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=WhaleView(self.bot))
+
+    @commands.hybrid_command(name="transfer")
+    async def transfer_command(self, ctx):
+        """View the Kingdom Transfer Guide."""
+        embed = discord.Embed(
+            title="🌐 Kingdom Transfer Event 🌐",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.blue()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=TransferView(self.bot))
 
 async def setup(bot):
     await bot.add_cog(GuidesCog(bot))

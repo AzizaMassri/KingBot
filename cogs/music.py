@@ -38,12 +38,28 @@ class YTDLSource(discord.PCMVolumeTransformer):
     @classmethod
     async def create_source(cls, query, loop=None, stream=True):
         loop = loop or asyncio.get_event_loop()
+        if not query:
+            raise Exception("Invalid missing search query.")
+            
         if "spotify.com" in query or "apple.com" in query:
             query = f"ytsearch:{query}"
+            
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(query, download=not stream))
+        
+        if not data:
+            raise Exception("Audio extraction failed. The content might be unavailable or age-restricted.")
+            
         if 'entries' in data:
+            if not data['entries']:
+                raise Exception("No search results found.")
             data = data['entries'][0]
-        filename = data['url'] if stream else ytdl.prepare_filename(data)
+            if not data:
+                raise Exception("Track data was empty.")
+                
+        filename = data.get('url') if stream else ytdl.prepare_filename(data)
+        if not filename:
+            raise Exception("Could not find a valid streamable audio URL.")
+            
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
 class MusicConfigModal(discord.ui.Modal, title='Music Configuration'):
@@ -120,8 +136,16 @@ class PlayModal(discord.ui.Modal, title='Add to Queue'):
                 return ytdl.extract_info(search_query, download=False)
                 
             data = await loop.run_in_executor(None, extract)
+            
+            if not data:
+                raise Exception("Audio extraction failed. The content might be unavailable or age-restricted.")
+                
             if 'entries' in data:
+                if not data['entries']:
+                    raise Exception("No search results found.")
                 data = data['entries'][0]
+                if not data:
+                    raise Exception("First search result was empty.")
 
             duration = data.get('duration')
             is_live = data.get('is_live', False)
@@ -282,15 +306,33 @@ class Music(commands.Cog):
                 self.bot.loop.call_soon_threadsafe(lambda: self.bot.loop.create_task(self.play_next(interaction_or_ctx)))
             
             voice_client.play(player, after=after_call)
-            channel = getattr(interaction_or_ctx, 'channel', None)
+            
+            cfg = await self.bot.db.hgetall(f"music_cfg:{guild.id}") or {}
+            auth_text = cfg.get("auth_text", "")
+            
+            channel = None
+            if auth_text and auth_text.isdigit():
+                channel = guild.get_channel(int(auth_text))
+            if not channel:
+                channel = getattr(interaction_or_ctx, 'channel', None)
+                
             if channel:
-                asyncio.run_coroutine_threadsafe(channel.send(f"🎶 Now Playing: **{player.title}**"), self.bot.loop)
+                await channel.send(f"🎶 Now Playing: **{player.title}**")
         except Exception as e:
             self.is_fetching[guild.id] = False
-            channel = getattr(interaction_or_ctx, 'channel', None)
+            
+            cfg = await self.bot.db.hgetall(f"music_cfg:{guild.id}") or {}
+            auth_text = cfg.get("auth_text", "")
+            
+            channel = None
+            if auth_text and auth_text.isdigit():
+                channel = guild.get_channel(int(auth_text))
+            if not channel:
+                channel = getattr(interaction_or_ctx, 'channel', None)
+                
             if channel:
-                asyncio.run_coroutine_threadsafe(channel.send(f"❌ Failed to play next track: `{e}`"), self.bot.loop)
-            asyncio.run_coroutine_threadsafe(self.play_next(interaction_or_ctx), self.bot.loop)
+                await channel.send(f"❌ Failed to play next track: `{e}`")
+            self.bot.loop.create_task(self.play_next(interaction_or_ctx))
 
     @commands.hybrid_command(name="music", aliases=["play"])
     async def music_dashboard(self, ctx):

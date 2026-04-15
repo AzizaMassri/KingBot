@@ -37,6 +37,19 @@ class BotLogs(commands.Cog):
         if isinstance(error, commands.CommandNotFound):
             return
 
+        from cogs.utils.tiers import PremiumRequiredError, AppPremiumRequiredError, build_premium_embed
+        
+        # Check against both unwrapped and wrapped CommandInvokeError instances
+        original_error = getattr(error, "original", error)
+
+        if isinstance(original_error, (PremiumRequiredError, AppPremiumRequiredError)):
+            req_tier = getattr(original_error, 'required_tier', 3)
+            try:
+                await ctx.send(embed=build_premium_embed(req_tier))
+            except:
+                pass
+            return
+
         import traceback
         traceback.print_exception(type(error), error, error.__traceback__)
 

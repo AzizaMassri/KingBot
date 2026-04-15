@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, Type, Union
 from datetime import datetime
 from discord.ext import commands
+from cogs.utils.bank import bank, errors, humanize_number
 
 
 class BaseMinigameCog(commands.Cog):

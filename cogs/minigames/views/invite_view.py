@@ -6,7 +6,7 @@ Ported to discord.py specifically for KingBot & Kingshot (Century Games) Brandin
 import re
 import discord
 
-
+from cogs.utils.bank import bank, errors, humanize_number
 
 from ..base import Minigame
 

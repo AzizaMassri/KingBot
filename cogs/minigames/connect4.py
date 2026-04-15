@@ -8,8 +8,7 @@ import discord
 from enum import Enum
 from typing import List, Optional, Union
 from datetime import datetime
-
-
+from cogs.utils.bank import bank, errors, humanize_number
 
 from .base import BaseMinigameCog, Minigame
 from .board import Board, find_lines

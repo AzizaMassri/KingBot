@@ -31,6 +31,10 @@ async def menu(ctx, pages, controls=None):
     for i, p in enumerate(pages):
         await ctx.send(p) # Basic dump instead of heavy pagination
 
+DEFAULT_CONTROLS = {"\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}": "prev"}
+def close_menu():
+    pass
+
 class BasicConfig:
     def __init__(self, bot):
         self.bot = bot

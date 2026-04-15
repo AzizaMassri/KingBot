@@ -9,7 +9,7 @@ class Subscriptions(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(name="set_tier")
-    async def set_tier(self, ctx, guild_id: int = None, tier: int = None, password: str = None):
+    async def set_tier(self, ctx, guild_id: str = None, tier: int = None, password: str = None):
         """Authorizes a given guild for a specific Subscription Tier."""
         if not guild_id or not tier or not password:
             return await ctx.send("❌ Usage: `!set_tier <guild_id> <tier> <password>`")

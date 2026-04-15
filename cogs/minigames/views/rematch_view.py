@@ -7,6 +7,7 @@ import re
 import discord
 from typing import Optional
 
+from cogs.utils.bank import bank, errors, humanize_number
 
 from ..base import Minigame
 

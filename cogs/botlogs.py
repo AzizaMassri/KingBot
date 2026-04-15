@@ -37,6 +37,13 @@ class BotLogs(commands.Cog):
         if isinstance(error, commands.CommandNotFound):
             return
 
+        if isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
+            try:
+                await ctx.send(f"❌ Syntax Error: {str(error)}\n*Hint: Check that you aren't missing any required inputs and haven't put text where a number goes.*")
+            except:
+                pass
+            return
+
         from cogs.utils.tiers import PremiumRequiredError, AppPremiumRequiredError, build_premium_embed
         
         # Check against both unwrapped and wrapped CommandInvokeError instances

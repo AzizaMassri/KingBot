@@ -1,6 +1,7 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import time
+import math
 
 class LevelUpChannelSelect(discord.ui.ChannelSelect):
     def __init__(self, bot):
@@ -28,18 +29,20 @@ class LevelUpConfigView(discord.ui.View):
 class Leveling(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # Using the same database connection from bot.py
         self.db = bot.db
         self.cooldowns = {}
-        self.points_per_msg = 5
         self.msg_cooldown = 60 # seconds
+        self.vc_xp_loop.start()
+
+    def cog_unload(self):
+        self.vc_xp_loop.cancel()
 
     def _get_level_from_xp(self, xp: int) -> int:
-        return int(0.1 * (xp ** 0.5))
+        return int(0.05 * (xp ** 0.5))
 
     def _get_xp_for_level(self, level: int) -> int:
-        if level == 0: return 0
-        return int((float(level) / 0.1) ** 2)
+        if level <= 0: return 0
+        return int((float(level) / 0.05) ** 2)
 
     async def _get_user_color(self, user_id: int) -> discord.Color:
         color_hex = await self.db.get(f"user_color:{user_id}")
@@ -50,6 +53,63 @@ class Leveling(commands.Cog):
                 return discord.Color.dark_grey()
         return discord.Color.dark_grey()
 
+    async def _process_level_up(self, member: discord.Member, old_level: int, new_level: int):
+        if new_level <= old_level:
+            return
+
+        # 1.5x Kingshot Bucks from the previous one, starting at 10000 for level 1
+        reward = int(10000 * (1.5 ** (new_level - 1)))
+        
+        current_balance = int(await self.db.get(f"ks_bucks:{member.id}") or 0)
+        new_balance = current_balance + reward
+        await self.db.set(f"ks_bucks:{member.id}", new_balance)
+
+        embed = discord.Embed(
+            title="👑 ROYAL PROMOTION SECURED! 👑",
+            description=f"Attention! {member.mention} has been elevated to **Level {new_level}**! 🛡️ For the Kingdom! ⚔️\n\n🏰 **Royal Treasury Deposit:** `{reward:,} Kingshot Bucks` added to your reserves!",
+            color=await self._get_user_color(member.id)
+        )
+        embed.set_thumbnail(url=member.display_avatar.url)
+        
+        target_channel = None
+        saved_channel_id = await self.db.get(f"levelup_channel:{member.guild.id}")
+        
+        if saved_channel_id:
+            target_channel = member.guild.get_channel(int(saved_channel_id))
+        
+        if target_channel:
+            try:
+                await target_channel.send(embed=embed)
+            except discord.Forbidden:
+                pass
+
+    @tasks.loop(minutes=1)
+    async def vc_xp_loop(self):
+        """Grants the highest amount of XP to active Voice Chat sitters."""
+        for guild in self.bot.guilds:
+            db_key = f"xp_{guild.id}"
+            for vc in guild.voice_channels:
+                for member in vc.members:
+                    if member.bot:
+                        continue
+                    if member.voice and (member.voice.self_deaf or member.voice.deaf or member.voice.afk):
+                        continue
+                    
+                    # Grant 40 XP per minute in Voice Chat (Very High)
+                    granted_xp = 40.0
+                    
+                    old_xp = int(await self.db.zscore(db_key, str(member.id)) or 0)
+                    old_level = self._get_level_from_xp(old_xp)
+                    
+                    new_xp = await self.db.zincrby(db_key, granted_xp, str(member.id))
+                    new_level = self._get_level_from_xp(int(new_xp))
+
+                    await self._process_level_up(member, old_level, new_level)
+                    
+    @vc_xp_loop.before_loop
+    async def before_vc_xp_loop(self):
+        await self.bot.wait_until_ready()
+
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot or not message.guild:
@@ -58,64 +118,39 @@ class Leveling(commands.Cog):
         user_id = message.author.id
         current_time = time.time()
         
-        # Check Cooldown
         if user_id in self.cooldowns:
             if current_time - self.cooldowns[user_id] < self.msg_cooldown:
                 return
         
         self.cooldowns[user_id] = current_time
-
-        # XP Multiplier Logic (March 8, 2026 -> March 15, 2026)
-        # Exactly 7 days from right now in Unix seconds
-        seven_days_from_now = 1773611390
-        
-        # Base Points
-        granted_xp = float(self.points_per_msg)
-        
-        if current_time < seven_days_from_now:
-            granted_xp *= 5.0 # 5x Faster
-        else:
-            granted_xp *= 2.5 # 2.5x Faster
-            
-        # Tuned to 2/3 of original XP gain
-        granted_xp *= (2.0 / 3.0)
-            
         guild_id = message.guild.id
-        db_key = f"xp_{guild_id}"
         
+        content = message.content.strip()
+        length = len(content)
+        words = content.split()
+        num_words = len(words)
+        has_punctuation = any(p in content for p in ".!?")
+
+        # Dynamic XP Calculation
+        if length == 0:
+            granted_xp = 1.0 # Only attachment/pure empty
+        elif length < 10 or num_words < 3:
+            granted_xp = 2.0 # Just emoji, gifs, or spam-type
+        elif num_words >= 10 and has_punctuation:
+            granted_xp = 15.0 # Structured sentences
+            if length > 300:
+                granted_xp = 25.0 # Max for very long texts
+        else:
+            granted_xp = 8.0 # Standard short messages
+
+        db_key = f"xp_{guild_id}"
         old_xp = int(await self.db.zscore(db_key, str(user_id)) or 0)
         old_level = self._get_level_from_xp(old_xp)
         
         new_xp = await self.db.zincrby(db_key, granted_xp, str(user_id))
         new_level = self._get_level_from_xp(int(new_xp))
 
-        # Check for Level Up
-        if new_level > old_level:
-            reward = (1000 + (new_level - 1) * 100) * 2
-            current_balance = int(await self.db.get(f"ks_bucks:{user_id}") or 0)
-            new_balance = current_balance + reward
-            await self.db.set(f"ks_bucks:{user_id}", new_balance)
-            
-            embed = discord.Embed(
-                title="👑 ROYAL PROMOTION SECURED! 👑",
-                description=f"Attention! {message.author.mention} has been elevated to **Level {new_level}**! 🛡️ For the Kingdom! ⚔️\n\n🏰 **Royal Treasury Deposit:** `{reward} Kingshot Bucks` added to your reserves!",
-                color=await self._get_user_color(user_id)
-            )
-            embed.set_thumbnail(url=message.author.display_avatar.url)
-            
-            # Check if an admin set a specific Level-Up announcement channel
-            target_channel = None
-            saved_channel_id = await self.db.get(f"levelup_channel:{guild_id}")
-            
-            if saved_channel_id:
-                target_channel = message.guild.get_channel(int(saved_channel_id))
-            
-            if target_channel:
-                try:
-                    await target_channel.send(embed=embed)
-                except discord.Forbidden:
-                    pass
-
+        await self._process_level_up(message.author, old_level, new_level)
 
     @commands.hybrid_command()
     async def rank(self, ctx, member: discord.Member = None):
@@ -140,10 +175,7 @@ class Leveling(commands.Cog):
         
         military_ranks = ["Squire", "Man-at-Arms", "Knight", "Captain", "Lord", "Baron", "Duke", "King"]
         title_rank = military_ranks[min(level // 5, len(military_ranks)-1)]
-
-        bars = int(progress * 10)
         
-        # War themed progress bar
         filled_blocks = "🟥" * int(bars)
         empty_blocks = "⬛" * int(10 - bars)
         
@@ -225,7 +257,6 @@ class Leveling(commands.Cog):
             return await ctx.send("❌ Invalid hex code format. Use a 6-character hex like `#FF0000`")
 
         try:
-            # Validate hex
             int(hex_code.strip('#'), 16)
         except ValueError:
             return await ctx.send("❌ Invalid hex code format.")
@@ -277,11 +308,10 @@ class Leveling(commands.Cog):
     @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def givexp(self, ctx, member: discord.Member, amount: int):
-        """[Admin Only] Instantly grants XP to a user, bypassing cooldowns."""
+        """[Admin Only] Instantly grants XP to a user."""
         guild_id = ctx.guild.id
         db_key = f"xp_{guild_id}"
         
-        # Calculate old level for potential level up notification
         old_xp = int(await self.db.zscore(db_key, str(member.id)) or 0)
         old_level = self._get_level_from_xp(old_xp)
         
@@ -289,33 +319,7 @@ class Leveling(commands.Cog):
         new_level = self._get_level_from_xp(int(new_xp))
         
         await ctx.send(f"✅ Successfully granted **{amount} XP** to {member.mention}.")
-        
-        # Check for Level Up
-        if new_level > old_level:
-            reward = 1000 + (new_level - 1) * 100
-            current_balance = int(await self.db.get(f"ks_bucks:{member.id}") or 0)
-            new_balance = current_balance + reward
-            await self.db.set(f"ks_bucks:{member.id}", new_balance)
-            
-            embed = discord.Embed(
-                title="🎖️ PROMOTION SECURED! 🎖️",
-                description=f"Attention! {member.mention} has advanced to **Level {new_level}**! 🫡 Keep pushing forward! ⚔️\n\n🏦 **War Chest Deposit:** `{reward} Kingshot Bucks` added to your reserves!",
-                color=await self._get_user_color(member.id)
-            )
-            embed.set_thumbnail(url=member.display_avatar.url)
-            
-            target_channel = None
-            saved_channel_id = await self.db.get(f"levelup_channel:{guild_id}")
-            
-            if saved_channel_id:
-                target_channel = ctx.guild.get_channel(int(saved_channel_id))
-            
-            if target_channel:
-                try:
-                    await target_channel.send(embed=embed)
-                except discord.Forbidden:
-                    pass
-
+        await self._process_level_up(member, old_level, new_level)
 
 async def setup(bot):
     await bot.add_cog(Leveling(bot))

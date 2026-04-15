@@ -20,7 +20,7 @@ ytdl_format_options = {
 }
 
 ffmpeg_options = {
-    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -reconnect_on_network_error 1 -reconnect_on_http_error 4xx,5xx',
     'options': '-vn'
 }
 
@@ -71,7 +71,7 @@ class YTDLSource(discord.AudioSource):
         if not filename:
             raise Exception("Could not find a valid streamable audio URL.")
             
-        return cls(discord.FFmpegOpusAudio(filename, **ffmpeg_options), data=data)
+        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
 class MusicConfigModal(discord.ui.Modal, title='Music Configuration'):
     authorized_text = discord.ui.TextInput(label='Restricted Text Channel ID (Blank = Any)', placeholder='e.g. 123456789', required=False)

@@ -276,10 +276,8 @@ class MusicControlView(discord.ui.View):
     async def stop_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         voice_client = interaction.guild.voice_client
         if voice_client:
-            if interaction.guild.id in self.cog.queues:
-                self.cog.queues[interaction.guild.id].clear()
             await voice_client.disconnect()
-            await interaction.response.send_message("🛑 Disconnected from the voice channel and cleared the queue.")
+            await interaction.response.send_message("🛑 Disconnected from the voice channel. (Queue preserved)")
         else:
             await interaction.response.send_message("❌ I am not in a voice channel.", ephemeral=True)
 

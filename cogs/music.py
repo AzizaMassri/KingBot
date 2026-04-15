@@ -16,7 +16,7 @@ ytdl_format_options = {
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
-    'extractor_args': {'youtube': {'player_client': ['android', 'web']}}
+    'extractor_args': {'youtube': {'player_client': ['android', 'ios']}}
 }
 
 ffmpeg_options = {
@@ -274,6 +274,9 @@ class MusicControlView(discord.ui.View):
 
     @discord.ui.button(label="Disconnect", style=discord.ButtonStyle.red, emoji="🛑", custom_id="music_cmd_stop", row=1)
     async def stop_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not interaction.user.guild_permissions.administrator:
+            return await interaction.response.send_message("❌ Only Server Administrators can forcefully disconnect the music bot.", ephemeral=True)
+            
         voice_client = interaction.guild.voice_client
         if voice_client:
             await voice_client.disconnect()

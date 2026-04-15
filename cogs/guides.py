@@ -635,6 +635,60 @@ class TransferView(BaseGuideView):
         await self.update_message(interaction, embed)
 
 
+class DailyOpsView(BaseGuideView):
+    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="dailyops_mini")
+    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🚀 Daily Operations Directive 🚀",
+            description=(
+                "⏱️ **Rotations:** Clear Conquest & Island Water every 8h. Gather Iron/Stone.\n"
+                "⚔️ **Map Clears:** Claim 2x stamina. Do 50/50 terrors. Clear all intel. Arena before reset.\n"
+                "🤝 **Alliance & Pets:** Max donations, clear gifts. Do pet missions & pop skills.\n"
+                "💸 **Store Sweeps:** Buy 50% off Widget Chests. Wipe Nomadic RSS trades. Buy VIP/Speedups. Max 5% gem bank.\n"
+                "👑 **Endgame (TC30+):** 6x TG Refinements! Truegold Dust daily. Use Decree Exploit.\n"
+                "🛑 **Rule:** 100% queue uptime! Max daily chests. Minimums on non-KvK events."
+            ),
+            color=discord.Color.brand_red()
+        )
+        await self.update_message(interaction, embed)
+
+    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="dailyops_full")
+    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(
+            title="🚀 Daily Operations Directive (Full) 🚀",
+            color=discord.Color.brand_red()
+        )
+        embed.description = (
+            "> *Execute the matrix daily. Do not bleed efficiency.*\n\n"
+            "**⏱️ 8-HOUR ROTATIONS**\n"
+            "• **Conquest:** Clear every 8h to prevent token cap.\n"
+            "• **Island Water:** Collect & use all 3 daily top-ups.\n"
+            "• **Gathering:** Reset 4 marches. Prioritize **Iron/Stone** for Truegold.\n\n"
+            "**⚔️ STAMINA & MAP CLEARS**\n"
+            "• **Stamina Drops:** Claim 2x daily free recharges.\n"
+            "• **Terrors:** Auto-join rallies until 50/50 cap. Manually kill 5 daily for top-tier loot.\n"
+            "• **Intel:** Complete ALL missions. (Grants Truegold at TC30).\n"
+            "• **Arena:** Do challenges right before 0:00 UTC reset to maximize placement.\n\n"
+            "**🤝 ALLIANCE & PETS**\n"
+            "• **Contributions:** Max out tech donations whenever online. Clear gift menu constantly.\n"
+            "• **Pets:** Complete all 4 daily missions. Pop skills (Bison RSS drain, Lynx stamina) on cooldown.\n\n"
+            "**💸 STORE SWEEPS**\n"
+            "• **Mystery Store:** Refresh and buy **Widget Chests ONLY** (50% off).\n"
+            "• **Nomadic Store:** Wipe out all RSS-to-RSS exchanges.\n"
+            "• **Alliance Store:** Buy Speedups, VIP points, Teleports. **NO healing speedups.**\n"
+            "• **Dailies:** Deposit max gems into 5% daily bank. Grab free VIP & Deal chests.\n\n"
+            "**👑 ENDGAME ECONOMY (TC30+)**\n"
+            "• **Truegold Crucible:** Execute 6x refinements daily. Do not miss this.\n"
+            "• **War Academy:** Exchange Gold for Truegold Dust daily.\n"
+            "• **Decree Exploit:** Fire in this exact order: `Urgent Mobilization` ➡️ `Productivity Day` (100% buff) ➡️ `Rush Job` (doubles the payout).\n\n"
+            "**🛑 THE GOLDEN RULES**\n"
+            "1. **100% Uptime:** Never let training or research queues idle.\n"
+            "2. **Event Discipline:** Do non-KvK events strictly to minimum reward thresholds.\n"
+            "3. **Daily Missions:** 100% completion for max chests."
+        )
+        await self.update_message(interaction, embed)
+
+
 class GuidesCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -707,6 +761,7 @@ class GuidesCog(commands.Cog):
                 "`!guides playbook` - View the Definitive Kingshot Playbook.\n"
                 "`!guides whale` - View the Whale Guide.\n"
                 "`!guides transfer` - View the Kingdom Transfer Event Guide.\n"
+                "`!guides dailyops` - View the Daily Operations Directive.\n"
                 "`!castle` - View information and strategies for the Kingdom of Power (KvK) Castle Battle.\n"
                 "`!facility` - View information and strategies for Sanctuaries, Outposts, and Fortresses."
             ),
@@ -793,6 +848,16 @@ class GuidesCog(commands.Cog):
             color=discord.Color.gold()
         )
         await self.send_or_translate_guide(ctx, embed, view=PlaybookView(self.bot))
+
+    @guides_command.command(name="dailyops", aliases=["daily"])
+    async def guides_dailyops(self, ctx):
+        """View the Daily Operations Directive."""
+        embed = discord.Embed(
+            title="🚀 Daily Operations Directive 🚀",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.brand_red()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=DailyOpsView(self.bot))
 
     @guides_command.command(name="whale")
     async def guides_whale(self, ctx):
@@ -891,6 +956,16 @@ class GuidesCog(commands.Cog):
             color=discord.Color.blue()
         )
         await self.send_or_translate_guide(ctx, embed, view=TransferView(self.bot))
+
+    @commands.hybrid_command(name="dailyops", aliases=["daily"])
+    async def dailyops_command(self, ctx):
+        """View the Daily Operations Directive."""
+        embed = discord.Embed(
+            title="🚀 Daily Operations Directive 🚀",
+            description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
+            color=discord.Color.brand_red()
+        )
+        await self.send_or_translate_guide(ctx, embed, view=DailyOpsView(self.bot))
 
 async def setup(bot):
     await bot.add_cog(GuidesCog(bot))

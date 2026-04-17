@@ -3,6 +3,35 @@ import asyncio
 import time
 from typing import Optional
 
+# Language name to language code mapping for deep_translator
+LANGUAGE_TO_CODE = {
+    "english": "en",
+    "spanish": "es",
+    "french": "fr",
+    "german": "de",
+    "italian": "it",
+    "portuguese": "pt",
+    "russian": "ru",
+    "japanese": "ja",
+    "korean": "ko",
+    "chinese simplified": "zh-CN",
+    "chinese traditional": "zh-TW",
+    "cantonese": "yue",
+    "arabic": "ar",
+    "hindi": "hi",
+    "turkish": "tr",
+    "dutch": "nl",
+    "polish": "pl",
+    "indonesian": "id",
+    "vietnamese": "vi",
+    "thai": "th",
+    "tagalog": "tl",
+    "swedish": "sv",
+    "ukrainian": "uk",
+    "greek": "el",
+    "romanian": "ro",
+}
+
 # Constants for Margin Calculation
 # Target monthly quota before reaching peak degradation. 
 IDEAL_VOLUME_CAP = 40000000 
@@ -199,8 +228,11 @@ def perform_google_translate_fallback(text: str, target_language: str) -> str:
         try:
             from deep_translator import GoogleTranslator
             
-            # Pass the full language name (lowercased); deep_translator handles name resolution
+            # Map language name to code; deep_translator needs codes like 'en', not 'english'
             lang_code = target_language.lower()
+            if lang_code in LANGUAGE_TO_CODE:
+                lang_code = LANGUAGE_TO_CODE[lang_code]
+            
             translator = GoogleTranslator(source='auto', target=lang_code)
             
             # Execute translation with timeout protection

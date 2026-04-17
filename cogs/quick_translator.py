@@ -189,13 +189,15 @@ class QuickTranslator(commands.Cog):
         preferred_lang = None
         try:
             preferred_lang = await self.bot.db.hget(f"translator_subs:{interaction.guild_id}", str(interaction.user.id))
-        except:
-            pass
+            logger.debug(f"Retrieved preferred_lang for {interaction.user.id}: {preferred_lang}")
+        except Exception as e:
+            logger.error(f"Failed to retrieve preferred_lang: {e}")
 
-        if preferred_lang:
+        if preferred_lang and preferred_lang.strip():  # Ensure not empty
             await interaction.response.defer(ephemeral=True)
-            target = preferred_lang
+            target = preferred_lang.strip()  # Clean whitespace
             text = message.content
+            logger.info(f"Using preferred language '{target}' for user {interaction.user.id}")
 
             try:
                 exclusion_list = await self.bot.db.smembers("translator_exclusion_keywords")

@@ -127,7 +127,7 @@ def get_translation_boundary(server_total_usage: int) -> float:
 def decide_translation_route(content: str, current_usage: int) -> str:
     """
     Decides the translation routing strategy based on sliding algorithm.
-    Returns: 'gemini-2.5-flash', 'gemini-2.5-flash-8b', or 'googletrans'
+    Returns: 'gemini-2.5-flash', 'gemini-2.5-flash-lite', or 'googletrans'
     """
     score = get_complexity_score(content)
     boundary = get_translation_boundary(current_usage)
@@ -139,7 +139,43 @@ def decide_translation_route(content: str, current_usage: int) -> str:
     if score >= boundary:
         return 'gemini-2.5-flash'
     else:
-        return 'gemini-2.5-flash-8b'
+        return 'gemini-2.5-flash-lite'
+
+
+def perform_gemini_translation(client, model_choice: str, prompt: str, text: str, target_language: str) -> str:
+    """
+    Executes a Gemini translation with retry logic and googletrans fallback on 503.
+    Retries up to 2 times with backoff, then falls back to perform_google_translate_fallback.
+    """
+    max_retries = 2
+    base_delay = 1.0
+
+    for attempt in range(max_retries + 1):
+        try:
+            response = client.models.generate_content(model=model_choice, contents=prompt)
+            result = response.text if response and hasattr(response, 'text') else None
+            if result and isinstance(result, str) and result.strip():
+                return result.strip()
+            raise ValueError("Empty response from Gemini")
+        except Exception as e:
+            error_str = str(e)
+            is_transient = any(code in error_str for code in [
+                '503', 'service unavailable', 'temporarily unavailable',
+                'overloaded', 'try again', 'server error'
+            ])
+            print(f"Gemini attempt {attempt + 1}/{max_retries + 1} failed ({model_choice}): {e}")
+            if is_transient and attempt < max_retries:
+                time.sleep(base_delay * (2 ** attempt))  # 1s, 2s
+                continue
+            # Non-transient or exhausted retries — fall back to googletrans
+            print(f"Falling back to googletrans after Gemini failure: {e}")
+            result = perform_google_translate_fallback(text, target_language)
+            if result:
+                return result
+            # Re-raise original so caller can handle it properly
+            raise
+
+    return ""
 
 
 def perform_google_translate_fallback(text: str, target_language: str) -> str:

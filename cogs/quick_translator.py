@@ -70,7 +70,7 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
                 raise ValueError("GEMINI_API_KEY environment variable is not set")
             
             def translate_text():
-                from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback, validate_translation_input
+                from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback, perform_gemini_translation, validate_translation_input
                 
                 # Validate input
                 is_valid, error_msg = validate_translation_input(text, target)
@@ -86,11 +86,7 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
                     return result
                 
                 client = genai.Client(api_key=api_key)
-                response = client.models.generate_content(
-                    model=model_choice,
-                    contents=prompt
-                )
-                return response.text if response and hasattr(response, 'text') else None
+                return perform_gemini_translation(client, model_choice, prompt, text, target)
             
             translation = await asyncio.wait_for(
                 asyncio.to_thread(translate_text),
@@ -226,7 +222,7 @@ class QuickTranslator(commands.Cog):
                     raise ValueError("GEMINI_API_KEY not configured")
                 
                 def translate_text():
-                    from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback
+                    from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback, perform_gemini_translation
                     model_choice = decide_translation_route(text, current_usage)
                     
                     if model_choice == 'googletrans':
@@ -236,11 +232,7 @@ class QuickTranslator(commands.Cog):
                         return result
                         
                     client = genai.Client(api_key=api_key)
-                    response = client.models.generate_content(
-                        model=model_choice,
-                        contents=prompt
-                    )
-                    return response.text
+                    return perform_gemini_translation(client, model_choice, prompt, text, target)
                 
                 translation = await asyncio.to_thread(translate_text)
                 if not translation:
@@ -326,7 +318,7 @@ class QuickTranslator(commands.Cog):
                         raise ValueError("GEMINI_API_KEY environment variable is not set")
                     
                     def translate_text():
-                        from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback
+                        from cogs.utils.translator_algo import decide_translation_route, perform_google_translate_fallback, perform_gemini_translation
                         model_choice = decide_translation_route(text_to_translate, current_usage)
                         
                         if model_choice == 'googletrans':
@@ -336,11 +328,7 @@ class QuickTranslator(commands.Cog):
                             return result
 
                         client = genai.Client(api_key=api_key)
-                        response = client.models.generate_content(
-                            model=model_choice,
-                            contents=prompt
-                        )
-                        return response.text
+                        return perform_gemini_translation(client, model_choice, prompt, text_to_translate, target_language)
                     
                     translation = await asyncio.to_thread(translate_text)
                     if not translation:

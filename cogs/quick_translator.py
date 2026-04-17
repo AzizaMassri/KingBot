@@ -132,8 +132,8 @@ class TranslateModal(discord.ui.Modal, title='Translate Message'):
             # Handle specific error cases
             if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
                 await interaction.followup.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY configuration.", ephemeral=True)
-            elif "temporarily unavailable" in error_msg.lower() or "service unavailable" in error_msg.lower():
-                await interaction.followup.send("⏳ Translation service temporarily unavailable. Please try again in a few seconds.", ephemeral=True)
+            elif "503" in error_msg or "service unavailable" in error_msg.lower() or "temporarily unavailable" in error_msg.lower():
+                await interaction.followup.send("⏳ Translation service is temporarily unavailable (503). Please try again in a few seconds.", ephemeral=True)
             elif "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
                 await interaction.followup.send("⚠️ Translation quota exceeded. Please try again later.", ephemeral=True)
             elif "invalid" in error_msg.lower():
@@ -262,8 +262,8 @@ class QuickTranslator(commands.Cog):
                 # Handle specific error cases
                 if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
                     await interaction.followup.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has proper access.", ephemeral=True)
-                elif "temporarily unavailable" in error_msg.lower() or "service unavailable" in error_msg.lower():
-                    await interaction.followup.send("⏳ Translation service is temporarily unavailable. Please try again in a few seconds.", ephemeral=True)
+                elif "503" in error_msg or "service unavailable" in error_msg.lower() or "temporarily unavailable" in error_msg.lower():
+                    await interaction.followup.send("⏳ Translation service is temporarily unavailable (503). Please try again in a few seconds.", ephemeral=True)
                 elif "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
                     await interaction.followup.send("⚠️ Translation quota exceeded. Please try again later.", ephemeral=True)
                 else:
@@ -367,8 +367,8 @@ class QuickTranslator(commands.Cog):
                 # Handle specific error cases
                 if "403" in error_msg or "PERMISSION_DENIED" in error_msg:
                     await ctx.send("❌ Translation failed - API key issue. Check your GEMINI_API_KEY and ensure it has proper access.")
-                elif "temporarily unavailable" in error_msg.lower() or "service unavailable" in error_msg.lower():
-                    await ctx.send("⏳ Translation service is temporarily unavailable. Please try again in a few seconds.")
+                elif "503" in error_msg or "service unavailable" in error_msg.lower() or "temporarily unavailable" in error_msg.lower():
+                    await ctx.send("⏳ Translation service is temporarily unavailable (503). Please try again in a few seconds.")
                 elif "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
                     await ctx.send("⚠️ Translation quota exceeded. Please try again later.")
                 else:

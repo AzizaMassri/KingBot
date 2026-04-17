@@ -163,8 +163,8 @@ def perform_google_translate_fallback(text: str, target_language: str) -> str:
         try:
             from deep_translator import GoogleTranslator
             
-            # Normalize language code - take only first 5 chars
-            lang_code = target_language.lower()[:5]
+            # Pass the full language name (lowercased); deep_translator handles name resolution
+            lang_code = target_language.lower()
             translator = GoogleTranslator(source='auto', target=lang_code)
             
             # Execute translation with timeout protection

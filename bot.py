@@ -195,6 +195,17 @@ async def global_admin_toggle_check(ctx):
 
 @bot.event
 async def on_ready():
+    # Run one-time guild sync on startup and log exact command counts by guild.
+    if not getattr(bot, "_guild_sync_done", False):
+        for guild in bot.guilds:
+            try:
+                bot.tree.copy_global_to(guild=guild)
+                guild_synced = await bot.tree.sync(guild=guild)
+                print(f"✅ Guild Sync | {guild.name} ({guild.id}) -> {len(guild_synced)} commands")
+            except Exception as e:
+                print(f"❌ Guild Sync Failed | {guild.name} ({guild.id}) -> {e}")
+        bot._guild_sync_done = True
+
     try:
         is_invisible = await bot.db.get("kingbot_global_invisible")
         if is_invisible == "1":

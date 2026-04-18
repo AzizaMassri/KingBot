@@ -764,8 +764,22 @@ class Simulator(commands.Cog):
             ),
         )
         embed.add_field(
-            name="Combat Input Format",
-            value="Use troop lines as inf,cav,arc. Example: 250000,120000,90000",
+            name="Combat Input Template",
+            value=(
+                "attacker_lines: inf,cav,arc\n"
+                "defender_lines: inf,cav,arc\n"
+                "Example attacker_lines: 250000,120000,90000\n"
+                "Example defender_lines: 300000,100000,110000"
+            ),
+            inline=False,
+        )
+        embed.add_field(
+            name="Advanced Templates",
+            value=(
+                "attacker_line_bonuses: inf:atk=10,def=5;cav:atk=8;arc:hp=12\n"
+                "defender_line_bonuses: inf:def=12,hp=10;arc:let=7\n"
+                "turn_events: 2:a_skill=1.2;4:d_skill=1.15;6:a_add=10,d_add=5"
+            ),
             inline=False,
         )
         embed.add_field(
@@ -803,8 +817,8 @@ class Simulator(commands.Cog):
 
     @sim.command(name="combat")
     @app_commands.describe(
-        attacker_lines="Attacker lines in inf,cav,arc format",
-        defender_lines="Defender lines in inf,cav,arc format",
+        attacker_lines="Required: inf,cav,arc (example: 250000,120000,90000)",
+        defender_lines="Required: inf,cav,arc (example: 300000,100000,110000)",
         attacker_tier="Attacker troop tier (1-12)",
         defender_tier="Defender troop tier (1-12)",
         turns="Turn count (1-60)",
@@ -838,9 +852,19 @@ class Simulator(commands.Cog):
                 title="Combat Input Needed",
                 color=discord.Color.blurple(),
                 description=(
-                    "No troop lines were provided, so here is the guided panel.\n"
-                    "You can also run: !sim combat 250000,120000,90000 300000,100000,110000"
+                    "Required inputs:\n"
+                    "1) attacker_lines as inf,cav,arc\n"
+                    "2) defender_lines as inf,cav,arc\n\n"
+                    "Exact prefix example:\n"
+                    "!sim combat 250000,120000,90000 300000,100000,110000\n\n"
+                    "Slash example:\n"
+                    "/sim combat attacker_lines:250000,120000,90000 defender_lines:300000,100000,110000"
                 ),
+            )
+            embed.add_field(
+                name="Need guided input?",
+                value="Use the panel buttons below to open modals and fill fields step by step.",
+                inline=False,
             )
             return await ctx.send(embed=embed, view=SimulatorPanelView(self))
 
@@ -848,7 +872,12 @@ class Simulator(commands.Cog):
             atk = parse_line_triplet(attacker_lines)
             deff = parse_line_triplet(defender_lines)
         except ValueError as exc:
-            return await ctx.send(f"Invalid troop line format: {exc}")
+            return await ctx.send(
+                "Invalid troop line format.\n"
+                f"Reason: {exc}\n"
+                "Expected: inf,cav,arc using whole numbers only.\n"
+                "Example: 250000,120000,90000"
+            )
 
         if sum(atk.values()) <= 0 or sum(deff.values()) <= 0:
             return await ctx.send("Both sides must have at least one troop.")
@@ -874,11 +903,11 @@ class Simulator(commands.Cog):
 
     @sim.command(name="combat_adv")
     @app_commands.describe(
-        attacker_lines="Attacker lines in inf,cav,arc format",
-        defender_lines="Defender lines in inf,cav,arc format",
-        attacker_line_bonuses="Example: inf:atk=10,def=5;cav:atk=8;arc:hp=12",
-        defender_line_bonuses="Example: inf:def=12,hp=10;arc:let=7",
-        turn_events="Example: 2:a_skill=1.2;4:d_skill=1.15;6:a_add=10,d_add=5",
+        attacker_lines="Required: inf,cav,arc (example: 250000,120000,90000)",
+        defender_lines="Required: inf,cav,arc (example: 300000,100000,110000)",
+        attacker_line_bonuses="Optional: inf:atk=10,def=5;cav:atk=8;arc:hp=12",
+        defender_line_bonuses="Optional: inf:def=12,hp=10;arc:let=7",
+        turn_events="Optional: 2:a_skill=1.2;4:d_skill=1.15;6:a_add=10,d_add=5",
     )
     async def sim_combat_adv(
         self,
@@ -906,8 +935,13 @@ class Simulator(commands.Cog):
                 title="Advanced Input Needed",
                 color=discord.Color.blurple(),
                 description=(
-                    "No troop lines were provided, so here is the guided panel for advanced mode.\n"
-                    "Click Advanced Combat to use line buffs and turn schedules by modal."
+                    "Required inputs:\n"
+                    "1) attacker_lines as inf,cav,arc\n"
+                    "2) defender_lines as inf,cav,arc\n\n"
+                    "Optional advanced fields:\n"
+                    "attacker_line_bonuses example: inf:atk=10,def=5;cav:atk=8;arc:hp=12\n"
+                    "defender_line_bonuses example: inf:def=12,hp=10;arc:let=7\n"
+                    "turn_events example: 2:a_skill=1.2;4:d_skill=1.15;6:a_add=10,d_add=5"
                 ),
             )
             return await ctx.send(embed=embed, view=SimulatorPanelView(self))
@@ -919,7 +953,12 @@ class Simulator(commands.Cog):
             def_line_bonus_map = parse_line_bonus_map(defender_line_bonuses)
             events = parse_turn_events(turn_events)
         except ValueError as exc:
-            return await ctx.send(f"Invalid advanced input: {exc}")
+            return await ctx.send(
+                "Invalid advanced input.\n"
+                f"Reason: {exc}\n"
+                "Line bonus format: inf:atk=10,def=5;cav:atk=8;arc:hp=12\n"
+                "Turn event format: 2:a_skill=1.2;4:d_skill=1.15;6:a_add=10,d_add=5"
+            )
 
         if sum(atk.values()) <= 0 or sum(deff.values()) <= 0:
             return await ctx.send("Both sides must have at least one troop.")

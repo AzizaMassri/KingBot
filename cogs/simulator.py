@@ -1365,7 +1365,7 @@ class QuickCombatModal(discord.ui.Modal, title="Quick Combat Simulation"):
     )
     settings = discord.ui.TextInput(
         label="Settings",
-        placeholder="a_tier=10,d_tier=10,turns=10,a_add=0,a_special=0,a_skill=1,d_add=0,d_special=0,d_skill=1,a_tg=0,d_tg=0",
+        placeholder="a_tier=10,d_tier=10,turns=10,a_add=0,a_skill=1,d_add=0,d_skill=1",
         required=False,
         max_length=400,
         style=discord.TextStyle.paragraph,
@@ -1424,13 +1424,13 @@ class AdvancedCombatModal(discord.ui.Modal, title="Advanced Combat Simulation"):
     )
     settings = discord.ui.TextInput(
         label="Base settings",
-        placeholder="a_tier=10,d_tier=10,turns=10,a_add=0,a_special=0,a_skill=1,d_add=0,d_special=0,d_skill=1",
+        placeholder="a_tier=10,d_tier=10,turns=10,a_add=0,a_skill=1,d_add=0,d_skill=1",
         required=False,
         max_length=350,
     )
     line_bonuses = discord.ui.TextInput(
         label="Line bonuses",
-        placeholder="A|inf:atk=10,def=5;cav:atk=8||D|inf:def=12,hp=9;arc:let=6",
+        placeholder="A|inf:atk=10;cav:atk=8||D|inf:def=12;arc:let=6",
         required=False,
         max_length=500,
         style=discord.TextStyle.paragraph,
@@ -1517,15 +1517,33 @@ class SimulatorPanelView(discord.ui.View):
 
     @discord.ui.button(label="Quick Combat", style=discord.ButtonStyle.primary, emoji="⚔️")
     async def quick_combat(self, interaction: discord.Interaction, _: discord.ui.Button):
-        await interaction.response.send_modal(QuickCombatModal(self.cog))
+        try:
+            await interaction.response.send_modal(QuickCombatModal(self.cog))
+        except Exception as e:
+            if interaction.response.is_done():
+                await interaction.followup.send(f"Could not open Quick Combat modal: {e}", ephemeral=True)
+            else:
+                await interaction.response.send_message(f"Could not open Quick Combat modal: {e}", ephemeral=True)
 
     @discord.ui.button(label="Advanced Combat", style=discord.ButtonStyle.danger, emoji="🧠")
     async def advanced_combat(self, interaction: discord.Interaction, _: discord.ui.Button):
-        await interaction.response.send_modal(AdvancedCombatModal(self.cog))
+        try:
+            await interaction.response.send_modal(AdvancedCombatModal(self.cog))
+        except Exception as e:
+            if interaction.response.is_done():
+                await interaction.followup.send(f"Could not open Advanced Combat modal: {e}", ephemeral=True)
+            else:
+                await interaction.response.send_message(f"Could not open Advanced Combat modal: {e}", ephemeral=True)
 
     @discord.ui.button(label="SkillMod Helper", style=discord.ButtonStyle.secondary, emoji="📐")
     async def skillmod(self, interaction: discord.Interaction, _: discord.ui.Button):
-        await interaction.response.send_modal(SkillModModal())
+        try:
+            await interaction.response.send_modal(SkillModModal())
+        except Exception as e:
+            if interaction.response.is_done():
+                await interaction.followup.send(f"Could not open SkillMod modal: {e}", ephemeral=True)
+            else:
+                await interaction.response.send_message(f"Could not open SkillMod modal: {e}", ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

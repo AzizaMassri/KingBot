@@ -16,9 +16,12 @@ class AdminConfirmView(TranslatedView):
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user != self.ctx.author:
             return await self.send_translated(interaction, content="You cannot confirm this action.", ephemeral=True)
-        for child in self.children: child.disabled = True
-        try: await interaction.message.edit(content=f"Confirmed {self.action_name}.", view=self)
-        except discord.HTTPException: pass
+        for child in self.children:
+            child.disabled = True
+        try:
+            await interaction.response.edit_message(content=f"Confirmed {self.action_name}.", view=self)
+        except discord.HTTPException:
+            pass
         self.stop()
         await self.callback_coro()
 
@@ -26,9 +29,12 @@ class AdminConfirmView(TranslatedView):
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user != self.ctx.author:
             return await self.send_translated(interaction, content="You cannot cancel this action.", ephemeral=True)
-        for child in self.children: child.disabled = True
-        try: await interaction.message.edit(content=f"Cancelled {self.action_name}.", view=self)
-        except discord.HTTPException: pass
+        for child in self.children:
+            child.disabled = True
+        try:
+            await interaction.response.edit_message(content=f"Cancelled {self.action_name}.", view=self)
+        except discord.HTTPException:
+            pass
         self.stop()
 
 

@@ -133,6 +133,35 @@ def parse_kv_numbers(raw: str) -> Dict[str, float]:
     return out
 
 
+def _parse_int_input(
+    raw: str,
+    default: int,
+    label: str,
+    minimum: int | None = None,
+    maximum: int | None = None,
+) -> int:
+    text = (raw or "").strip()
+    value = default if not text else int(text)
+    if minimum is not None and value < minimum:
+        raise ValueError(f"{label} must be at least {minimum}.")
+    if maximum is not None and value > maximum:
+        raise ValueError(f"{label} must be at most {maximum}.")
+    return value
+
+
+def _parse_float_input(
+    raw: str,
+    default: float,
+    label: str,
+    minimum: float | None = None,
+) -> float:
+    text = (raw or "").strip()
+    value = default if not text else float(text)
+    if minimum is not None and value < minimum:
+        raise ValueError(f"{label} must be at least {minimum}.")
+    return value
+
+
 def scale_anchor_map(
     anchors: Dict[str, Dict[str, int]],
     atk_scale: float,
@@ -819,13 +848,13 @@ class Simulator(commands.Cog):
 
     @sim.command(name="panel")
     async def sim_panel(self, ctx: commands.Context):
-        """Open an interactive simulator panel with guided modals."""
+        """Open an interactive simulator panel with guided builders."""
         embed = discord.Embed(
             title="Interactive Simulator Panel",
             color=discord.Color.blurple(),
             description=(
                 "Use the buttons below to run the simulator without memorizing command syntax.\n"
-                "Each modal explains expected input format directly in placeholders."
+                "Each builder keeps all current inputs visible in one place while you fill out section forms."
             ),
         )
         embed.add_field(
@@ -904,7 +933,7 @@ class Simulator(commands.Cog):
             )
             embed.add_field(
                 name="Need guided input?",
-                value="Use the panel buttons below to open modals and fill fields step by step.",
+                value="Use the panel buttons below to open a guided builder and fill each section step by step.",
                 inline=False,
             )
             return await ctx.send(embed=embed, view=SimulatorPanelView(self))
@@ -1411,164 +1440,453 @@ class SkillModModal(discord.ui.Modal, title="SkillMod Helper"):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
-class QuickCombatModal(discord.ui.Modal, title="Quick Combat Simulation"):
-    attacker_lines = discord.ui.TextInput(
-        label="Attacker lines (inf,cav,arc)",
-        placeholder="Example: 250000,120000,90000",
-        required=True,
-        max_length=120,
-    )
-    defender_lines = discord.ui.TextInput(
-        label="Defender lines (inf,cav,arc)",
-        placeholder="Example: 300000,100000,110000",
-        required=True,
-        max_length=120,
-    )
-    settings = discord.ui.TextInput(
-        label="Settings (a_/d_ plus tier,tg,add,special,skill,turns)",
-        placeholder="a_tier=10,a_tg=0,d_tier=10,d_tg=0,turns=10,a_add=0,d_add=0,a_special=0,d_special=0,a_skill=1,d_skill=1",
-        required=False,
-        max_length=400,
-        style=discord.TextStyle.paragraph,
-    )
+@dataclass
+class CombatWizardState:
+    attacker_lines_raw: str = ""
+    defender_lines_raw: str = ""
+    attacker_tier: int = 10
+    defender_tier: int = 10
+    turns: int = 10
+    attacker_tg: int = 0
+    defender_tg: int = 0
+    attacker_add: float = 0.0
+    defender_add: float = 0.0
+    attacker_special: float = 0.0
+    defender_special: float = 0.0
+    attacker_skill: float = 1.0
+    defender_skill: float = 1.0
 
-    def __init__(self, cog: Simulator):
-        super().__init__()
+
+@dataclass
+class AdvancedCombatWizardState(CombatWizardState):
+    attacker_line_bonuses_raw: str = ""
+    defender_line_bonuses_raw: str = ""
+    turn_events_raw: str = ""
+
+
+class BaseSimulatorSetupView(discord.ui.View):
+    def __init__(self, cog: Simulator, owner_id: int):
+        super().__init__(timeout=900)
         self.cog = cog
+        self.owner_id = owner_id
+        self.message: discord.Message | None = None
 
-    async def on_submit(self, interaction: discord.Interaction):
-        try:
-            atk = parse_line_triplet(str(self.attacker_lines.value))
-            deff = parse_line_triplet(str(self.defender_lines.value))
-            cfg = parse_kv_numbers(str(self.settings.value))
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.owner_id:
+            await interaction.response.send_message("This simulator panel belongs to the user who opened it.", ephemeral=True)
+            return False
+        return True
 
-            attacker_cfg = self.cog._build_side_config(
-                int(cfg.get("a_tier", 10)),
-                int(cfg.get("a_tg", 0)),
-                float(cfg.get("a_add", 0.0)),
-                float(cfg.get("a_special", 0.0)),
-                float(cfg.get("a_skill", 1.0)),
-            )
-            defender_cfg = self.cog._build_side_config(
-                int(cfg.get("d_tier", 10)),
-                int(cfg.get("d_tg", 0)),
-                float(cfg.get("d_add", 0.0)),
-                float(cfg.get("d_special", 0.0)),
-                float(cfg.get("d_skill", 1.0)),
-            )
-            turns = int(cfg.get("turns", 10))
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
+        if self.message is not None:
+            try:
+                await self.message.edit(view=self)
+            except discord.HTTPException:
+                pass
 
-            result = CombatEngine.simulate(atk, deff, attacker_cfg, defender_cfg, turns=turns)
-            embed = self.cog._combat_result_embed(
-                result,
-                title="Combat Simulation (Panel)",
-                description="Quick panel run with the same core assumptions as /sim combat.",
-                footer="Tip: use Advanced Combat for line buffs and scheduled turn effects.",
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-        except Exception as exc:
-            await interaction.response.send_message(f"Could not run simulation: {exc}", ephemeral=True)
-
-
-class AdvancedCombatModal(discord.ui.Modal, title="Advanced Combat Simulation"):
-    attacker_lines = discord.ui.TextInput(
-        label="Attacker lines (inf,cav,arc)",
-        placeholder="Example: 250000,120000,90000",
-        required=True,
-        max_length=120,
-    )
-    defender_lines = discord.ui.TextInput(
-        label="Defender lines (inf,cav,arc)",
-        placeholder="Example: 300000,100000,110000",
-        required=True,
-        max_length=120,
-    )
-    settings = discord.ui.TextInput(
-        label="Base settings (a_/d_ plus tier,tg,add,special,skill,turns)",
-        placeholder="a_tier=10,a_tg=0,d_tier=10,d_tg=0,turns=10,a_add=0,d_add=0,a_special=0,d_special=0,a_skill=1,d_skill=1",
-        required=False,
-        max_length=350,
-    )
-    line_bonuses = discord.ui.TextInput(
-        label="Line bonuses (atk,def,hp,let)",
-        placeholder="A|inf:atk=10;cav:atk=8||D|inf:def=12;arc:let=6",
-        required=False,
-        max_length=500,
-        style=discord.TextStyle.paragraph,
-    )
-    turn_events = discord.ui.TextInput(
-        label="Turn events (a_skill,d_add,etc.)",
-        placeholder="2:a_skill=1.2;4:d_skill=1.15;6:a_add=10,d_add=5",
-        required=False,
-        max_length=500,
-        style=discord.TextStyle.paragraph,
-    )
-
-    def __init__(self, cog: Simulator):
-        super().__init__()
-        self.cog = cog
+    async def refresh_panel(self, interaction: discord.Interaction):
+        if not interaction.response.is_done():
+            await interaction.response.defer()
+        if self.message is not None:
+            await self.message.edit(embed=self.build_embed(), view=self)
 
     @staticmethod
-    def _split_bonus_blob(raw: str) -> Tuple[str, str]:
-        text = (raw or "").strip()
-        if not text:
-            return "", ""
-        if "||" not in text:
-            raise ValueError("Line bonuses must separate sides using ||")
-        left, right = text.split("||", 1)
-        left = left.strip()
-        right = right.strip()
-        if left.upper().startswith("A|"):
-            left = left[2:].strip()
-        if right.upper().startswith("D|"):
-            right = right[2:].strip()
-        return left, right
+    def _display(value: str, fallback: str = "Not set") -> str:
+        text = value.strip()
+        return text if text else fallback
+
+
+class CombatLinesModal(discord.ui.Modal):
+    def __init__(self, parent_view: BaseSimulatorSetupView, title: str, attacker_default: str, defender_default: str):
+        super().__init__(title=title)
+        self.parent_view = parent_view
+        self.attacker_lines = discord.ui.TextInput(
+            label="Attacker lines",
+            placeholder="250000,120000,90000",
+            default=attacker_default,
+            required=False,
+            max_length=120,
+        )
+        self.defender_lines = discord.ui.TextInput(
+            label="Defender lines",
+            placeholder="300000,100000,110000",
+            default=defender_default,
+            required=False,
+            max_length=120,
+        )
+        self.add_item(self.attacker_lines)
+        self.add_item(self.defender_lines)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        self.parent_view.state.attacker_lines_raw = str(self.attacker_lines.value).strip()
+        self.parent_view.state.defender_lines_raw = str(self.defender_lines.value).strip()
+        await self.parent_view.refresh_panel(interaction)
+
+
+class CombatBaseSettingsModal(discord.ui.Modal):
+    def __init__(self, parent_view: BaseSimulatorSetupView, title: str):
+        super().__init__(title=title)
+        state = parent_view.state
+        self.parent_view = parent_view
+        self.attacker_tier = discord.ui.TextInput(label="Attacker tier (1-12)", default=str(state.attacker_tier), required=False, max_length=3)
+        self.defender_tier = discord.ui.TextInput(label="Defender tier (1-12)", default=str(state.defender_tier), required=False, max_length=3)
+        self.turns = discord.ui.TextInput(label="Turns (1-60)", default=str(state.turns), required=False, max_length=3)
+        self.attacker_tg = discord.ui.TextInput(label="Attacker TG (0-5)", default=str(state.attacker_tg), required=False, max_length=3)
+        self.defender_tg = discord.ui.TextInput(label="Defender TG (0-5)", default=str(state.defender_tg), required=False, max_length=3)
+        self.add_item(self.attacker_tier)
+        self.add_item(self.defender_tier)
+        self.add_item(self.turns)
+        self.add_item(self.attacker_tg)
+        self.add_item(self.defender_tg)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            atk = parse_line_triplet(str(self.attacker_lines.value))
-            deff = parse_line_triplet(str(self.defender_lines.value))
-            cfg = parse_kv_numbers(str(self.settings.value))
-            atk_bonus_blob, def_bonus_blob = self._split_bonus_blob(str(self.line_bonuses.value))
-            atk_bonuses = parse_line_bonus_map(atk_bonus_blob)
-            def_bonuses = parse_line_bonus_map(def_bonus_blob)
-            events = parse_turn_events(str(self.turn_events.value))
+            state = self.parent_view.state
+            state.attacker_tier = _parse_int_input(str(self.attacker_tier.value), state.attacker_tier, "Attacker tier", 1, 12)
+            state.defender_tier = _parse_int_input(str(self.defender_tier.value), state.defender_tier, "Defender tier", 1, 12)
+            state.turns = _parse_int_input(str(self.turns.value), state.turns, "Turns", 1, 60)
+            state.attacker_tg = _parse_int_input(str(self.attacker_tg.value), state.attacker_tg, "Attacker TG", 0, 5)
+            state.defender_tg = _parse_int_input(str(self.defender_tg.value), state.defender_tg, "Defender TG", 0, 5)
+        except ValueError as exc:
+            await interaction.response.send_message(str(exc), ephemeral=True)
+            return
+        await self.parent_view.refresh_panel(interaction)
 
+
+class CombatBuffSettingsModal(discord.ui.Modal):
+    def __init__(self, parent_view: BaseSimulatorSetupView, title: str):
+        super().__init__(title=title)
+        state = parent_view.state
+        self.parent_view = parent_view
+        self.attacker_add = discord.ui.TextInput(label="Attacker add %", default=f"{state.attacker_add:g}", required=False, max_length=12)
+        self.defender_add = discord.ui.TextInput(label="Defender add %", default=f"{state.defender_add:g}", required=False, max_length=12)
+        self.attacker_special = discord.ui.TextInput(label="Attacker special %", default=f"{state.attacker_special:g}", required=False, max_length=12)
+        self.defender_special = discord.ui.TextInput(label="Defender special %", default=f"{state.defender_special:g}", required=False, max_length=12)
+        self.add_item(self.attacker_add)
+        self.add_item(self.defender_add)
+        self.add_item(self.attacker_special)
+        self.add_item(self.defender_special)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            state = self.parent_view.state
+            state.attacker_add = _parse_float_input(str(self.attacker_add.value), state.attacker_add, "Attacker add")
+            state.defender_add = _parse_float_input(str(self.defender_add.value), state.defender_add, "Defender add")
+            state.attacker_special = _parse_float_input(str(self.attacker_special.value), state.attacker_special, "Attacker special")
+            state.defender_special = _parse_float_input(str(self.defender_special.value), state.defender_special, "Defender special")
+        except ValueError as exc:
+            await interaction.response.send_message(str(exc), ephemeral=True)
+            return
+        await self.parent_view.refresh_panel(interaction)
+
+
+class CombatSkillSettingsModal(discord.ui.Modal):
+    def __init__(self, parent_view: BaseSimulatorSetupView, title: str):
+        super().__init__(title=title)
+        state = parent_view.state
+        self.parent_view = parent_view
+        self.attacker_skill = discord.ui.TextInput(label="Attacker SkillMod", default=f"{state.attacker_skill:g}", required=False, max_length=12)
+        self.defender_skill = discord.ui.TextInput(label="Defender SkillMod", default=f"{state.defender_skill:g}", required=False, max_length=12)
+        self.add_item(self.attacker_skill)
+        self.add_item(self.defender_skill)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            state = self.parent_view.state
+            state.attacker_skill = _parse_float_input(str(self.attacker_skill.value), state.attacker_skill, "Attacker SkillMod", 0.0)
+            state.defender_skill = _parse_float_input(str(self.defender_skill.value), state.defender_skill, "Defender SkillMod", 0.0)
+        except ValueError as exc:
+            await interaction.response.send_message(str(exc), ephemeral=True)
+            return
+        await self.parent_view.refresh_panel(interaction)
+
+
+class AdvancedLineBonusesModal(discord.ui.Modal):
+    def __init__(self, parent_view: BaseSimulatorSetupView):
+        super().__init__(title="Advanced Line Bonuses")
+        state = parent_view.state
+        self.parent_view = parent_view
+        self.attacker_bonuses = discord.ui.TextInput(
+            label="Attacker bonuses",
+            placeholder="inf:atk=10;cav:atk=8",
+            default=state.attacker_line_bonuses_raw,
+            required=False,
+            max_length=500,
+            style=discord.TextStyle.paragraph,
+        )
+        self.defender_bonuses = discord.ui.TextInput(
+            label="Defender bonuses",
+            placeholder="inf:def=12;arc:let=6",
+            default=state.defender_line_bonuses_raw,
+            required=False,
+            max_length=500,
+            style=discord.TextStyle.paragraph,
+        )
+        self.add_item(self.attacker_bonuses)
+        self.add_item(self.defender_bonuses)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        state = self.parent_view.state
+        state.attacker_line_bonuses_raw = str(self.attacker_bonuses.value).strip()
+        state.defender_line_bonuses_raw = str(self.defender_bonuses.value).strip()
+        await self.parent_view.refresh_panel(interaction)
+
+
+class AdvancedTurnEventsModal(discord.ui.Modal):
+    def __init__(self, parent_view: BaseSimulatorSetupView):
+        super().__init__(title="Advanced Turn Events")
+        state = parent_view.state
+        self.parent_view = parent_view
+        self.turn_events = discord.ui.TextInput(
+            label="Turn events",
+            placeholder="2:a_skill=1.2;4:d_skill=1.15;6:a_add=10,d_add=5",
+            default=state.turn_events_raw,
+            required=False,
+            max_length=500,
+            style=discord.TextStyle.paragraph,
+        )
+        self.add_item(self.turn_events)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        self.parent_view.state.turn_events_raw = str(self.turn_events.value).strip()
+        await self.parent_view.refresh_panel(interaction)
+
+
+class QuickCombatSetupView(BaseSimulatorSetupView):
+    def __init__(self, cog: Simulator, owner_id: int):
+        super().__init__(cog, owner_id)
+        self.state = CombatWizardState()
+
+    def build_embed(self) -> discord.Embed:
+        embed = discord.Embed(
+            title="Quick Combat Builder",
+            color=discord.Color.blurple(),
+            description=(
+                "Everything needed for the simulator is shown in this panel. "
+                "Fill each section, confirm the summary, then click Run Simulation."
+            ),
+        )
+        embed.add_field(
+            name="Attacker",
+            value=(
+                f"Lines: `{self._display(self.state.attacker_lines_raw)}`\n"
+                f"Tier/TG: `{self.state.attacker_tier}` / `{self.state.attacker_tg}`\n"
+                f"Add/Special: `{self.state.attacker_add:g}%` / `{self.state.attacker_special:g}%`\n"
+                f"SkillMod: `{self.state.attacker_skill:g}x`"
+            ),
+            inline=True,
+        )
+        embed.add_field(
+            name="Defender",
+            value=(
+                f"Lines: `{self._display(self.state.defender_lines_raw)}`\n"
+                f"Tier/TG: `{self.state.defender_tier}` / `{self.state.defender_tg}`\n"
+                f"Add/Special: `{self.state.defender_add:g}%` / `{self.state.defender_special:g}%`\n"
+                f"SkillMod: `{self.state.defender_skill:g}x`"
+            ),
+            inline=True,
+        )
+        embed.add_field(
+            name="Battle Settings",
+            value=(
+                f"Turns: `{self.state.turns}`\n"
+                f"Ready to run: `{'yes' if self.state.attacker_lines_raw and self.state.defender_lines_raw else 'no'}`"
+            ),
+            inline=False,
+        )
+        embed.add_field(name="Settings Key", value=QUICK_SETTINGS_LEGEND, inline=False)
+        embed.set_footer(text="Use Troops, Base, Buffs, and Skill buttons below. Troop lines are required before running.")
+        return embed
+
+    @discord.ui.button(label="Troops", style=discord.ButtonStyle.primary, row=0)
+    async def edit_troops(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await interaction.response.send_modal(
+            CombatLinesModal(self, "Quick Combat Troops", self.state.attacker_lines_raw, self.state.defender_lines_raw)
+        )
+
+    @discord.ui.button(label="Base", style=discord.ButtonStyle.secondary, row=0)
+    async def edit_base(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await interaction.response.send_modal(CombatBaseSettingsModal(self, "Quick Combat Base Settings"))
+
+    @discord.ui.button(label="Buffs", style=discord.ButtonStyle.secondary, row=0)
+    async def edit_buffs(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await interaction.response.send_modal(CombatBuffSettingsModal(self, "Quick Combat Buffs"))
+
+    @discord.ui.button(label="Skill", style=discord.ButtonStyle.secondary, row=0)
+    async def edit_skill(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await interaction.response.send_modal(CombatSkillSettingsModal(self, "Quick Combat SkillMod"))
+
+    @discord.ui.button(label="Run Simulation", style=discord.ButtonStyle.success, row=1)
+    async def run_simulation(self, interaction: discord.Interaction, _: discord.ui.Button):
+        try:
+            if not self.state.attacker_lines_raw or not self.state.defender_lines_raw:
+                raise ValueError("Attacker and defender troop lines are required before running the simulation.")
+            atk = parse_line_triplet(self.state.attacker_lines_raw)
+            deff = parse_line_triplet(self.state.defender_lines_raw)
             attacker_cfg = self.cog._build_side_config(
-                int(cfg.get("a_tier", 10)),
-                int(cfg.get("a_tg", 0)),
-                float(cfg.get("a_add", 0.0)),
-                float(cfg.get("a_special", 0.0)),
-                float(cfg.get("a_skill", 1.0)),
+                self.state.attacker_tier,
+                self.state.attacker_tg,
+                self.state.attacker_add,
+                self.state.attacker_special,
+                self.state.attacker_skill,
             )
             defender_cfg = self.cog._build_side_config(
-                int(cfg.get("d_tier", 10)),
-                int(cfg.get("d_tg", 0)),
-                float(cfg.get("d_add", 0.0)),
-                float(cfg.get("d_special", 0.0)),
-                float(cfg.get("d_skill", 1.0)),
+                self.state.defender_tier,
+                self.state.defender_tg,
+                self.state.defender_add,
+                self.state.defender_special,
+                self.state.defender_skill,
             )
-            turns = int(cfg.get("turns", 10))
+            result = CombatEngine.simulate(atk, deff, attacker_cfg, defender_cfg, turns=self.state.turns)
+        except Exception as exc:
+            await interaction.response.send_message(f"Could not run simulation: {exc}", ephemeral=True)
+            return
 
+        embed = self.cog._combat_result_embed(
+            result,
+            title="Combat Simulation (Panel)",
+            description="Guided quick-combat run using the values shown in your builder panel.",
+            footer="Tip: use Advanced Combat Builder when you need line bonuses or turn events.",
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @discord.ui.button(label="Reset", style=discord.ButtonStyle.danger, row=1)
+    async def reset_form(self, interaction: discord.Interaction, _: discord.ui.Button):
+        self.state = CombatWizardState()
+        await self.refresh_panel(interaction)
+
+
+class AdvancedCombatSetupView(BaseSimulatorSetupView):
+    def __init__(self, cog: Simulator, owner_id: int):
+        super().__init__(cog, owner_id)
+        self.state = AdvancedCombatWizardState()
+
+    def build_embed(self) -> discord.Embed:
+        embed = discord.Embed(
+            title="Advanced Combat Builder",
+            color=discord.Color.dark_orange(),
+            description=(
+                "Use this guided builder when you need line-specific buffs or turn-by-turn effects. "
+                "All current inputs stay visible here while you edit them."
+            ),
+        )
+        embed.add_field(
+            name="Attacker",
+            value=(
+                f"Lines: `{self._display(self.state.attacker_lines_raw)}`\n"
+                f"Tier/TG: `{self.state.attacker_tier}` / `{self.state.attacker_tg}`\n"
+                f"Add/Special: `{self.state.attacker_add:g}%` / `{self.state.attacker_special:g}%`\n"
+                f"SkillMod: `{self.state.attacker_skill:g}x`"
+            ),
+            inline=True,
+        )
+        embed.add_field(
+            name="Defender",
+            value=(
+                f"Lines: `{self._display(self.state.defender_lines_raw)}`\n"
+                f"Tier/TG: `{self.state.defender_tier}` / `{self.state.defender_tg}`\n"
+                f"Add/Special: `{self.state.defender_add:g}%` / `{self.state.defender_special:g}%`\n"
+                f"SkillMod: `{self.state.defender_skill:g}x`"
+            ),
+            inline=True,
+        )
+        embed.add_field(name="Battle", value=f"Turns: `{self.state.turns}`", inline=False)
+        embed.add_field(
+            name="Line Bonuses",
+            value=(
+                f"Attacker: `{self._display(self.state.attacker_line_bonuses_raw, 'none')}`\n"
+                f"Defender: `{self._display(self.state.defender_line_bonuses_raw, 'none')}`"
+            ),
+            inline=False,
+        )
+        embed.add_field(
+            name="Turn Events",
+            value=f"`{self._display(self.state.turn_events_raw, 'none')}`",
+            inline=False,
+        )
+        embed.add_field(name="Quick Key", value=QUICK_SETTINGS_LEGEND, inline=False)
+        embed.add_field(name="Advanced Key", value=ADVANCED_SETTINGS_LEGEND, inline=False)
+        embed.set_footer(text="Use the section buttons below. Troop lines are required; bonuses and events are optional.")
+        return embed
+
+    @discord.ui.button(label="Troops", style=discord.ButtonStyle.primary, row=0)
+    async def edit_troops(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await interaction.response.send_modal(
+            CombatLinesModal(self, "Advanced Combat Troops", self.state.attacker_lines_raw, self.state.defender_lines_raw)
+        )
+
+    @discord.ui.button(label="Base", style=discord.ButtonStyle.secondary, row=0)
+    async def edit_base(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await interaction.response.send_modal(CombatBaseSettingsModal(self, "Advanced Combat Base Settings"))
+
+    @discord.ui.button(label="Buffs", style=discord.ButtonStyle.secondary, row=0)
+    async def edit_buffs(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await interaction.response.send_modal(CombatBuffSettingsModal(self, "Advanced Combat Buffs"))
+
+    @discord.ui.button(label="Skill", style=discord.ButtonStyle.secondary, row=0)
+    async def edit_skill(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await interaction.response.send_modal(CombatSkillSettingsModal(self, "Advanced Combat SkillMod"))
+
+    @discord.ui.button(label="Line Bonuses", style=discord.ButtonStyle.secondary, row=1)
+    async def edit_line_bonuses(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await interaction.response.send_modal(AdvancedLineBonusesModal(self))
+
+    @discord.ui.button(label="Turn Events", style=discord.ButtonStyle.secondary, row=1)
+    async def edit_turn_events(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await interaction.response.send_modal(AdvancedTurnEventsModal(self))
+
+    @discord.ui.button(label="Run Simulation", style=discord.ButtonStyle.success, row=1)
+    async def run_simulation(self, interaction: discord.Interaction, _: discord.ui.Button):
+        try:
+            if not self.state.attacker_lines_raw or not self.state.defender_lines_raw:
+                raise ValueError("Attacker and defender troop lines are required before running the simulation.")
+            atk = parse_line_triplet(self.state.attacker_lines_raw)
+            deff = parse_line_triplet(self.state.defender_lines_raw)
+            atk_bonuses = parse_line_bonus_map(self.state.attacker_line_bonuses_raw)
+            def_bonuses = parse_line_bonus_map(self.state.defender_line_bonuses_raw)
+            events = parse_turn_events(self.state.turn_events_raw)
+            attacker_cfg = self.cog._build_side_config(
+                self.state.attacker_tier,
+                self.state.attacker_tg,
+                self.state.attacker_add,
+                self.state.attacker_special,
+                self.state.attacker_skill,
+            )
+            defender_cfg = self.cog._build_side_config(
+                self.state.defender_tier,
+                self.state.defender_tg,
+                self.state.defender_add,
+                self.state.defender_special,
+                self.state.defender_skill,
+            )
             result = CombatEngine.simulate_advanced(
                 atk,
                 deff,
                 attacker_cfg,
                 defender_cfg,
-                turns,
+                self.state.turns,
                 attacker_line_bonuses=atk_bonuses,
                 defender_line_bonuses=def_bonuses,
                 turn_events=events,
             )
-            embed = self.cog._combat_result_embed(
-                result,
-                title="Advanced Combat (Panel)",
-                description="Panel-run advanced mode with per-line buffs and turn-scheduled effects.",
-                footer="Keep schedules concise and only define turns where behavior changes.",
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
         except Exception as exc:
             await interaction.response.send_message(f"Could not run advanced simulation: {exc}", ephemeral=True)
+            return
+
+        embed = self.cog._combat_result_embed(
+            result,
+            title="Advanced Combat (Panel)",
+            description="Guided advanced-combat run using the values shown in your builder panel.",
+            footer="Line bonuses and turn events only need to be filled when behavior changes from the base setup.",
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @discord.ui.button(label="Reset", style=discord.ButtonStyle.danger, row=1)
+    async def reset_form(self, interaction: discord.Interaction, _: discord.ui.Button):
+        self.state = AdvancedCombatWizardState()
+        await self.refresh_panel(interaction)
 
 
 class SimulatorPanelView(discord.ui.View):
@@ -1579,22 +1897,26 @@ class SimulatorPanelView(discord.ui.View):
     @discord.ui.button(label="Quick Combat", style=discord.ButtonStyle.primary, emoji="⚔️")
     async def quick_combat(self, interaction: discord.Interaction, _: discord.ui.Button):
         try:
-            await interaction.response.send_modal(QuickCombatModal(self.cog))
+            view = QuickCombatSetupView(self.cog, interaction.user.id)
+            await interaction.response.send_message(embed=view.build_embed(), view=view, ephemeral=True)
+            view.message = await interaction.original_response()
         except Exception as e:
             if interaction.response.is_done():
-                await interaction.followup.send(f"Could not open Quick Combat modal: {e}", ephemeral=True)
+                await interaction.followup.send(f"Could not open Quick Combat builder: {e}", ephemeral=True)
             else:
-                await interaction.response.send_message(f"Could not open Quick Combat modal: {e}", ephemeral=True)
+                await interaction.response.send_message(f"Could not open Quick Combat builder: {e}", ephemeral=True)
 
     @discord.ui.button(label="Advanced Combat", style=discord.ButtonStyle.danger, emoji="🧠")
     async def advanced_combat(self, interaction: discord.Interaction, _: discord.ui.Button):
         try:
-            await interaction.response.send_modal(AdvancedCombatModal(self.cog))
+            view = AdvancedCombatSetupView(self.cog, interaction.user.id)
+            await interaction.response.send_message(embed=view.build_embed(), view=view, ephemeral=True)
+            view.message = await interaction.original_response()
         except Exception as e:
             if interaction.response.is_done():
-                await interaction.followup.send(f"Could not open Advanced Combat modal: {e}", ephemeral=True)
+                await interaction.followup.send(f"Could not open Advanced Combat builder: {e}", ephemeral=True)
             else:
-                await interaction.response.send_message(f"Could not open Advanced Combat modal: {e}", ephemeral=True)
+                await interaction.response.send_message(f"Could not open Advanced Combat builder: {e}", ephemeral=True)
 
     @discord.ui.button(label="SkillMod Helper", style=discord.ButtonStyle.secondary, emoji="📐")
     async def skillmod(self, interaction: discord.Interaction, _: discord.ui.Button):

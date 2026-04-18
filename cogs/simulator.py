@@ -10,6 +10,20 @@ from discord.ext import commands
 
 LINE_ORDER = ("inf", "cav", "arc")
 LINE_LABELS = {"inf": "Infantry", "cav": "Cavalry", "arc": "Archers"}
+QUICK_SETTINGS_LEGEND = (
+    "`a_` = attacker, `d_` = defender\n"
+    "`tier` = troop tier, `tg` = Truegold level, `turns` = number of turns\n"
+    "`add` = additive % buff, `special` = special % buff, `skill` = SkillMod multiplier"
+)
+ADVANCED_SETTINGS_LEGEND = (
+    "`atk`/`attack` = attack %, `def`/`defense` = defense %, `hp`/`health` = health %, `let`/`lethality` = lethality %\n"
+    "`A|...||D|...` = attacker line bonuses on the left, defender line bonuses on the right\n"
+    "Turn events accept only `a_skill`, `d_skill`, `a_add`, `d_add`, `a_special`, `d_special`"
+)
+SKILLMOD_INPUT_LEGEND = (
+    "`DamageUp, OppDefDown, OppDmgDown, DefenseUp`\n"
+    "Enter raw percentages only, for example `25,15,10,8`"
+)
 
 
 def _ceil_int(value: float) -> int:
@@ -783,6 +797,16 @@ class Simulator(commands.Cog):
             inline=False,
         )
         embed.add_field(
+            name="Settings Key",
+            value=QUICK_SETTINGS_LEGEND,
+            inline=False,
+        )
+        embed.add_field(
+            name="Advanced Key",
+            value=ADVANCED_SETTINGS_LEGEND,
+            inline=False,
+        )
+        embed.add_field(
             name="Model Notes",
             value=(
                 "Reconstructed T1-T12 bases use 7% tier scaling with known anchor points. "
@@ -813,6 +837,21 @@ class Simulator(commands.Cog):
             ),
             inline=False,
         )
+        embed.add_field(
+            name="Settings Key",
+            value=QUICK_SETTINGS_LEGEND,
+            inline=False,
+        )
+        embed.add_field(
+            name="Advanced Key",
+            value=ADVANCED_SETTINGS_LEGEND,
+            inline=False,
+        )
+        embed.add_field(
+            name="SkillMod Key",
+            value=SKILLMOD_INPUT_LEGEND,
+            inline=False,
+        )
         await ctx.send(embed=embed, view=SimulatorPanelView(self))
 
     @sim.command(name="combat")
@@ -823,11 +862,13 @@ class Simulator(commands.Cog):
         defender_tier="Defender troop tier (1-12)",
         turns="Turn count (1-60)",
         attacker_additive="Attacker additive bonus percent",
-        attacker_special="Attacker special multiplicative percent",
+        attacker_special="Attacker special bonus percent",
         defender_additive="Defender additive bonus percent",
-        defender_special="Defender special multiplicative percent",
+        defender_special="Defender special bonus percent",
         attacker_skillmod="Attacker total SkillMod factor (use /sim skillmod)",
         defender_skillmod="Defender total SkillMod factor (use /sim skillmod)",
+        attacker_tg="Attacker Truegold level (0-5)",
+        defender_tg="Defender Truegold level (0-5)",
     )
     async def sim_combat(
         self,
@@ -905,9 +946,20 @@ class Simulator(commands.Cog):
     @app_commands.describe(
         attacker_lines="Required: inf,cav,arc (example: 250000,120000,90000)",
         defender_lines="Required: inf,cav,arc (example: 300000,100000,110000)",
-        attacker_line_bonuses="Optional: inf:atk=10,def=5;cav:atk=8;arc:hp=12",
-        defender_line_bonuses="Optional: inf:def=12,hp=10;arc:let=7",
-        turn_events="Optional: 2:a_skill=1.2;4:d_skill=1.15;6:a_add=10,d_add=5",
+        attacker_tier="Attacker troop tier (1-12)",
+        defender_tier="Defender troop tier (1-12)",
+        turns="Turn count (1-60)",
+        attacker_additive="Attacker additive bonus percent",
+        attacker_special="Attacker special bonus percent",
+        defender_additive="Defender additive bonus percent",
+        defender_special="Defender special bonus percent",
+        attacker_skillmod="Attacker total SkillMod factor (use /sim skillmod)",
+        defender_skillmod="Defender total SkillMod factor (use /sim skillmod)",
+        attacker_tg="Attacker Truegold level (0-5)",
+        defender_tg="Defender Truegold level (0-5)",
+        attacker_line_bonuses="Optional per-line buffs. Keys: atk, def, hp, let",
+        defender_line_bonuses="Optional per-line buffs. Keys: atk, def, hp, let",
+        turn_events="Optional per-turn changes. Keys: a_skill, d_skill, a_add, d_add, a_special, d_special",
     )
     async def sim_combat_adv(
         self,
@@ -1002,6 +1054,15 @@ class Simulator(commands.Cog):
         defender_lines="Defender lines in inf,cav,arc format",
         observed_attacker_remaining="Observed attacker remaining troops",
         observed_defender_remaining="Observed defender remaining troops",
+        attacker_tier="Attacker troop tier (1-12)",
+        defender_tier="Defender troop tier (1-12)",
+        turns="Turn count used in the observed battle (1-60)",
+        attacker_additive="Attacker additive bonus percent",
+        attacker_special="Attacker special bonus percent",
+        defender_additive="Defender additive bonus percent",
+        defender_special="Defender special bonus percent",
+        attacker_skillmod="Attacker SkillMod factor",
+        defender_skillmod="Defender SkillMod factor",
         samples="Search samples (higher = slower but tighter)",
     )
     async def sim_calibrate(
@@ -1325,7 +1386,7 @@ class Simulator(commands.Cog):
 
 class SkillModModal(discord.ui.Modal, title="SkillMod Helper"):
     values = discord.ui.TextInput(
-        label="DamageUp,OppDefDown,OppDmgDown,DefenseUp",
+        label="DamageUp, OppDefDown, OppDmgDown, DefenseUp (%)",
         placeholder="Example: 25,15,10,8",
         required=True,
         max_length=120,
@@ -1364,8 +1425,8 @@ class QuickCombatModal(discord.ui.Modal, title="Quick Combat Simulation"):
         max_length=120,
     )
     settings = discord.ui.TextInput(
-        label="Settings",
-        placeholder="a_tier=10,d_tier=10,turns=10,a_add=0,a_skill=1,d_add=0,d_skill=1",
+        label="Settings (a_/d_ plus tier,tg,add,special,skill,turns)",
+        placeholder="a_tier=10,a_tg=0,d_tier=10,d_tg=0,turns=10,a_add=0,d_add=0,a_special=0,d_special=0,a_skill=1,d_skill=1",
         required=False,
         max_length=400,
         style=discord.TextStyle.paragraph,
@@ -1423,20 +1484,20 @@ class AdvancedCombatModal(discord.ui.Modal, title="Advanced Combat Simulation"):
         max_length=120,
     )
     settings = discord.ui.TextInput(
-        label="Base settings",
-        placeholder="a_tier=10,d_tier=10,turns=10,a_add=0,a_skill=1,d_add=0,d_skill=1",
+        label="Base settings (a_/d_ plus tier,tg,add,special,skill,turns)",
+        placeholder="a_tier=10,a_tg=0,d_tier=10,d_tg=0,turns=10,a_add=0,d_add=0,a_special=0,d_special=0,a_skill=1,d_skill=1",
         required=False,
         max_length=350,
     )
     line_bonuses = discord.ui.TextInput(
-        label="Line bonuses",
+        label="Line bonuses (atk,def,hp,let)",
         placeholder="A|inf:atk=10;cav:atk=8||D|inf:def=12;arc:let=6",
         required=False,
         max_length=500,
         style=discord.TextStyle.paragraph,
     )
     turn_events = discord.ui.TextInput(
-        label="Turn events",
+        label="Turn events (a_skill,d_add,etc.)",
         placeholder="2:a_skill=1.2;4:d_skill=1.15;6:a_add=10,d_add=5",
         required=False,
         max_length=500,

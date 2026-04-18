@@ -34,6 +34,7 @@ A comprehensive, production-grade Discord bot tailored specifically for complex 
 ### Utilities & Tools
 * **Advanced Music System:** High-quality, multithreaded audio playback via `!music`. Features a fully interactive UI, Apple Music/Spotify DRM-bypass parsing, and 24/7 internet radio streaming support.
 * **Alliance Merger Tool:** Advanced data parsing system (`!merger`) capable of evaluating `.txt` and `.csv` rosters to sort members by power and distribute them optimally into Main and Academy alliances.
+* **KingShot Simulator Suite:** Accuracy-focused combat and progression tools exposed through `/sim` and `!sim`, including quick combat, advanced combat with line buffs and turn schedules, SkillMod calculation, deployment fractions, timers, TG progression, and calibration helpers.
 * **Hybrid Command Ecosystem:** Every single command across all 26 extensions natively supports both traditional text `!` prefixes and interactive Discord `/slash` commands interchangeably!
 * **Enterprise SaaS Subscription Tiers:** Granular, database-enforced feature gating. Guilds can be manually upgraded via `!set_tier` securely mapped dynamically to 3 distinct tiers (Free, Premium, Elite) affecting High Priority routing and translation limits!
 * **Educational Guides:** Organized modules providing extensive information on Player Growth, Events, Facilities, Castles, and more, gracefully replacing the old custom calculators.
@@ -102,6 +103,52 @@ Discord User (with Circuit Breaker protection)
 The bot comes with a highly modular `cogs/` extension framework (26+ cogs).
 For a complete list of commands, standard users can type `!help` in any channel. 
 *(Note: Sensitive Moderation, Ticketing Configuration, and Onboarding settings are dynamically hidden into `!adminhelp` for designated server administrators).*
+
+## ⚔️ Simulator Quick Reference
+
+KingBot includes a combat-focused simulator suite under `!sim` and `/sim`.
+
+### Core Simulator Commands
+- `!sim panel`: Opens the guided button panel for Quick Combat, Advanced Combat, and SkillMod Helper.
+- `!sim combat`: Runs the base combat simulator with troop lines, tiers, TG, buffs, and SkillMod.
+- `!sim combat_adv`: Adds per-line stat bonuses and per-turn scheduled effects.
+- `!sim skillmod`: Computes the Rule-of-4 SkillMod multiplier from hero percentages.
+- `!sim deploy`: Returns optimal infantry, cavalry, and archer join fractions.
+- `!sim timer`: Calculates time reduction with additive speed math.
+- `!sim tg`: Projects Truegold progression costs and flat stat gains.
+- `!sim calibrate`: Searches anchor scales against real battle results for tuning.
+
+### Simulator Key Legend
+- `a_` = attacker, `d_` = defender.
+- `tier` = troop tier.
+- `tg` = Truegold level.
+- `turns` = number of combat rounds.
+- `add` = additive percent buff.
+- `special` = special percent buff.
+- `skill` = SkillMod multiplier.
+
+### Advanced Simulator Legend
+- `atk` or `attack` = attack percent bonus.
+- `def` or `defense` = defense percent bonus.
+- `hp` or `health` = health percent bonus.
+- `let` or `lethality` = lethality percent bonus.
+- `A|...||D|...` = attacker line bonuses on the left, defender line bonuses on the right.
+- Turn-event keys: `a_skill`, `d_skill`, `a_add`, `d_add`, `a_special`, `d_special`.
+
+### Input Examples
+```text
+Quick settings:
+a_tier=10,a_tg=0,d_tier=10,d_tg=0,turns=10,a_add=0,d_add=0,a_special=0,d_special=0,a_skill=1,d_skill=1
+
+Advanced line bonuses:
+A|inf:atk=10;cav:atk=8||D|inf:def=12;arc:let=6
+
+Turn events:
+2:a_skill=1.2;4:d_skill=1.15;6:a_add=10,d_add=5
+
+SkillMod input:
+25,15,10,8
+```
 
 ## 🚀 Getting Started
 

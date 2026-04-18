@@ -111,11 +111,17 @@ class CoreCommands(commands.Cog):
         """Generates an invite link for server administrators to add this bot to other servers."""
         client_id = self.bot.user.id
         permissions = discord.Permissions(administrator=True).value
-        invite_url = f"https://discord.com/api/oauth2/authorize?client_id={client_id}&permissions={permissions}&scope=bot"
+        invite_url = (
+            "https://discord.com/api/oauth2/authorize"
+            f"?client_id={client_id}&permissions={permissions}&scope=bot%20applications.commands"
+        )
         
         embed = discord.Embed(
             title="🔗 Add KingBot to another server!",
-            description=f"[Click here to invite me!]({invite_url})\n\n*Requires Server Manager / Administrator permissions to add.*",
+            description=(
+                f"[Click here to invite me!]({invite_url})\n\n"
+                "*Includes bot + slash command scopes. Requires Server Manager / Administrator permissions to add.*"
+            ),
             color=discord.Color.gold()
         )
         embed.set_thumbnail(url=self.bot.user.display_avatar.url if self.bot.user.display_avatar else None)

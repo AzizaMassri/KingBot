@@ -266,13 +266,28 @@ class Admin(commands.Cog):
         view = AdminConfirmView(ctx, f"reload of cogs.{extension}", do_reload)
         await ctx.send(f"Are you sure you want to reload `cogs.{extension}`?", view=view)
 
-    @commands.hybrid_command(hidden=True)
+    @commands.hybrid_command(name="sync", hidden=True)
     @commands.has_permissions(administrator=True)
-    async def sync(self, ctx):
-        synced = await self.bot.tree.sync(guild=ctx.guild)
-        self.bot.tree.copy_global_to(guild=ctx.guild)
-        synced = await self.bot.tree.sync(guild=ctx.guild)
-        await ctx.send(f"✅ Fast-Synced **{len(synced)}** app commands.")
+    async def sync(self, ctx, spec: str = "*"):
+        """Syncs the slash command tree.
+        Syntax: !sync, !sync ~, !sync *, !sync ^
+        Default uses * to copy globals into this guild and sync immediately.
+        """
+        try:
+            if spec == "~":
+                synced = await self.bot.tree.sync(guild=ctx.guild)
+            elif spec == "*":
+                self.bot.tree.copy_global_to(guild=ctx.guild)
+                synced = await self.bot.tree.sync(guild=ctx.guild)
+            elif spec == "^":
+                self.bot.tree.clear_commands(guild=ctx.guild)
+                await self.bot.tree.sync(guild=ctx.guild)
+                synced = []
+            else:
+                synced = await self.bot.tree.sync()
+            await ctx.send(f"✅ Synced {len(synced)} commands {'globally' if spec not in {'~', '*', '^'} else 'to the current guild' }.")
+        except Exception as e:
+            await ctx.send(f"❌ Failed to sync commands: {e}")
 
     @commands.hybrid_command(name="toggle_command", aliases=["toggle"])
     @commands.has_permissions(administrator=True)
@@ -336,29 +351,6 @@ class Admin(commands.Cog):
             await self.bot.db.set("kingbot_global_invisible", "1")
             await self.bot.change_presence(status=discord.Status.invisible)
             await ctx.send("👻 **KingBot is now INVISIBLE globally.**")
-
-
-    @commands.command(name="sync", hidden=True)
-    @commands.has_permissions(administrator=True)
-    async def sync(self, ctx, spec: str = None):
-        """Syncs the slash command tree.
-        Syntax: !sync, !sync ~, !sync *, !sync ^
-        """
-        try:
-            if spec == "~":
-                synced = await self.bot.tree.sync(guild=ctx.guild)
-            elif spec == "*":
-                self.bot.tree.copy_global_to(guild=ctx.guild)
-                synced = await self.bot.tree.sync(guild=ctx.guild)
-            elif spec == "^":
-                self.bot.tree.clear_commands(guild=ctx.guild)
-                await self.bot.tree.sync(guild=ctx.guild)
-                synced = []
-            else:
-                synced = await self.bot.tree.sync()
-            await ctx.send(f"✅ Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild'}.")
-        except Exception as e:
-            await ctx.send(f"❌ Failed to sync commands: {e}")
 
 async def setup(bot):
     await bot.add_cog(Admin(bot))

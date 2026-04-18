@@ -818,8 +818,8 @@ class Simulator(commands.Cog):
     async def sim_combat(
         self,
         ctx: commands.Context,
-        attacker_lines: str,
-        defender_lines: str,
+        attacker_lines: str | None = None,
+        defender_lines: str | None = None,
         attacker_tier: app_commands.Range[int, 1, 12] = 10,
         defender_tier: app_commands.Range[int, 1, 12] = 10,
         turns: app_commands.Range[int, 1, 60] = 10,
@@ -833,6 +833,17 @@ class Simulator(commands.Cog):
         defender_tg: app_commands.Range[int, 0, 5] = 0,
     ):
         """Run an accuracy-focused march simulation with explained assumptions."""
+        if not attacker_lines or not defender_lines:
+            embed = discord.Embed(
+                title="Combat Input Needed",
+                color=discord.Color.blurple(),
+                description=(
+                    "No troop lines were provided, so here is the guided panel.\n"
+                    "You can also run: !sim combat 250000,120000,90000 300000,100000,110000"
+                ),
+            )
+            return await ctx.send(embed=embed, view=SimulatorPanelView(self))
+
         try:
             atk = parse_line_triplet(attacker_lines)
             deff = parse_line_triplet(defender_lines)
@@ -872,8 +883,8 @@ class Simulator(commands.Cog):
     async def sim_combat_adv(
         self,
         ctx: commands.Context,
-        attacker_lines: str,
-        defender_lines: str,
+        attacker_lines: str | None = None,
+        defender_lines: str | None = None,
         attacker_tier: app_commands.Range[int, 1, 12] = 10,
         defender_tier: app_commands.Range[int, 1, 12] = 10,
         turns: app_commands.Range[int, 1, 60] = 10,
@@ -890,6 +901,17 @@ class Simulator(commands.Cog):
         turn_events: str = "",
     ):
         """Advanced combat with per-line buffs and per-turn proc schedule support."""
+        if not attacker_lines or not defender_lines:
+            embed = discord.Embed(
+                title="Advanced Input Needed",
+                color=discord.Color.blurple(),
+                description=(
+                    "No troop lines were provided, so here is the guided panel for advanced mode.\n"
+                    "Click Advanced Combat to use line buffs and turn schedules by modal."
+                ),
+            )
+            return await ctx.send(embed=embed, view=SimulatorPanelView(self))
+
         try:
             atk = parse_line_triplet(attacker_lines)
             deff = parse_line_triplet(defender_lines)

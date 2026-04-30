@@ -1,3 +1,4 @@
+from cogs.utils.bank import bank
 """
 Original Port Author: hollowstrawberry (crab-cogs)
 https://github.com/hollowstrawberry/crab-cogs/tree/main/minigames
@@ -8,8 +9,6 @@ import discord
 from enum import Enum
 from typing import List, Optional, Tuple, Union
 from datetime import datetime
-from cogs.utils.bank import bank, errors, humanize_number
-
 
 
 from .base import BaseMinigameCog, Minigame
@@ -184,7 +183,6 @@ class TicTacToeGame(Minigame):
             )
 
             async def action(interaction: discord.Interaction, i=i):
-                nonlocal self, view
                 assert isinstance(interaction.user, discord.Member)
                 if interaction.user not in self.players:
                     return await interaction.response.send_message("You're not playing this game!", ephemeral=True)

@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import random
 import asyncio
-from cogs.economy import Economy
 from cogs.utils.views import TranslatedView
 
 class RaceLobbyView(TranslatedView):
@@ -348,7 +347,7 @@ class RussianRouletteGameView(TranslatedView):
                 refunded += 1
                 refunded_names.append(player.display_name)
 
-            refund_text = f"\n\n⏱️ The game has been cancelled because the current player did not pull the trigger in time.\n"
+            refund_text = "\n\n⏱️ The game has been cancelled because the current player did not pull the trigger in time.\n"
             if refunded:
                 refund_text += f"**Refunded {self.bet} 💰 to {refunded} player{'s' if refunded != 1 else ''}.**"
                 refund_text += f"\n{', '.join(refunded_names)}"
@@ -444,7 +443,7 @@ class Games(commands.Cog):
         )
         
         view = RaceLobbyView(ctx.author, bet, self.eco, self.animals, my_animal)
-        msg = await ctx.send(embed=embed, view=view)
+        await ctx.send(embed=embed, view=view)
         
         await view.wait()
         
@@ -624,7 +623,7 @@ class Games(commands.Cog):
         )
 
         view = HeistLobbyView(ctx.author, cost, self.eco, level['title'])
-        msg = await ctx.send(embed=embed, view=view)
+        await ctx.send(embed=embed, view=view)
         
         await view.wait()
         

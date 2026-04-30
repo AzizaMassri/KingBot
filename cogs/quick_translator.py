@@ -162,7 +162,7 @@ class TransChannelSelect(discord.ui.ChannelSelect):
             await self.bot.db.sadd(f"translation_channels:{interaction.guild_id}", str(channel.id))
             
         mentions = [c.mention for c in self.values]
-        await interaction.followup.send(f"✅ Auto-translation is now enabled in:\n" + "\n".join(mentions), ephemeral=True)
+        await interaction.followup.send("✅ Auto-translation is now enabled in:\n" + "\n".join(mentions), ephemeral=True)
 
 class TransConfigView(discord.ui.View):
     def __init__(self, bot):

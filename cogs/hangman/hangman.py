@@ -1,3 +1,4 @@
+import os
 """
 Original Port Author: Flame442 (FlameCogs)
 Ported to discord.py specifically for KingBot & Kingshot (Century Games) Branding.
@@ -5,7 +6,6 @@ Ported to discord.py specifically for KingBot & Kingshot (Century Games) Brandin
 import discord
 from discord.ext import commands
 from random import randint
-import asyncio, os
 
 class ExecutionModal(discord.ui.Modal, title="King's Execution"):
     guess = discord.ui.TextInput(

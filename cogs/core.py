@@ -64,7 +64,7 @@ class CoreCommands(commands.Cog):
             await user.send(embed=embed)
             if ctx.guild:
                  await ctx.send(f"✅ {ctx.author.mention}, I've sent you a DM with the detailed KingBot command guide!")
-        except Exception as e:
+        except Exception:
             await ctx.send(f"⚠️ {ctx.author.mention}, I cannot send you a DM due to your privacy settings. Here is the guide:", embed=embed)
 
     @commands.hybrid_command(name="adminhelp", aliases=["helpadmin"])
@@ -102,7 +102,7 @@ class CoreCommands(commands.Cog):
             await user.send(embed=embed)
             if ctx.guild:
                  await ctx.send(f"🔐 {ctx.author.mention}, I've sent you a secure DM with the Administrator command rulebook!")
-        except Exception as e:
+        except Exception:
             await ctx.send(f"⚠️ {ctx.author.mention}, I cannot send you a DM due to your privacy settings. Here is the admin guide:", embed=embed)
 
     @commands.hybrid_command(name="invite")

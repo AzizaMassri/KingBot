@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord import app_commands
 import re
 from cogs.utils.tiers import requires_tier, Tier
 
@@ -77,7 +76,7 @@ class ReactionRoleModal(discord.ui.Modal, title='Reaction Role Builder'):
                     except discord.Forbidden:
                         invalid_lines.append(f"`{line}` (Missing Manage Roles permission to create role)")
                         continue
-                    except Exception as e:
+                    except Exception:
                         invalid_lines.append(f"`{line}` (Failed to create role)")
                         continue
                         
@@ -101,7 +100,7 @@ class ReactionRoleModal(discord.ui.Modal, title='Reaction Role Builder'):
                     emoji=emoji_str
                 ))
                 added_roles.append(f"{emoji_str} {role.mention}")
-            except Exception as e:
+            except Exception:
                 invalid_lines.append(f"`{line}` (Invalid Emoji or Limit Reached)")
 
         if not added_roles:
@@ -177,7 +176,7 @@ class ReactionRoles(commands.Cog):
         embed.set_footer(text="This launch panel will expire in 5 minutes.")
         
         view = BuilderLaunchView(channel, ctx.author)
-        message = await ctx.send(embed=embed, view=view)
+        await ctx.send(embed=embed, view=view)
         
         # Optionally delete the command invocation to keep it clean if ran via prefix
         try:

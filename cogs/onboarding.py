@@ -1,8 +1,5 @@
 import discord
 from discord.ext import commands
-import aiohttp
-import asyncio
-import datetime
 from cogs.utils.tiers import requires_tier, Tier
 
 class OnboardingModal(discord.ui.Modal, title='Setup Your Profile'):
@@ -332,7 +329,7 @@ class Onboarding(commands.Cog):
             await ctx.send(embed=embed, view=view)
         except Exception as e:
             print(f"Error in onboarding admin: {e}")
-            await ctx.send(f"❌ An error occurred connecting to configuration data.")
+            await ctx.send("❌ An error occurred connecting to configuration data.")
 
     @commands.hybrid_command(name="onboarding_roles")
     @commands.has_permissions(administrator=True)

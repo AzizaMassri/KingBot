@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands, tasks
 import time
-import math
 
 class LevelUpChannelSelect(discord.ui.ChannelSelect):
     def __init__(self, bot):

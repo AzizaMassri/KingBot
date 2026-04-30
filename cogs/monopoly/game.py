@@ -18,7 +18,7 @@ from .constants import TILENAME, PRICEBUY, RENTPRICE, RRPRICE, CCNAME, CHANCENAM
 from .views import ConfirmView, JailView, SelectView, TradeView, TurnView
 import asyncio
 import logging
-import os
+
 from io import BytesIO
 from PIL import Image, ImageDraw
 from random import randint, shuffle

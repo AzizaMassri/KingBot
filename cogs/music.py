@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import asyncio
 import yt_dlp
-import re
 from collections import deque
 
 ytdl_format_options = {

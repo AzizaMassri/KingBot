@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 import random
-from cogs.economy import Economy
 from cogs.utils.views import TranslatedView
 
 class Casino(commands.Cog):
@@ -281,7 +280,7 @@ class BlackjackView(TranslatedView):
         else:
             if draw:
                 title = "🃏 Blackjack: PUSH (Tie)"
-                desc = f"You tied with the dealer. Bet refunded.\n\n"
+                desc = "You tied with the dealer. Bet refunded.\n\n"
                 color = discord.Color.light_grey()
                 await self.eco.add_balance(self.ctx.author.id, self.bet) # Refund
             elif player_won:

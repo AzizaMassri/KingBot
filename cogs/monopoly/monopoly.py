@@ -1,3 +1,4 @@
+import os
 """
 Original Port Author: Flame442 (FlameCogs)
 https://github.com/Flame442/FlameCogs/tree/master/monopoly
@@ -9,7 +10,6 @@ import json
 
 
 from typing import Union
-import asyncio, os
 
 def humanize_list(items):
     if len(items) == 0: return ''

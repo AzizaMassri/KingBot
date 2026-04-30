@@ -1,3 +1,4 @@
+from cogs.utils.bank import humanize_number
 """
 Original Port Author: hollowstrawberry (crab-cogs)
 https://github.com/hollowstrawberry/crab-cogs/tree/main/minigames
@@ -6,8 +7,6 @@ Ported to discord.py specifically for KingBot & Kingshot (Century Games) Brandin
 import re
 import discord
 from typing import Optional
-
-from cogs.utils.bank import bank, errors, humanize_number
 
 from ..base import Minigame
 

@@ -113,7 +113,7 @@ class BotLogs(commands.Cog):
                 
             embed = discord.Embed(
                 title="✅ Bot Restarted",
-                description=f"The bot has successfully reconnected to Discord and loaded all modules.",
+                description="The bot has successfully reconnected to Discord and loaded all modules.",
                 color=discord.Color.green(),
                 timestamp=discord.utils.utcnow()
             )

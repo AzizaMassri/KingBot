@@ -1,18 +1,13 @@
 import discord
 from discord.ext import commands
-import datetime
 from google import genai
 import os
 from cogs.utils.postgres_cache import PostgresCache
-import hashlib
-import json
 import asyncio
 import aio_pika
-import aiohttp
 import socket
 import sys
 from dotenv import load_dotenv
-from collections import deque
 
 load_dotenv()
 

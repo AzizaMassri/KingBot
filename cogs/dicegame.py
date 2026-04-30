@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands, tasks
 import random
 import json
-import os
 from datetime import datetime, timedelta, timezone
 from cogs.utils.views import TranslatedView, TranslatedModal
 

@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import time
 import random
-import asyncio
 
 class TransferBucksModal(discord.ui.Modal, title='Bank Transfer (Admin)'):
     user_id = discord.ui.TextInput(label='Target User ID', placeholder='e.g. 123456789012345678', required=True)

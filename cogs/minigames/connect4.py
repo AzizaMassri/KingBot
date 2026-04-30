@@ -1,3 +1,4 @@
+from cogs.utils.bank import bank
 """
 Original Port Author: hollowstrawberry (crab-cogs)
 https://github.com/hollowstrawberry/crab-cogs/tree/main/minigames
@@ -8,8 +9,6 @@ import discord
 from enum import Enum
 from typing import List, Optional, Union
 from datetime import datetime
-from cogs.utils.bank import bank, errors, humanize_number
-
 from .base import BaseMinigameCog, Minigame
 from .board import Board, find_lines
 from .views.minigame_view import MinigameView
@@ -244,7 +243,6 @@ class ConnectFourGame(Minigame):
         select = discord.ui.Select(row=0, options=options, placeholder="Choose column to drop a piece...", custom_id=f"minigames c4 {self.channel.id}")
 
         async def action(interaction: discord.Interaction):
-            nonlocal self, view
             assert isinstance(interaction.user, discord.Member)
             if interaction.user not in self.players:
                 return await interaction.response.send_message("You're not playing this game!", ephemeral=True)

@@ -1,3 +1,4 @@
+from cogs.utils.bank import bank
 """
 Original Port Author: hollowstrawberry (crab-cogs)
 https://github.com/hollowstrawberry/crab-cogs/tree/main/minigames
@@ -9,8 +10,6 @@ from typing import Dict, List, Optional, Type, Union
 from datetime import datetime
 from discord.ext import commands
 from discord import app_commands
-from cogs.utils.bank import bank, errors, humanize_number
-
 
 
 from .base import Minigame, BaseMinigameCog
@@ -36,10 +35,7 @@ class KingsMinigames(BaseMinigameCog):
         self.allowedguilds = set()
         self.games: Dict[int, Minigame] = {}
         
-        default_config = {
-            "connect4_payout": 100,
-            "tictactoe_payout": 10
-        }
+
         
         
 
@@ -135,7 +131,6 @@ class KingsMinigames(BaseMinigameCog):
                 seconds_passed = int((datetime.now() - old_game.last_interacted).total_seconds())
                 if seconds_passed // 60 >= TIME_LIMIT:
                     async def callback():
-                        nonlocal ctx, players, old_game, against_bot
                         assert isinstance(author, discord.Member) and isinstance(ctx.channel, discord.abc.Messageable) and isinstance(ctx.channel, (discord.abc.GuildChannel, discord.Thread))
                         await old_game.cancel(author)
                         game = game_cls(self, players, ctx.channel, bet or 0)

@@ -7,7 +7,6 @@ import discord
 from discord.ext import commands
 import json; import os
 
-import asyncio
 from .game import ArmadaGame
 from .ai import BattleshipAI
 from .views import ConfirmView, GetPlayersView

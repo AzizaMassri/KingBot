@@ -12,6 +12,11 @@ docker compose stop kingbot-app 2>/dev/null || true
 echo "⬇️ Pulling latest approved changes from GitHub..."
 git pull https://ROCKETexecdevs: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@github.com/ROCKETexecdevs/KingBot.git master
 
+echo "🧹 Pruning system to reclaim disk space (safely preserving databases/volumes)..."
+docker system prune -a -f || true
+sudo journalctl --vacuum-time=3d 2>/dev/null || true
+sudo apt-get clean 2>/dev/null || true
+
 echo "🏗️ Rebuilding and starting the stack (app + dependencies)..."
 if docker compose up -d --build kingbot-app; then
   echo "✅ Update complete! KingBot is back online asynchronously."

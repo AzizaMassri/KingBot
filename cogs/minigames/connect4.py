@@ -1,4 +1,5 @@
 from cogs.utils.bank import bank
+
 """
 Original Port Author: hollowstrawberry (crab-cogs)
 https://github.com/hollowstrawberry/crab-cogs/tree/main/minigames
@@ -42,7 +43,13 @@ NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7�
 
 
 class ConnectFourGame(Minigame):
-    def __init__(self, cog: BaseMinigameCog, players: List[discord.Member], channel: Union[discord.abc.GuildChannel, discord.Thread], bet: int):
+    def __init__(
+        self,
+        cog: BaseMinigameCog,
+        players: List[discord.Member],
+        channel: Union[discord.abc.GuildChannel, discord.Thread],
+        bet: int,
+    ):
         if len(players) != 2:
             raise ValueError("Game must have 2 players")
         super().__init__(cog, players, channel, bet)
@@ -59,12 +66,14 @@ class ConnectFourGame(Minigame):
         if self.is_finished():
             raise ValueError("This game is finished")
         if column < 0 or column > self.board.width - 1:
-            raise ValueError(f"Column must be a number between 0 and {self.board.width - 1}, not {column}")
-        
+            raise ValueError(
+                f"Column must be a number between 0 and {self.board.width - 1}, not {column}"
+            )
+
         row = self.get_highest_slot(self.board, column)
         if row is None:
             raise ValueError("Column is full")
-        
+
         self.last_interacted = datetime.now()
         self.time += 1
         self.board[column, row] = self.current
@@ -84,17 +93,35 @@ class ConnectFourGame(Minigame):
         if len(columns) == 1:
             moves[columns[0]] = 0
         else:
-            for column in columns: # All moves it can make
+            for column in columns:  # All moves it can make
                 temp_board = self.board.copy()
                 self.drop_piece(temp_board, column, self.current)
-                if self.check_win(temp_board, self.current, self.time + 1): # Can win instantly
+                if self.check_win(
+                    temp_board, self.current, self.time + 1
+                ):  # Can win instantly
                     moves = {column: 0}
                     avoid_moves = []
                     break
                 # The AI plays defensively, so it mostly avoids possible futures where it may lose
-                lose_count = self.may_lose_count(temp_board, self.current, self.opponent(self.current), self.time + 1, depth=3)
+                lose_count = self.may_lose_count(
+                    temp_board,
+                    self.current,
+                    self.opponent(self.current),
+                    self.time + 1,
+                    depth=3,
+                )
                 moves[column] = lose_count
-                if self.may_lose_count(temp_board, self.current, self.opponent(self.current), self.time + 1, depth=1) > 0: # Can lose next turn
+                # Can lose next turn
+                if (
+                    self.may_lose_count(
+                        temp_board,
+                        self.current,
+                        self.opponent(self.current),
+                        self.time + 1,
+                        depth=1,
+                    )
+                    > 0
+                ):
                     avoid_moves.append(column)
         if len(avoid_moves) < len(moves):
             for move in avoid_moves:
@@ -105,11 +132,15 @@ class ConnectFourGame(Minigame):
         await self.do_turn(self.member(self.current), move)
 
     def is_finished(self) -> bool:
-        return self.winner != Player.NONE or self.cancelled or self.time == len(self.board._data)
-    
+        return (
+            self.winner != Player.NONE
+            or self.cancelled
+            or self.time == len(self.board._data)
+        )
+
     def is_cancelled(self) -> bool:
         return self.cancelled
-    
+
     async def cancel(self, player: discord.Member):
         self.cancelled = True
         if self.time == 0:
@@ -122,20 +153,20 @@ class ConnectFourGame(Minigame):
 
     def accept(self, _):
         self.accepted = True
-    
+
     def member(self, player: Player) -> discord.Member:
         if player.value < 0:
             raise ValueError("Invalid player")
         return self.players[player.value]
-    
+
     @classmethod
     def opponent(cls, current: Player) -> Player:
         return Player.BLUE if current == Player.RED else Player.RED
-    
+
     @classmethod
     def check_win(cls, board: Board, color: Player, time: int) -> bool:
         return find_lines(board, color, 4)
-    
+
     @classmethod
     def get_highest_slot(cls, board: Board, column: int) -> Optional[int]:
         if column < 0 or column > board.width - 1:
@@ -144,7 +175,7 @@ class ConnectFourGame(Minigame):
             if board[column, row] == Player.NONE:
                 return row
         return None
-    
+
     @classmethod
     def drop_piece(cls, board: Board, column: int, color: Player):
         if column < 0 or column > board.width - 1:
@@ -153,20 +184,26 @@ class ConnectFourGame(Minigame):
         if row is None:
             raise ValueError("Column is full")
         board[column, row] = color
-    
+
     @classmethod
-    def available_columns(cls, board: Board): 
-        return [col for col in range(board.width) if cls.get_highest_slot(board, col) is not None]
-    
+    def available_columns(cls, board: Board):
+        return [
+            col
+            for col in range(board.width)
+            if cls.get_highest_slot(board, col) is not None
+        ]
+
     @classmethod
     def get_random_unoccupied(cls, board: Board) -> int:
         available_columns = cls.available_columns(board)
         if not available_columns:
             raise ValueError("No available columns")
         return random.choice(available_columns)
-    
+
     @classmethod
-    def may_lose_count(cls, board: Board, color: Player, current: Player, time: int, depth: int):
+    def may_lose_count(
+        cls, board: Board, color: Player, current: Player, time: int, depth: int
+    ):
         count = 0
         if depth <= 0 or time == len(board._data):
             return count
@@ -176,24 +213,41 @@ class ConnectFourGame(Minigame):
             if current != color and cls.check_win(temp_board, current, time + 1):
                 count += 1
             elif current != color or not cls.check_win(temp_board, current, time + 1):
-                count += cls.may_lose_count(temp_board, color, cls.opponent(current), time + 1, depth - 1)
+                count += cls.may_lose_count(
+                    temp_board, color, cls.opponent(current), time + 1, depth - 1
+                )
         return count
-
 
     async def get_content(self) -> Optional[str]:
         if not self.accepted:
-            return f"{self.players[0].mention} you've been invited to play Knight's Row!"
+            return (
+                f"{self.players[0].mention} you've been invited to play Knight's Row!"
+            )
         else:
             return None
 
-
     async def get_embed(self) -> discord.Embed:
-        title = "Pending invitation..." if not self.accepted \
-                else f"{self.member(self.current).display_name}'s turn" if not self.is_finished() \
-                else "The game was cancelled!" if self.cancelled and self.winner.value < 0 \
-                else "It's a tie!" if self.winner == Player.TIE \
-                else f"{self.member(self.winner).display_name} is the winner via surrender!" if self.cancelled \
-                else f"{self.member(self.winner).display_name} is the winner!"
+        title = (
+            "Pending invitation..."
+            if not self.accepted
+            else (
+                f"{self.member(self.current).display_name}'s turn"
+                if not self.is_finished()
+                else (
+                    "The game was cancelled!"
+                    if self.cancelled and self.winner.value < 0
+                    else (
+                        "It's a tie!"
+                        if self.winner == Player.TIE
+                        else (
+                            f"{self.member(self.winner).display_name} is the winner via surrender!"
+                            if self.cancelled
+                            else f"{self.member(self.winner).display_name} is the winner!"
+                        )
+                    )
+                )
+            )
+        )
 
         description = ""
         for i, player in enumerate(self.players):
@@ -202,7 +256,12 @@ class ConnectFourGame(Minigame):
             elif not self.is_finished() and self.current.value == i and self.accepted:
                 description += "►"
             description += f"{EMOJIS[Player(i)]} - {player.mention}"
-            if self.winner.value >= 0 and self.bet > 0 and not player.bot and await self.cog.is_economy_enabled(self.channel.guild):
+            if (
+                self.winner.value >= 0
+                and self.bet > 0
+                and not player.bot
+                and await self.cog.is_economy_enabled(self.channel.guild)
+            ):
                 currency_name = await bank.get_currency_name(self.channel.guild)
                 if self.winner.value == i:
                     description += f" +{str(self.bet)} {currency_name}"
@@ -216,10 +275,12 @@ class ConnectFourGame(Minigame):
             description += "\n"
         for y in range(self.board.height):
             for x in range(self.board.width):
-                description += EMOJIS[self.board[x, y]] # type: ignore
+                description += EMOJIS[self.board[x, y]]  # type: ignore
             description += "\n"
 
-        color = COLORS[self.winner] if self.winner != Player.NONE else COLORS[self.current]
+        color = (
+            COLORS[self.winner] if self.winner != Player.NONE else COLORS[self.current]
+        )
 
         embed = discord.Embed(title=title, description=description, color=color)
 
@@ -231,7 +292,6 @@ class ConnectFourGame(Minigame):
 
         return embed
 
-
     async def get_view(self) -> Optional[discord.ui.View]:
         if not self.accepted:
             return InviteView(self, await bank.get_currency_name(self.channel.guild))
@@ -239,22 +299,39 @@ class ConnectFourGame(Minigame):
             return RematchView(self, await bank.get_currency_name(self.channel.guild))
 
         view = MinigameView(self)
-        options = [discord.SelectOption(label=f"{col + 1}", value=f"{col}") for col in self.available_columns(self.board)]
-        select = discord.ui.Select(row=0, options=options, placeholder="Choose column to drop a piece...", custom_id=f"minigames c4 {self.channel.id}")
+        options = [
+            discord.SelectOption(label=f"{col + 1}", value=f"{col}")
+            for col in self.available_columns(self.board)
+        ]
+        select = discord.ui.Select(
+            row=0,
+            options=options,
+            placeholder="Choose column to drop a piece...",
+            custom_id=f"minigames c4 {self.channel.id}",
+        )
 
         async def action(interaction: discord.Interaction):
             assert isinstance(interaction.user, discord.Member)
             if interaction.user not in self.players:
-                return await interaction.response.send_message("You're not playing this game!", ephemeral=True)
+                return await interaction.response.send_message(
+                    "You're not playing this game!", ephemeral=True
+                )
             if interaction.user != self.member(self.current):
-                return await interaction.response.send_message("It's not your turn!", ephemeral=True)
-            await self.do_turn(interaction.user, int(interaction.data['values'][0])) # type: ignore
+                return await interaction.response.send_message(
+                    "It's not your turn!", ephemeral=True
+                )
+            # type: ignore
+            await self.do_turn(interaction.user, int(interaction.data["values"][0]))
             if not self.is_finished() and self.member(self.current).bot:
                 await self.do_turn_ai()
             if self.is_finished():
                 view.stop()
             new_view = await self.get_view()
-            await interaction.response.edit_message(content=await self.get_content(), embed=await self.get_embed(), view=new_view)
+            await interaction.response.edit_message(
+                content=await self.get_content(),
+                embed=await self.get_embed(),
+                view=new_view,
+            )
             if isinstance(new_view, RematchView):
                 new_view.message = interaction.message
 

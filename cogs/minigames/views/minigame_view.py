@@ -3,6 +3,7 @@ Original Port Author: hollowstrawberry (crab-cogs)
 https://github.com/hollowstrawberry/crab-cogs/tree/main/minigames
 Ported to discord.py specifically for KingBot & Kingshot (Century Games) Branding.
 """
+
 import discord
 
 from ..base import Minigame
@@ -13,8 +14,12 @@ class MinigameView(discord.ui.View):
         super().__init__(timeout=None)
         self.game = game
         if not self.game.is_finished():
-            bump_button = discord.ui.Button(emoji="⬇️", label="Bump", style=discord.ButtonStyle.primary, row=4)
-            end_button = discord.ui.Button(emoji="🏳️", label="Surrender", style=discord.ButtonStyle.danger, row=4)
+            bump_button = discord.ui.Button(
+                emoji="⬇️", label="Bump", style=discord.ButtonStyle.primary, row=4
+            )
+            end_button = discord.ui.Button(
+                emoji="🏳️", label="Surrender", style=discord.ButtonStyle.danger, row=4
+            )
             bump_button.callback = self.bump
             end_button.callback = self.end
             self.add_item(bump_button)
@@ -23,17 +28,29 @@ class MinigameView(discord.ui.View):
     async def bump(self, interaction: discord.Interaction):
         assert interaction.message
         if interaction.user not in self.game.players:
-            return await interaction.response.send_message("You're not playing this game!", ephemeral=True)
-        self.message = await interaction.message.channel.send(content=await self.game.get_content(), embed=await self.game.get_embed(), view=await self.game.get_view())
+            return await interaction.response.send_message(
+                "You're not playing this game!", ephemeral=True
+            )
+        self.message = await interaction.message.channel.send(
+            content=await self.game.get_content(),
+            embed=await self.game.get_embed(),
+            view=await self.game.get_view(),
+        )
         await interaction.message.delete()
-    
+
     async def end(self, interaction: discord.Interaction):
         assert interaction.channel and isinstance(interaction.user, discord.Member)
         if interaction.user not in self.game.players:
-            return await interaction.response.send_message("You're not playing this game!", ephemeral=True)
+            return await interaction.response.send_message(
+                "You're not playing this game!", ephemeral=True
+            )
         await self.game.cancel(interaction.user)
         new_view = await self.game.get_view()
         if new_view:
             new_view.stop()
         self.stop()
-        await interaction.response.edit_message(content=await self.game.get_content(), embed=await self.game.get_embed(), view=new_view)
+        await interaction.response.edit_message(
+            content=await self.game.get_content(),
+            embed=await self.game.get_embed(),
+            view=new_view,
+        )

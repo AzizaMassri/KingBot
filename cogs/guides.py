@@ -3,6 +3,7 @@ from discord.ext import commands
 import os
 from google import genai
 
+
 class BaseGuideView(discord.ui.View):
     def __init__(self, bot):
         super().__init__()
@@ -10,7 +11,7 @@ class BaseGuideView(discord.ui.View):
 
     async def get_target_lang(self, user_id):
         try:
-            return await self.bot.db.hget('global_translator_subs', str(user_id))
+            return await self.bot.db.hget("global_translator_subs", str(user_id))
         except Exception:
             return None
 
@@ -19,17 +20,16 @@ class BaseGuideView(discord.ui.View):
         try:
             client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
             response = await client.aio.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt
+                model="gemini-2.5-flash", contents=prompt
             )
             if response and response.text:
                 translation = response.text.strip()
                 t_embed = discord.Embed(
                     title=f"{embed.title} ({target_lang.capitalize()})",
                     description=translation,
-                    color=embed.color
+                    color=embed.color,
                 )
-                if embed.image and getattr(embed.image, 'url', None):
+                if embed.image and getattr(embed.image, "url", None):
                     t_embed.set_image(url=embed.image.url)
                 t_embed.set_footer(text="Translated via Global Translator")
                 return t_embed
@@ -41,19 +41,27 @@ class BaseGuideView(discord.ui.View):
         target_lang = await self.get_target_lang(interaction.user.id)
         if target_lang:
             embed = await self.translate_embed(embed, target_lang)
-            
+
         if interaction.guild is None:
             content = f"**{embed.title}**\n\n{embed.description}"
-            if embed.image and getattr(embed.image, 'url', None):
+            if embed.image and getattr(embed.image, "url", None):
                 content += f"\n{embed.image.url}"
-            await interaction.response.edit_message(content=content, embed=None, view=self)
+            await interaction.response.edit_message(
+                content=content, embed=None, view=self
+            )
         else:
-            await interaction.response.edit_message(content=None, embed=embed, view=self)
+            await interaction.response.edit_message(
+                content=None, embed=embed, view=self
+            )
 
 
 class VikingView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="viking_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="viking_mini"
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🛡️ Viking Vengeance Guide 🛡️",
             description=(
@@ -63,15 +71,18 @@ class VikingView(BaseGuideView):
                 "🚑 **HEALING:** DO NOT heal unless you are out or the event is over! Healing steals ally points.\n"
                 "📍 **Position:** Teleport close to allies to share support quickly."
             ),
-            color=discord.Color.dark_red()
+            color=discord.Color.dark_red(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="viking_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="viking_full"
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
-            title="🛡️ Viking Vengeance (Full) 🛡️",
-            color=discord.Color.dark_red()
+            title="🛡️ Viking Vengeance (Full) 🛡️", color=discord.Color.dark_red()
         )
         embed.description = (
             "**What is it?**\n"
@@ -96,8 +107,12 @@ class VikingView(BaseGuideView):
 
 
 class ChampionshipView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="champ_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="champ_mini"
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🏆 Alliance Championship Guide 🏆",
             description=(
@@ -107,15 +122,19 @@ class ChampionshipView(BaseGuideView):
                 "🔥 **PRO TIP:** Buffs (like pet buffs) active *when you register* apply to the whole event!\n\n"
                 "*(For full details, select the Full Guide!)*"
             ),
-            color=discord.Color.brand_green()
+            color=discord.Color.brand_green(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="champ_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="champ_full"
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🏆 Alliance Championship Guide (Full) 🏆",
-            color=discord.Color.brand_green()
+            color=discord.Color.brand_green(),
         )
         embed.description = (
             "To play the Alliance Championship event, each alliance must assign 20 members to each of three lanes. The core strategy is to focus strength on two lanes to secure victory, as winning at least two out of three lanes is required for the overall win.\n\n"
@@ -142,8 +161,12 @@ class ChampionshipView(BaseGuideView):
 
 
 class BearTrapView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="beartrap_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="beartrap_mini"
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🐻 Bear Trap Guide 🐻",
             description=(
@@ -154,15 +177,20 @@ class BearTrapView(BaseGuideView):
                 "🎯 **Focus:** Prioritize Lethality and Pitfall donations!\n\n"
                 "*(For full details, select the Full Guide!)*"
             ),
-            color=discord.Color.dark_magenta()
+            color=discord.Color.dark_magenta(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="beartrap_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide",
+        style=discord.ButtonStyle.secondary,
+        custom_id="beartrap_full",
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
-            title="🐻 Bear Trap Guide (Full) 🐻",
-            color=discord.Color.dark_magenta()
+            title="🐻 Bear Trap Guide (Full) 🐻", color=discord.Color.dark_magenta()
         )
         embed.description = (
             "**Preparing Your City**\n"
@@ -191,8 +219,12 @@ class BearTrapView(BaseGuideView):
 
 
 class TimelineView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="timeline_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="timeline_mini"
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🏰 Kingdom Journey Timeline 🏰",
             description=(
@@ -207,12 +239,18 @@ class TimelineView(BaseGuideView):
                 "🔥 **Day 315:** TrueGold 6/7/8 & Super Refinement\n\n"
                 "*(For full timeline details, select the Full Guide!)*"
             ),
-            color=discord.Color.gold()
+            color=discord.Color.gold(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="timeline_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide",
+        style=discord.ButtonStyle.secondary,
+        custom_id="timeline_full",
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🏰 Kingdom Journey Timeline (Full) 🏰",
             description=(
@@ -232,15 +270,19 @@ class TimelineView(BaseGuideView):
                 "**Day 280** – Gen 5 Pets (Great Moose, Alpha Black Panther)\n"
                 "**Day 315** – TG 6, 7 & 8 / Super Refinement"
             ),
-            color=discord.Color.gold()
+            color=discord.Color.gold(),
         )
-        embed.set_image(url="https://i.imgur.com/qtn62GE.png") 
+        embed.set_image(url="https://i.imgur.com/qtn62GE.png")
         await self.update_message(interaction, embed)
 
 
 class CastleView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="castle_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="castle_mini"
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🏰 King's Castle & KvK Guide 🏰",
             description=(
@@ -250,15 +292,18 @@ class CastleView(BaseGuideView):
                 "🚨 **Healing:** NEVER 'Heal All'. Heal in 30-45min batches & mash alliance 'Help' for instant free heals!\n"
                 "⚔️ **Reinforcing:** Send pure Infantry without heroes so you don't override defensive buffs!"
             ),
-            color=discord.Color.purple()
+            color=discord.Color.purple(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="castle_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="castle_full"
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
-             title="🏰 King's Castle & KvK (Full) 🏰",
-             color=discord.Color.purple()
+            title="🏰 King's Castle & KvK (Full) 🏰", color=discord.Color.purple()
         )
         embed.description = (
             "**Event Overview**\n"
@@ -282,8 +327,12 @@ class CastleView(BaseGuideView):
 
 
 class FacilityView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="fac_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="fac_mini"
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🗺️ Sancs, Forts & Outposts Guide 🗺️",
             description=(
@@ -293,15 +342,18 @@ class FacilityView(BaseGuideView):
                 "🤝 **Rebels:** NEVER solo rebel NPCs! Mass rally so the entire alliance gets 15x 'First Capture' loot.\n"
                 "⚔️ **Defensive Ratio:** Reinforce garrisons with PURE Infantry without heroes to save the stats!"
             ),
-            color=discord.Color.blue()
+            color=discord.Color.blue(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="fac_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="fac_full"
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
-             title="🗺️ Sancs, Forts & Outposts (Full) 🗺️",
-             color=discord.Color.blue()
+            title="🗺️ Sancs, Forts & Outposts (Full) 🗺️", color=discord.Color.blue()
         )
         embed.description = (
             "**Territory & Requirements**\n"
@@ -324,8 +376,12 @@ class FacilityView(BaseGuideView):
 
 
 class OasisView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="oasis_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="oasis_mini"
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🌴 Oasis Island Guide 🌴",
             description=(
@@ -334,15 +390,19 @@ class OasisView(BaseGuideView):
                 "📈 **Stats:** Phase 1: Economy boosts. Phase 2: Lethality/Health. Golden Sunset Wonder. Water allies daily.\n"
                 "⚔️ **Combat:** Rally leader gets island stats; joiners send damage heroes left. Bear Hunt: 10% Inf/10% Cav/80% Arch."
             ),
-            color=discord.Color.teal()
+            color=discord.Color.teal(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="oasis_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="oasis_full"
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🌴 KINGSHOT MEGA-ALLIANCE: ULTIMATE OASIS ISLAND GUIDE 🌴",
-            color=discord.Color.teal()
+            color=discord.Color.teal(),
         )
         embed.description = (
             "Oasis Island (unlocks at Town Center Lv. 19) is Kingshot's hidden engine for massive, permanent stat scaling. Based on the current competitive meta and StratGameSloth's \"Build Smart & Grow FAST\" video, here is how our alliance will out-scale the server from Day 1.\n\n"
@@ -351,11 +411,11 @@ class OasisView(BaseGuideView):
             "Rush Reservoir Lv. 4: This is priority #1! It unlocks a 2nd worker, instantly doubling your cactus-clearing speed and passive essence income.\n"
             "Micromanage the Reservoir: Workers physically walk to chop cacti. Move your Reservoir directly touching the cacti or hidden chests you want to harvest to completely eliminate travel time.\n"
             "Reset Pathing AI: If your workers target the wrong cactus across the map, simply exit the island and re-enter. This resets their AI targeting RNG!\n"
-            "The Purifier Rush: Focus purely on clearing all cacti. Once the island is clear, your Reservoirs permanently convert into \"Purifiers,\" generating passive essence forever.\n\n"
-            "🏗️ 2. BUILDING STRATEGY & THE \"QUEST EXPLOIT\"\n"
-            "The Early Quest Hack: Buy the cheapest 1x1 Grey (T1) items for 1,000 essence early on. This rapidly knocks out the \"Make X Shop Purchases\" quests, giving you a massive early water injection to reinvest.\n"
+            'The Purifier Rush: Focus purely on clearing all cacti. Once the island is clear, your Reservoirs permanently convert into "Purifiers," generating passive essence forever.\n\n'
+            '🏗️ 2. BUILDING STRATEGY & THE "QUEST EXPLOIT"\n'
+            'The Early Quest Hack: Buy the cheapest 1x1 Grey (T1) items for 1,000 essence early on. This rapidly knocks out the "Make X Shop Purchases" quests, giving you a massive early water injection to reinvest.\n'
             "Pivot to Blue (T3): Once your Fountain hits Lv. 4, stop buying Greys/Greens! Blue buildings have the absolute best Essence-to-Prosperity ratio (15 water per prosperity vs. 20 for greys).\n"
-            "⛔ Mistake 1 - The \"Type Limit\" Trap: Every decoration has a strict limit. If an item's limit is 4/4, placing a 5th gives ZERO stats and ZERO prosperity. Extra copies are purely cosmetic and a massive waste of early water. Only use duplicates to upgrade buildings!\n"
+            '⛔ Mistake 1 - The "Type Limit" Trap: Every decoration has a strict limit. If an item\'s limit is 4/4, placing a 5th gives ZERO stats and ZERO prosperity. Extra copies are purely cosmetic and a massive waste of early water. Only use duplicates to upgrade buildings!\n'
             "⛔ Mistake 2 - The 50% Recycle Nerf: NEVER sell items back to the Recycle Shop unless absolutely desperate. The devs nerfed it to a 50% refund. If you need space for better buildings, simply Store your old items to preserve your overall build value.\n\n"
             "📈 3. STAT BOOSTING & ALLIANCE SYNERGY\n"
             "Phase 1 (Economy): First, upgrade buildings that provide Construction, Research, and Training Speed. These compound your account's growth immensely over your first month.\n"
@@ -374,8 +434,14 @@ class OasisView(BaseGuideView):
 
 
 class DrillCampView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="drillcamp_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide",
+        style=discord.ButtonStyle.primary,
+        custom_id="drillcamp_mini",
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="⛺ Drill Camp Guide ⛺",
             description=(
@@ -385,15 +451,20 @@ class DrillCampView(BaseGuideView):
                 "❌ **Shop:** NEVER buy XP from shops. It's less valuable late game.\n"
                 "🔄 **Slots:** Keep important rally joiners leveled. Drop unused/weak PvE heroes first."
             ),
-            color=discord.Color.orange()
+            color=discord.Color.orange(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="drillcamp_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide",
+        style=discord.ButtonStyle.secondary,
+        custom_id="drillcamp_full",
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
-            title="⛺ Drill Camp Guide ⛺",
-            color=discord.Color.orange()
+            title="⛺ Drill Camp Guide ⛺", color=discord.Color.orange()
         )
         embed.description = (
             "**What Drill Camp Does**\n"
@@ -415,13 +486,20 @@ class DrillCampView(BaseGuideView):
             "You’ll hit a point where you have more heroes than Drill slots. Keep core combat/rally heroes inside. Leave unused PvE heroes at level 1.\n"
             "*Sneaky Optimization:* Even a level 1 hero can use maxed skills in rallies (but lower level = fewer troops sent). Keep important rally/join heroes leveled, drop low-impact PvE heroes first."
         )
-        embed.set_image(url="https://i.imgur.com/placeholder.jpeg") # Placeholder for the requested image link
+        # Placeholder for the requested image link
+        embed.set_image(url="https://i.imgur.com/placeholder.jpeg")
         await self.update_message(interaction, embed)
 
 
 class ExpeditionCombatView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="expedition_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide",
+        style=discord.ButtonStyle.primary,
+        custom_id="expedition_mini",
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="⚔️ Expedition Combat Guide ⚔️",
             description=(
@@ -431,15 +509,20 @@ class ExpeditionCombatView(BaseGuideView):
                 "🔥 **Rallies:** Rally leader stats matter most! Joiners' troop buffs don't apply. Send correct heroes.\n"
                 "🏥 **Losses:** ALWAYS have infirmary space! High-risk fights with a full infirmary = permanent troop loss."
             ),
-            color=discord.Color.red()
+            color=discord.Color.red(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="expedition_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide",
+        style=discord.ButtonStyle.secondary,
+        custom_id="expedition_full",
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
-            title="⚔️ Expedition Combat Guide ⚔️",
-            color=discord.Color.red()
+            title="⚔️ Expedition Combat Guide ⚔️", color=discord.Color.red()
         )
         embed.description = (
             "**Troop Roles (Core Foundation)**\n"
@@ -467,8 +550,12 @@ class ExpeditionCombatView(BaseGuideView):
 
 
 class PlaybookView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="playbook_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="playbook_mini"
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="👑 The Definitive Kingshot Playbook 👑",
             description=(
@@ -479,15 +566,20 @@ class PlaybookView(BaseGuideView):
                 "⚔️ **Rallies:** Put strong joiner heroes in the left slot. Bear Hunt: 10% Inf / 10% Cav / 80% Arch.\n"
                 "⚖️ **Endgame:** The TrueGold T11 wall is huge. Stop at TG5 if F2P!"
             ),
-            color=discord.Color.gold()
+            color=discord.Color.gold(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="playbook_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide",
+        style=discord.ButtonStyle.secondary,
+        custom_id="playbook_full",
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
-            title="👑 THE DEFINITIVE KINGSHOT PLAYBOOK 👑",
-            color=discord.Color.gold()
+            title="👑 THE DEFINITIVE KINGSHOT PLAYBOOK 👑", color=discord.Color.gold()
         )
         embed.description = (
             "📜 **THE GOLDEN RULE**\n"
@@ -509,7 +601,7 @@ class PlaybookView(BaseGuideView):
             "• **Hero Roulette / HoG:** Save Gems for exactly 120 spins (max milestones). Split your spins across HoG Day 2 & Day 3 to double-dip on points. Stop spending the second you hit the final milestone.\n\n"
             "⚔️ **COMBAT & RALLY DYNAMICS**\n"
             "• **Rally Joiners (The Lead Hero Trick):** The game ignores joiner hero gear. It only calculates your Lead Hero's top-right skill (Lethality/Attack). Put Chenko, Yeonwoo, or Amane in your primary left slot to massively buff the whale leading the rally.\n"
-            "• **The Pitfall (Bear Hunt) 1/1/8 Rule:** Maximum damage ratio is 10% Infantry / 10% Cavalry / 80% Archers. You need the 10% melee to bypass the game's hidden \"zero-troop\" damage penalty.\n"
+            '• **The Pitfall (Bear Hunt) 1/1/8 Rule:** Maximum damage ratio is 10% Infantry / 10% Cavalry / 80% Archers. You need the 10% melee to bypass the game\'s hidden "zero-troop" damage penalty.\n'
             "• **Arena Snipe:** Save your 10 daily attacks for the last 1-10 minutes before 00:00 UTC server reset to secure your rank.\n\n"
             "🛡️ **GEAR & PETS**\n"
             "• **Gear Focus:** Only upgrade your top 3 main march heroes. Priority: Infantry Gloves & Chest (Survivability) ➡️ Cavalry/Archers Helmets & Boots (Lethality).\n"
@@ -524,8 +616,12 @@ class PlaybookView(BaseGuideView):
 
 
 class WhaleView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="whale_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="whale_mini"
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🐳 Whale Guide 🐳",
             description=(
@@ -535,15 +631,18 @@ class WhaleView(BaseGuideView):
                 "📈 **Stats:** Prioritize Health & Lethality (Inf Health / Arch Lethality). Use Charms, Tech, and Pets for this.\n"
                 "⚔️ **Troops:** POWER ≠ STATS! Troops boost event points but inflate matchmaking. Invest in evergreen stats!"
             ),
-            color=discord.Color.blue()
+            color=discord.Color.blue(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="whale_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="whale_full"
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
-            title="🐳 Whale Guide (Full) 🐳",
-            color=discord.Color.blue()
+            title="🐳 Whale Guide (Full) 🐳", color=discord.Color.blue()
         )
         embed.description = (
             "**Rally Leadership & Stability**\n"
@@ -572,8 +671,12 @@ class WhaleView(BaseGuideView):
 
 
 class TransferView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="transfer_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="transfer_mini"
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🌐 Kingdom Transfer Event 🌐",
             description=(
@@ -583,15 +686,20 @@ class TransferView(BaseGuideView):
                 "💳 **Passes:** Price scales up from $5 to $100. Resets monthly!\n"
                 "⚙️ **Effects:** City moves to Badland with 24h shield. Arena points reset, shop resets, and unprotected resources are lost."
             ),
-            color=discord.Color.blue()
+            color=discord.Color.blue(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="transfer_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide",
+        style=discord.ButtonStyle.secondary,
+        custom_id="transfer_full",
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
-            title="🌐 Kingdom Transfer Event (Full) 🌐",
-            color=discord.Color.blue()
+            title="🌐 Kingdom Transfer Event (Full) 🌐", color=discord.Color.blue()
         )
         embed.description = (
             "**Event Time:** 2026.4.12 00:00:00(UTC) - 2026.4.18 23:59:59(UTC)\n"
@@ -636,8 +744,12 @@ class TransferView(BaseGuideView):
 
 
 class DailyOpsView(BaseGuideView):
-    @discord.ui.button(label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="dailyops_mini")
-    async def mini_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Mini Guide", style=discord.ButtonStyle.primary, custom_id="dailyops_mini"
+    )
+    async def mini_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🚀 Daily Operations Directive 🚀",
             description=(
@@ -648,15 +760,21 @@ class DailyOpsView(BaseGuideView):
                 "👑 **Endgame (TC30+):** 6x TG Refinements! Truegold Dust daily. Use Decree Exploit.\n"
                 "🛑 **Rule:** 100% queue uptime! Max daily chests. Minimums on non-KvK events."
             ),
-            color=discord.Color.brand_red()
+            color=discord.Color.brand_red(),
         )
         await self.update_message(interaction, embed)
 
-    @discord.ui.button(label="Full Guide", style=discord.ButtonStyle.secondary, custom_id="dailyops_full")
-    async def full_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Full Guide",
+        style=discord.ButtonStyle.secondary,
+        custom_id="dailyops_full",
+    )
+    async def full_guide(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         embed = discord.Embed(
             title="🚀 Daily Operations Directive (Full) 🚀",
-            color=discord.Color.brand_red()
+            color=discord.Color.brand_red(),
         )
         embed.description = (
             "> *Execute the matrix daily. Do not bleed efficiency.*\n\n"
@@ -693,45 +811,37 @@ class GuidesCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def cog_check(self, ctx):
-        if not ctx.guild:
-            return True
-        from cogs.utils.tiers import get_guild_tier, Tier, PremiumRequiredError
-        tier = await get_guild_tier(self.bot, ctx.guild.id)
-        if tier < Tier.ELITE:
-            raise PremiumRequiredError(Tier.ELITE)
-        return True
-
     async def send_or_translate_guide(self, ctx, embed, view=None):
         target_lang = None
         try:
-             target_lang = await self.bot.db.hget('global_translator_subs', str(ctx.author.id))
+            target_lang = await self.bot.db.hget(
+                "global_translator_subs", str(ctx.author.id)
+            )
         except Exception:
-             pass
-             
+            pass
+
         if target_lang:
-             prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
-             try:
-                 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-                 response = await client.aio.models.generate_content(
-                     model='gemini-2.5-flash',
-                     contents=prompt
-                 )
-                 if response and response.text:
-                     translation = response.text.strip()
-                     t_embed = discord.Embed(
-                         title=f"{embed.title} ({target_lang.capitalize()})",
-                         description=translation,
-                         color=embed.color
-                     )
-                     t_embed.set_footer(text="Translated via Global Translator")
-                     embed = t_embed
-             except:
-                 pass
-                 
+            prompt = f"Translate the following to {target_lang}. Be concise and strictly literal. No AI fluff.\nTitle: {embed.title}\nDescription: {embed.description}"
+            try:
+                client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                response = await client.aio.models.generate_content(
+                    model="gemini-2.5-flash", contents=prompt
+                )
+                if response and response.text:
+                    translation = response.text.strip()
+                    t_embed = discord.Embed(
+                        title=f"{embed.title} ({target_lang.capitalize()})",
+                        description=translation,
+                        color=embed.color,
+                    )
+                    t_embed.set_footer(text="Translated via Global Translator")
+                    embed = t_embed
+            except Exception:
+                pass
+
         if ctx.guild is None:
             content = f"**{embed.title}**\n\n{embed.description}"
-            if embed.image and getattr(embed.image, 'url', None):
+            if embed.image and getattr(embed.image, "url", None):
                 content += f"\n{embed.image.url}"
             if view:
                 await ctx.send(content=content, view=view)
@@ -743,7 +853,9 @@ class GuidesCog(commands.Cog):
             else:
                 await ctx.send(embed=embed)
 
-    @commands.hybrid_group(name="guides", aliases=["guide"], invoke_without_command=True)
+    @commands.hybrid_group(
+        name="guides", aliases=["guide"], invoke_without_command=True
+    )
     async def guides_command(self, ctx):
         embed = discord.Embed(
             title="🗺️ Kingshot Mini Guides 🗺️",
@@ -765,17 +877,17 @@ class GuidesCog(commands.Cog):
                 "`!castle` - View information and strategies for the Kingdom of Power (KvK) Castle Battle.\n"
                 "`!facility` - View information and strategies for Sanctuaries, Outposts, and Fortresses."
             ),
-            color=discord.Color.green()
+            color=discord.Color.green(),
         )
         await self.send_or_translate_guide(ctx, embed)
-        
+
     @guides_command.command(name="events")
     async def guides_events(self, ctx):
         """Placeholder for all events guides hub."""
         embed = discord.Embed(
             title="📅 Event Guides",
             description="Event-specific guides are being categorized! Check back later, or use `!castle` and `!facility` directly for now.",
-            color=discord.Color.gold()
+            color=discord.Color.gold(),
         )
         await self.send_or_translate_guide(ctx, embed)
 
@@ -785,7 +897,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🛡️ Viking Vengeance Guide 🛡️",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.dark_red()
+            color=discord.Color.dark_red(),
         )
         await self.send_or_translate_guide(ctx, embed, view=VikingView(self.bot))
 
@@ -795,7 +907,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🏆 Alliance Championship Guide 🏆",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.brand_green()
+            color=discord.Color.brand_green(),
         )
         await self.send_or_translate_guide(ctx, embed, view=ChampionshipView(self.bot))
 
@@ -805,7 +917,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🐻 Bear Trap Guide 🐻",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.dark_magenta()
+            color=discord.Color.dark_magenta(),
         )
         await self.send_or_translate_guide(ctx, embed, view=BearTrapView(self.bot))
 
@@ -815,7 +927,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🌴 Oasis Island Guide 🌴",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.teal()
+            color=discord.Color.teal(),
         )
         await self.send_or_translate_guide(ctx, embed, view=OasisView(self.bot))
 
@@ -825,7 +937,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="⛺ Drill Camp Guide ⛺",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.orange()
+            color=discord.Color.orange(),
         )
         await self.send_or_translate_guide(ctx, embed, view=DrillCampView(self.bot))
 
@@ -835,9 +947,11 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="⚔️ Expedition Combat Guide ⚔️",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.red()
+            color=discord.Color.red(),
         )
-        await self.send_or_translate_guide(ctx, embed, view=ExpeditionCombatView(self.bot))
+        await self.send_or_translate_guide(
+            ctx, embed, view=ExpeditionCombatView(self.bot)
+        )
 
     @guides_command.command(name="playbook", aliases=["definitive"])
     async def guides_playbook(self, ctx):
@@ -845,7 +959,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="👑 The Definitive Kingshot Playbook 👑",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.gold()
+            color=discord.Color.gold(),
         )
         await self.send_or_translate_guide(ctx, embed, view=PlaybookView(self.bot))
 
@@ -855,7 +969,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🚀 Daily Operations Directive 🚀",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.brand_red()
+            color=discord.Color.brand_red(),
         )
         await self.send_or_translate_guide(ctx, embed, view=DailyOpsView(self.bot))
 
@@ -865,7 +979,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🐳 Whale Guide 🐳",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.blue()
+            color=discord.Color.blue(),
         )
         await self.send_or_translate_guide(ctx, embed, view=WhaleView(self.bot))
 
@@ -875,7 +989,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🌐 Kingdom Transfer Event 🌐",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.blue()
+            color=discord.Color.blue(),
         )
         await self.send_or_translate_guide(ctx, embed, view=TransferView(self.bot))
 
@@ -885,7 +999,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🏰 Kingdom Journey Timeline 🏰",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.gold()
+            color=discord.Color.gold(),
         )
         await self.send_or_translate_guide(ctx, embed, view=TimelineView(self.bot))
 
@@ -894,16 +1008,20 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🏰 King's Castle & KvK Guide 🏰",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.purple()
+            color=discord.Color.purple(),
         )
         await self.send_or_translate_guide(ctx, embed, view=CastleView(self.bot))
 
-    @commands.hybrid_group(name="facility", aliases=["sanctuary", "outpost", "fortress"], invoke_without_command=True)
+    @commands.hybrid_group(
+        name="facility",
+        aliases=["sanctuary", "outpost", "fortress"],
+        invoke_without_command=True,
+    )
     async def facility_command(self, ctx):
         embed = discord.Embed(
             title="🗺️ Sanctuaries, Outposts & Fortresses Guide 🗺️",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.blue()
+            color=discord.Color.blue(),
         )
         await self.send_or_translate_guide(ctx, embed, view=FacilityView(self.bot))
 
@@ -913,7 +1031,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="⛺ Drill Camp Guide ⛺",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.orange()
+            color=discord.Color.orange(),
         )
         await self.send_or_translate_guide(ctx, embed, view=DrillCampView(self.bot))
 
@@ -923,9 +1041,11 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="⚔️ Expedition Combat Guide ⚔️",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.red()
+            color=discord.Color.red(),
         )
-        await self.send_or_translate_guide(ctx, embed, view=ExpeditionCombatView(self.bot))
+        await self.send_or_translate_guide(
+            ctx, embed, view=ExpeditionCombatView(self.bot)
+        )
 
     @commands.hybrid_command(name="playbook", aliases=["definitive"])
     async def playbook_command(self, ctx):
@@ -933,7 +1053,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="👑 The Definitive Kingshot Playbook 👑",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.gold()
+            color=discord.Color.gold(),
         )
         await self.send_or_translate_guide(ctx, embed, view=PlaybookView(self.bot))
 
@@ -943,7 +1063,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🐳 Whale Guide 🐳",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.blue()
+            color=discord.Color.blue(),
         )
         await self.send_or_translate_guide(ctx, embed, view=WhaleView(self.bot))
 
@@ -953,7 +1073,7 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🌐 Kingdom Transfer Event 🌐",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.blue()
+            color=discord.Color.blue(),
         )
         await self.send_or_translate_guide(ctx, embed, view=TransferView(self.bot))
 
@@ -963,9 +1083,10 @@ class GuidesCog(commands.Cog):
         embed = discord.Embed(
             title="🚀 Daily Operations Directive 🚀",
             description="Please select either the short **Mini Guide** or the detailed **Full Guide** using the buttons below.",
-            color=discord.Color.brand_red()
+            color=discord.Color.brand_red(),
         )
         await self.send_or_translate_guide(ctx, embed, view=DailyOpsView(self.bot))
+
 
 async def setup(bot):
     await bot.add_cog(GuidesCog(bot))

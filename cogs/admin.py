@@ -3,7 +3,7 @@ from discord.ext import commands
 import sys
 import datetime
 from cogs.utils.views import TranslatedView
-from cogs.utils.tiers import requires_tier, Tier
+
 
 class AdminConfirmView(TranslatedView):
     def __init__(self, ctx, action_name: str, callback_coro):
@@ -13,13 +13,19 @@ class AdminConfirmView(TranslatedView):
         self.callback_coro = callback_coro
 
     @discord.ui.button(label="Confirm", style=discord.ButtonStyle.success, emoji="✅")
-    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def confirm(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         if interaction.user != self.ctx.author:
-            return await self.send_translated(interaction, content="You cannot confirm this action.", ephemeral=True)
+            return await self.send_translated(
+                interaction, content="You cannot confirm this action.", ephemeral=True
+            )
         for child in self.children:
             child.disabled = True
         try:
-            await interaction.response.edit_message(content=f"Confirmed {self.action_name}.", view=self)
+            await interaction.response.edit_message(
+                content=f"Confirmed {self.action_name}.", view=self
+            )
         except discord.HTTPException:
             pass
         self.stop()
@@ -28,11 +34,15 @@ class AdminConfirmView(TranslatedView):
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger, emoji="❌")
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user != self.ctx.author:
-            return await self.send_translated(interaction, content="You cannot cancel this action.", ephemeral=True)
+            return await self.send_translated(
+                interaction, content="You cannot cancel this action.", ephemeral=True
+            )
         for child in self.children:
             child.disabled = True
         try:
-            await interaction.response.edit_message(content=f"Cancelled {self.action_name}.", view=self)
+            await interaction.response.edit_message(
+                content=f"Cancelled {self.action_name}.", view=self
+            )
         except discord.HTTPException:
             pass
         self.stop()
@@ -40,15 +50,20 @@ class AdminConfirmView(TranslatedView):
 
 # --- Modals for the Admin Suite ---
 
+
 class ModActionModal(discord.ui.Modal):
-    user_id = discord.ui.TextInput(label="Target User ID", placeholder="e.g. 123456789012345678", required=True)
-    reason = discord.ui.TextInput(label="Reason (Optional)", style=discord.TextStyle.paragraph, required=False)
+    user_id = discord.ui.TextInput(
+        label="Target User ID", placeholder="e.g. 123456789012345678", required=True
+    )
+    reason = discord.ui.TextInput(
+        label="Reason (Optional)", style=discord.TextStyle.paragraph, required=False
+    )
 
     def __init__(self, bot, action_type):
         action_map = {
             "mod_kick": "Kick User",
             "mod_ban": "Ban User",
-            "mod_unmute": "Remove Time-out"
+            "mod_unmute": "Remove Time-out",
         }
         super().__init__(title=action_map.get(action_type, "Action"))
         self.bot = bot
@@ -64,8 +79,12 @@ class ModActionModal(discord.ui.Modal):
                 if self.action_type == "mod_ban":
                     user = await self.bot.fetch_user(target_id)
                     await interaction.guild.ban(user, reason=self.reason.value)
-                    return await interaction.followup.send(f"✅ Banned **{user.name}**.")
-                return await interaction.followup.send("❌ Error: Could not find user in the server via that ID.")
+                    return await interaction.followup.send(
+                        f"✅ Banned **{user.name}**."
+                    )
+                return await interaction.followup.send(
+                    "❌ Error: Could not find user in the server via that ID."
+                )
 
             if self.action_type == "mod_kick":
                 await member.kick(reason=self.reason.value)
@@ -75,17 +94,24 @@ class ModActionModal(discord.ui.Modal):
                 await interaction.followup.send(f"✅ Banned **{member.display_name}**.")
             elif self.action_type == "mod_unmute":
                 await member.timeout(None, reason="Unmuted via Mod Panel")
-                await interaction.followup.send(f"🔊 Removed time-out from **{member.display_name}**.")
+                await interaction.followup.send(
+                    f"🔊 Removed time-out from **{member.display_name}**."
+                )
         except ValueError:
             await interaction.followup.send("❌ User ID must be a number.")
         except discord.Forbidden:
-            await interaction.followup.send("❌ Permission Denied. My role is likely underneath theirs.")
+            await interaction.followup.send(
+                "❌ Permission Denied. My role is likely underneath theirs."
+            )
         except Exception as e:
             await interaction.followup.send(f"❌ Error: {e}")
 
+
 class MuteModal(discord.ui.Modal, title="Time-out User"):
     user_id = discord.ui.TextInput(label="Target User ID", required=True)
-    minutes = discord.ui.TextInput(label="Duration (Minutes)", placeholder="e.g. 60", required=True)
+    minutes = discord.ui.TextInput(
+        label="Duration (Minutes)", placeholder="e.g. 60", required=True
+    )
     reason = discord.ui.TextInput(label="Reason (Optional)", required=False)
 
     def __init__(self, bot):
@@ -96,14 +122,20 @@ class MuteModal(discord.ui.Modal, title="Time-out User"):
         await interaction.response.defer(ephemeral=True)
         try:
             member = interaction.guild.get_member(int(self.user_id.value.strip()))
-            if not member: return await interaction.followup.send("❌ Target user not found in the server.")
+            if not member:
+                return await interaction.followup.send(
+                    "❌ Target user not found in the server."
+                )
             duration = datetime.timedelta(minutes=int(self.minutes.value.strip()))
             await member.timeout(duration, reason=self.reason.value)
-            await interaction.followup.send(f"🔇 Timed out **{member.display_name}** for {self.minutes.value} mins.")
+            await interaction.followup.send(
+                f"🔇 Timed out **{member.display_name}** for {self.minutes.value} mins."
+            )
         except discord.Forbidden:
             await interaction.followup.send("❌ Permission Denied.")
         except Exception as e:
             await interaction.followup.send(f"❌ Error: {e}")
+
 
 class ForceNameModal(discord.ui.Modal, title="Force Update Nickname"):
     user_id = discord.ui.TextInput(label="Target User ID", required=True)
@@ -117,14 +149,22 @@ class ForceNameModal(discord.ui.Modal, title="Force Update Nickname"):
         await interaction.response.defer(ephemeral=True)
         try:
             member = interaction.guild.get_member(int(self.user_id.value.strip()))
-            if not member: return await interaction.followup.send("❌ Target user not found in the server.")
+            if not member:
+                return await interaction.followup.send(
+                    "❌ Target user not found in the server."
+                )
             await member.edit(nick=self.new_name.value.strip())
-            await interaction.followup.send(f"🏷️ Nickname for the user updated to **{self.new_name.value}**.")
+            await interaction.followup.send(
+                f"🏷️ Nickname for the user updated to **{self.new_name.value}**."
+            )
         except discord.Forbidden:
             await interaction.followup.send("❌ Permission Denied to change nickname.")
 
+
 class PurgeModal(discord.ui.Modal, title="Purge Messages"):
-    amount = discord.ui.TextInput(label="Number of Messages (1-500)", placeholder="e.g. 50", required=True)
+    amount = discord.ui.TextInput(
+        label="Number of Messages (1-500)", placeholder="e.g. 50", required=True
+    )
 
     def __init__(self, bot):
         super().__init__()
@@ -137,11 +177,15 @@ class PurgeModal(discord.ui.Modal, title="Purge Messages"):
             if count < 1 or count > 500:
                 return await interaction.followup.send("❌ Must be between 1 and 500.")
             deleted = await interaction.channel.purge(limit=count)
-            await interaction.followup.send(f"🧹 Purged **{len(deleted)}** messages from the channel.")
+            await interaction.followup.send(
+                f"🧹 Purged **{len(deleted)}** messages from the channel."
+            )
         except Exception as e:
             await interaction.followup.send(f"❌ Error: {e}")
 
+
 # --- Admin View Dashboard ---
+
 
 class AdminSuiteView(discord.ui.View):
     def __init__(self, bot):
@@ -154,16 +198,24 @@ class AdminSuiteView(discord.ui.View):
             discord.SelectOption(label="Kick User", value="mod_kick", emoji="👢"),
             discord.SelectOption(label="Ban User", value="mod_ban", emoji="🔨"),
             discord.SelectOption(label="Time-out User", value="mod_mute", emoji="🔇"),
-            discord.SelectOption(label="Remove Time-out", value="mod_unmute", emoji="🔊"),
-            discord.SelectOption(label="Force Nickname", value="mod_forcename", emoji="🏷️")
+            discord.SelectOption(
+                label="Remove Time-out", value="mod_unmute", emoji="🔊"
+            ),
+            discord.SelectOption(
+                label="Force Nickname", value="mod_forcename", emoji="🏷️"
+            ),
         ],
         custom_id="admin_mod_select",
-        row=0
+        row=0,
     )
-    async def mod_select(self, interaction: discord.Interaction, select: discord.ui.Select):
+    async def mod_select(
+        self, interaction: discord.Interaction, select: discord.ui.Select
+    ):
         if not interaction.user.guild_permissions.administrator:
-            return await interaction.response.send_message("❌ Admin strictly required.", ephemeral=True)
-            
+            return await interaction.response.send_message(
+                "❌ Admin strictly required.", ephemeral=True
+            )
+
         val = select.values[0]
         if val in ["mod_kick", "mod_ban", "mod_unmute"]:
             await interaction.response.send_modal(ModActionModal(self.bot, val))
@@ -175,63 +227,121 @@ class AdminSuiteView(discord.ui.View):
     @discord.ui.select(
         placeholder="🛡️ Select Channel Action...",
         options=[
-            discord.SelectOption(label="Purge Messages", value="chan_purge", emoji="🧹"),
+            discord.SelectOption(
+                label="Purge Messages", value="chan_purge", emoji="🧹"
+            ),
             discord.SelectOption(label="Lock Channel", value="chan_lock", emoji="🔒"),
-            discord.SelectOption(label="Unlock Channel", value="chan_unlock", emoji="🔓")
+            discord.SelectOption(
+                label="Unlock Channel", value="chan_unlock", emoji="🔓"
+            ),
         ],
         custom_id="admin_chan_select",
-        row=1
+        row=1,
     )
-    async def chan_select(self, interaction: discord.Interaction, select: discord.ui.Select):
+    async def chan_select(
+        self, interaction: discord.Interaction, select: discord.ui.Select
+    ):
         if not interaction.user.guild_permissions.administrator:
-            return await interaction.response.send_message("❌ Admin strictly required.", ephemeral=True)
-            
+            return await interaction.response.send_message(
+                "❌ Admin strictly required.", ephemeral=True
+            )
+
         val = select.values[0]
         if val == "chan_purge":
             await interaction.response.send_modal(PurgeModal(self.bot))
         elif val == "chan_lock":
             try:
-                await interaction.channel.set_permissions(interaction.guild.default_role, send_messages=False)
-                await interaction.response.send_message("🔒 **Channel Locked.** @everyone can no longer text.", ephemeral=False)
+                await interaction.channel.set_permissions(
+                    interaction.guild.default_role, send_messages=False
+                )
+                await interaction.response.send_message(
+                    "🔒 **Channel Locked.** @everyone can no longer text.",
+                    ephemeral=False,
+                )
             except discord.Forbidden:
-                await interaction.response.send_message("❌ Missing Permissions.", ephemeral=True)
+                await interaction.response.send_message(
+                    "❌ Missing Permissions.", ephemeral=True
+                )
         elif val == "chan_unlock":
             try:
-                await interaction.channel.set_permissions(interaction.guild.default_role, send_messages=None)
-                await interaction.response.send_message("🔓 **Channel Unlocked.**", ephemeral=False)
+                await interaction.channel.set_permissions(
+                    interaction.guild.default_role, send_messages=None
+                )
+                await interaction.response.send_message(
+                    "🔓 **Channel Unlocked.**", ephemeral=False
+                )
             except discord.Forbidden:
-                await interaction.response.send_message("❌ Missing Permissions.", ephemeral=True)
+                await interaction.response.send_message(
+                    "❌ Missing Permissions.", ephemeral=True
+                )
 
-    @discord.ui.button(label="Restart Bot", style=discord.ButtonStyle.danger, emoji="🔄", row=2, custom_id="admin_btn_restart")
-    async def restart_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not interaction.user.guild_permissions.administrator: return
-        await interaction.response.send_message("🔄 Force Restarting Engine...", ephemeral=False)
+    @discord.ui.button(
+        label="Restart Bot",
+        style=discord.ButtonStyle.danger,
+        emoji="🔄",
+        row=2,
+        custom_id="admin_btn_restart",
+    )
+    async def restart_btn(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if not interaction.user.guild_permissions.administrator:
+            return
+        await interaction.response.send_message(
+            "🔄 Force Restarting Engine...", ephemeral=False
+        )
         sys.exit(0)
 
-    @discord.ui.button(label="Sync Global", style=discord.ButtonStyle.primary, emoji="♻️", row=2, custom_id="admin_btn_sync")
-    async def sync_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not interaction.user.guild_permissions.administrator: return
+    @discord.ui.button(
+        label="Sync Global",
+        style=discord.ButtonStyle.primary,
+        emoji="♻️",
+        row=2,
+        custom_id="admin_btn_sync",
+    )
+    async def sync_btn(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if not interaction.user.guild_permissions.administrator:
+            return
         await interaction.response.defer(ephemeral=True)
         synced = await self.bot.tree.sync(guild=interaction.guild)
         self.bot.tree.copy_global_to(guild=interaction.guild)
         synced = await self.bot.tree.sync(guild=interaction.guild)
-        await interaction.followup.send(f"✅ Fast-Synced **{len(synced)}** app commands natively bypassing global cache.")
+        await interaction.followup.send(
+            f"✅ Fast-Synced **{len(synced)}** app commands natively bypassing global cache."
+        )
 
-    @discord.ui.button(label="Toggle Invisible", style=discord.ButtonStyle.secondary, emoji="👻", row=2, custom_id="admin_btn_invis")
-    async def invis_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not interaction.user.guild_permissions.administrator: return
+    @discord.ui.button(
+        label="Toggle Invisible",
+        style=discord.ButtonStyle.secondary,
+        emoji="👻",
+        row=2,
+        custom_id="admin_btn_invis",
+    )
+    async def invis_btn(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if not interaction.user.guild_permissions.administrator:
+            return
         is_invisible = await self.bot.db.get("kingbot_global_invisible")
         if is_invisible == "1":
             await self.bot.db.delete("kingbot_global_invisible")
             await self.bot.change_presence(status=discord.Status.online)
-            await interaction.response.send_message("👁️ KingBot is now globally visible.", ephemeral=False)
+            await interaction.response.send_message(
+                "👁️ KingBot is now globally visible.", ephemeral=False
+            )
         else:
             await self.bot.db.set("kingbot_global_invisible", "1")
             await self.bot.change_presence(status=discord.Status.invisible)
-            await interaction.response.send_message("👻 KingBot is now historically cloaked across all shards.", ephemeral=False)
+            await interaction.response.send_message(
+                "👻 KingBot is now historically cloaked across all shards.",
+                ephemeral=False,
+            )
 
 
 # --- Engine Cog ---
+
 
 class Admin(commands.Cog):
     def __init__(self, bot):
@@ -239,16 +349,17 @@ class Admin(commands.Cog):
 
     @commands.hybrid_command(name="control_panel", aliases=["admin_suite", "cpanel"])
     @commands.has_permissions(administrator=True)
-    @requires_tier(Tier.PREMIUM)
     async def control_panel(self, ctx):
         """Summons the Master Admin Control Panel."""
         embed = discord.Embed(
             title="⚙️ KingBot Master Control Panel",
             description="Utilize the dropdowns to effortlessly moderate users and police the channel, or use the execution buttons to hot-swap infrastructure.\n\n"
-                        "*(All legacy text commands are still actively supported).* ",
-            color=discord.Color.dark_red()
+            "*(All legacy text commands are still actively supported).* ",
+            color=discord.Color.dark_red(),
         )
-        embed.set_footer(text="Requires High Administrator Clearance. Interactions logged securely.")
+        embed.set_footer(
+            text="Requires High Administrator Clearance. Interactions logged securely."
+        )
         await ctx.send(embed=embed, view=AdminSuiteView(self.bot))
 
     @commands.hybrid_command(name="restart", aliases=["reboot"], hidden=True)
@@ -257,6 +368,7 @@ class Admin(commands.Cog):
         async def do_restart():
             await ctx.send("🔄 Restarting bot...")
             sys.exit(0)
+
         view = AdminConfirmView(ctx, "bot restart", do_restart)
         await ctx.send("Are you sure you want to restart the bot?", view=view)
 
@@ -269,8 +381,11 @@ class Admin(commands.Cog):
                 await ctx.send(f"✅ Successfully reloaded `cogs.{extension}`")
             except Exception as e:
                 await ctx.send(f"❌ Failed to reload `cogs.{extension}`: {e}")
+
         view = AdminConfirmView(ctx, f"reload of cogs.{extension}", do_reload)
-        await ctx.send(f"Are you sure you want to reload `cogs.{extension}`?", view=view)
+        await ctx.send(
+            f"Are you sure you want to reload `cogs.{extension}`?", view=view
+        )
 
     @commands.hybrid_command(name="sync", hidden=True)
     @commands.has_permissions(administrator=True)
@@ -291,29 +406,44 @@ class Admin(commands.Cog):
                 synced = []
             else:
                 synced = await self.bot.tree.sync()
-            await ctx.send(f"✅ Synced {len(synced)} commands {'globally' if spec not in {'~', '*', '^'} else 'to the current guild' }.")
+            await ctx.send(
+                f"✅ Synced {len(synced)} commands {'globally' if spec not in {'~', '*', '^'} else 'to the current guild' }."
+            )
         except Exception as e:
             await ctx.send(f"❌ Failed to sync commands: {e}")
 
     @commands.hybrid_command(name="toggle_command", aliases=["toggle"])
     @commands.has_permissions(administrator=True)
-    @requires_tier(Tier.PREMIUM)
     async def toggle_command(self, ctx, command_name: str = None):
         """Toggles any bot command to be Admin-only. Type '!toggle list' to see all disabled commands."""
         if not command_name:
-            return await ctx.send("❌ Usage: `!toggle <CommandName>` or `!toggle list`.")
-            
+            return await ctx.send(
+                "❌ Usage: `!toggle <CommandName>` or `!toggle list`."
+            )
+
         if command_name.lower() == "list":
             pattern = f"cmd_disabled:{ctx.guild.id}:*"
             keys = await self.bot.db.keys(pattern)
-            if not keys: return await ctx.send("✅ There are currently no commands/cogs disabled in this server.")
-            disabled_cmds = [f"`!{key.split(':')[2]}`" for key in keys if len(key.split(':')) >= 3]
-            embed = discord.Embed(title="🚫 Disabled Commands", description="\n".join(disabled_cmds), color=discord.Color.red())
+            if not keys:
+                return await ctx.send(
+                    "✅ There are currently no commands/cogs disabled in this server."
+                )
+            disabled_cmds = [
+                f"`!{key.split(':')[2]}`" for key in keys if len(key.split(":")) >= 3
+            ]
+            embed = discord.Embed(
+                title="🚫 Disabled Commands",
+                description="\n".join(disabled_cmds),
+                color=discord.Color.red(),
+            )
             return await ctx.send(embed=embed)
 
         cmd = self.bot.get_command(command_name)
-        if not cmd: return await ctx.send(f"❌ Could not find a command named `{command_name}`.")
-            
+        if not cmd:
+            return await ctx.send(
+                f"❌ Could not find a command named `{command_name}`."
+            )
+
         key = f"cmd_disabled:{ctx.guild.id}:{cmd.name}"
         is_disabled = await self.bot.db.get(key)
         if is_disabled:
@@ -325,28 +455,41 @@ class Admin(commands.Cog):
 
     @commands.hybrid_command(name="toggle_cog", aliases=["togglecog"])
     @commands.has_permissions(administrator=True)
-    @requires_tier(Tier.PREMIUM)
     async def toggle_cog(self, ctx, cog_name: str = None):
         """Toggles an entire cog on or off for this server."""
-        if not cog_name: return await ctx.send("❌ Usage: `!togglecog <CogName>`")
-        target_cog = next((c for n, c in self.bot.cogs.items() if n.lower() == cog_name.lower()), None)
-        if not target_cog: return await ctx.send(f"❌ Could not find module `{cog_name}`.")
+        if not cog_name:
+            return await ctx.send("❌ Usage: `!togglecog <CogName>`")
+        target_cog = next(
+            (c for n, c in self.bot.cogs.items() if n.lower() == cog_name.lower()), None
+        )
+        if not target_cog:
+            return await ctx.send(f"❌ Could not find module `{cog_name}`.")
         cmds = target_cog.get_commands()
-        if not cmds: return await ctx.send("⚠️ No toggleable commands.")
-        
-        is_disabled = await self.bot.db.get(f"cmd_disabled:{ctx.guild.id}:{cmds[0].name}")
+        if not cmds:
+            return await ctx.send("⚠️ No toggleable commands.")
+
+        is_disabled = await self.bot.db.get(
+            f"cmd_disabled:{ctx.guild.id}:{cmds[0].name}"
+        )
         if is_disabled:
-            for cmd in cmds: await self.bot.db.delete(f"cmd_disabled:{ctx.guild.id}:{cmd.name}")
-            await self.bot.db.delete(f"cog_disabled:{ctx.guild.id}:{target_cog.qualified_name}")
+            for cmd in cmds:
+                await self.bot.db.delete(f"cmd_disabled:{ctx.guild.id}:{cmd.name}")
+            await self.bot.db.delete(
+                f"cog_disabled:{ctx.guild.id}:{target_cog.qualified_name}"
+            )
             await ctx.send(f"✅ ENABLED `{target_cog.qualified_name}`.")
         else:
-            for cmd in cmds: await self.bot.db.set(f"cmd_disabled:{ctx.guild.id}:{cmd.name}", "1")
-            await self.bot.db.set(f"cog_disabled:{ctx.guild.id}:{target_cog.qualified_name}", "1")
+            for cmd in cmds:
+                await self.bot.db.set(f"cmd_disabled:{ctx.guild.id}:{cmd.name}", "1")
+            await self.bot.db.set(
+                f"cog_disabled:{ctx.guild.id}:{target_cog.qualified_name}", "1"
+            )
             await ctx.send(f"🚫 REQUIRED ADMIN FOR `{target_cog.qualified_name}`.")
 
-    @commands.hybrid_command(name="toggle_invisible", aliases=["invisible"], hidden=True)
+    @commands.hybrid_command(
+        name="toggle_invisible", aliases=["invisible"], hidden=True
+    )
     @commands.has_permissions(administrator=True)
-    @requires_tier(Tier.PREMIUM)
     async def toggle_invisible(self, ctx):
         is_invisible = await self.bot.db.get("kingbot_global_invisible")
         if is_invisible == "1":
@@ -357,6 +500,7 @@ class Admin(commands.Cog):
             await self.bot.db.set("kingbot_global_invisible", "1")
             await self.bot.change_presence(status=discord.Status.invisible)
             await ctx.send("👻 **KingBot is now INVISIBLE globally.**")
+
 
 async def setup(bot):
     await bot.add_cog(Admin(bot))

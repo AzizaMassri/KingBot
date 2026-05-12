@@ -1,3 +1,4 @@
+from cogs.utils.translator import translate_content
 import discord
 from discord.ext import commands
 from google import genai
@@ -12,14 +13,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- SINGLE INSTANCE LOCK ---
+
+
 def enforce_single_instance():
     global _lock_socket
     _lock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        _lock_socket.bind(('127.0.0.1', 17690))
+        _lock_socket.bind(("127.0.0.1", 17690))
     except socket.error:
-        print("❌ Another instance of the bot is already running. Exiting to prevent ghost instances.")
+        print(
+            "❌ Another instance of the bot is already running. Exiting to prevent ghost instances."
+        )
         sys.exit(1)
+
 
 enforce_single_instance()
 
@@ -30,47 +36,70 @@ intents.guilds = True
 intents.members = True
 intents.voice_states = True
 
-from cogs.utils.translator import translate_content
 
 class UniversalContext(commands.Context):
     async def send(self, content=None, **kwargs):
         # Grab the locale if it was invoked via slash command
-        target_locale = self.interaction.locale if self.interaction else discord.Locale.american_english
-        
+        target_locale = (
+            self.interaction.locale
+            if self.interaction
+            else discord.Locale.american_english
+        )
+
         tasks = []
-        
-        guild_id = self.guild.id if hasattr(self, 'guild') and self.guild else None
+
+        guild_id = self.guild.id if hasattr(self, "guild") and self.guild else None
         # 1. Translate string content
         if content:
-            tasks.append(translate_content(content, target_locale, bot=self.bot, guild_id=guild_id))
-            
+            tasks.append(
+                translate_content(
+                    content, target_locale, bot=self.bot, guild_id=guild_id
+                )
+            )
+
         # 2. Translate Embeds
-        embeds = kwargs.get('embeds', [])
-        embed = kwargs.get('embed')
+        embeds = kwargs.get("embeds", [])
+        embed = kwargs.get("embed")
         if embed:
             embeds.append(embed)
-            
+
         for e in embeds:
             if e.title:
-                tasks.append(translate_content(e.title, target_locale, bot=self.bot, guild_id=guild_id))
+                tasks.append(
+                    translate_content(
+                        e.title, target_locale, bot=self.bot, guild_id=guild_id
+                    )
+                )
             if e.description:
-                tasks.append(translate_content(e.description, target_locale, bot=self.bot, guild_id=guild_id))
-            # Support field translations as well    
+                tasks.append(
+                    translate_content(
+                        e.description, target_locale, bot=self.bot, guild_id=guild_id
+                    )
+                )
+            # Support field translations as well
             for field in e.fields:
                 if field.name:
-                    tasks.append(translate_content(field.name, target_locale, bot=self.bot, guild_id=guild_id))
+                    tasks.append(
+                        translate_content(
+                            field.name, target_locale, bot=self.bot, guild_id=guild_id
+                        )
+                    )
                 if field.value:
-                    tasks.append(translate_content(field.value, target_locale, bot=self.bot, guild_id=guild_id))
-                    
+                    tasks.append(
+                        translate_content(
+                            field.value, target_locale, bot=self.bot, guild_id=guild_id
+                        )
+                    )
+
         # Execute all translations concurrently
         results = await asyncio.gather(*tasks) if tasks else []
-        
+
         # Unpack results back into the objects
         res_idx = 0
         if content:
             content = results[res_idx]
             res_idx += 1
-            
+
         for e in embeds:
             if e.title:
                 e.title = results[res_idx]
@@ -87,15 +116,18 @@ class UniversalContext(commands.Context):
                 if set_field.value:
                     new_value = results[res_idx]
                     res_idx += 1
-                e.set_field_at(index, name=new_name, value=new_value, inline=set_field.inline)
-            
-        if embed and 'embed' in kwargs:
-            kwargs['embed'] = embeds[0]
+                e.set_field_at(
+                    index, name=new_name, value=new_value, inline=set_field.inline
+                )
+
+        if embed and "embed" in kwargs:
+            kwargs["embed"] = embeds[0]
         elif embeds:
-            kwargs['embeds'] = embeds
+            kwargs["embeds"] = embeds
 
         # 3. Pass the translated data to the original send method
         return await super().send(content, **kwargs)
+
 
 class MyBot(commands.AutoShardedBot):
     async def get_context(self, message, *, cls=UniversalContext):
@@ -106,32 +138,35 @@ class MyBot(commands.AutoShardedBot):
         try:
             self.mq_connection = await aio_pika.connect_robust(RABBITMQ_URL)
             self.mq_channel = await self.mq_connection.channel()
-            print('✅ Established persistent RabbitMQ connection.')
+            print("✅ Established persistent RabbitMQ connection.")
         except Exception as e:
-            print(f'❌ Failed to establish persistent RabbitMQ connection: {e}')
+            print(f"❌ Failed to establish persistent RabbitMQ connection: {e}")
             self.mq_connection = None
             self.mq_channel = None
 
         # Store database cache natively
         self.db = cache
         await self.db.init_db()
-        print('✅ Initialized Postgres database pool.')
-        
+        print("✅ Initialized Postgres database pool.")
+
         # Load Cogs Dynamically
-        for filename in os.listdir('./cogs'):
+        for filename in os.listdir("./cogs"):
             extension = None
-            if filename.endswith('.py') and not filename.startswith('__'):
-                extension = f'cogs.{filename[:-3]}'
-            elif os.path.isdir(f'./cogs/{filename}') and filename not in ['utils', '__pycache__']:
-                if os.path.isfile(f'./cogs/{filename}/__init__.py'):
-                    extension = f'cogs.{filename}'
-                    
+            if filename.endswith(".py") and not filename.startswith("__"):
+                extension = f"cogs.{filename[:-3]}"
+            elif os.path.isdir(f"./cogs/{filename}") and filename not in [
+                "utils",
+                "__pycache__",
+            ]:
+                if os.path.isfile(f"./cogs/{filename}/__init__.py"):
+                    extension = f"cogs.{filename}"
+
             if extension:
                 try:
                     await self.load_extension(extension)
-                    print(f'✅ Loaded extension: {extension}')
+                    print(f"✅ Loaded extension: {extension}")
                 except Exception as e:
-                    print(f'❌ Failed to load extension {extension}. Error: {e}')
+                    print(f"❌ Failed to load extension {extension}. Error: {e}")
 
         try:
             synced = await self.tree.sync()
@@ -140,14 +175,14 @@ class MyBot(commands.AutoShardedBot):
             print(f"❌ Failed to sync App Commands: {e}")
 
     async def close(self):
-        if hasattr(self, 'mq_connection') and self.mq_connection:
+        if hasattr(self, "mq_connection") and self.mq_connection:
             try:
                 await self.mq_connection.close()
                 print("🛑 Closed RabbitMQ connection.")
             except Exception as e:
                 print(f"⚠️ Error closing RabbitMQ connection: {e}")
-                
-        if hasattr(self, 'db') and self.db:
+
+        if hasattr(self, "db") and self.db:
             try:
                 await self.db.close()
                 print("🛑 Closed Postgres Database.")
@@ -155,9 +190,15 @@ class MyBot(commands.AutoShardedBot):
                 print(f"⚠️ Error closing Postgres Database: {e}")
         await super().close()
 
+
 # Disable default help command so we can create a custom !bothelp / !help
 # AutoSharding and zero chunking handles massive scaling footprint.
-bot = MyBot(command_prefix='!', intents=intents, help_command=None, chunk_guilds_at_startup=False)
+bot = MyBot(
+    command_prefix="!",
+    intents=intents,
+    help_command=None,
+    chunk_guilds_at_startup=False,
+)
 
 # --- NEW GEMINI SDK SETUP (2026) ---
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
@@ -170,23 +211,27 @@ RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
 RABBITMQ_PASS = os.getenv("RABBITMQ_PASS", "guest")
 RABBITMQ_URL = f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}/"
 
+
 @bot.check
 async def global_admin_toggle_check(ctx):
     if not ctx.guild:
         return True
     if ctx.author.guild_permissions.administrator:
         return True
-    
+
     cmd_name = ctx.command.name if ctx.command else None
     if cmd_name:
         try:
             is_disabled = await bot.db.get(f"cmd_disabled:{ctx.guild.id}:{cmd_name}")
             if is_disabled:
-                raise commands.CheckFailure(f"The `{cmd_name}` command is currently restricted to Administrators on this server.")
+                raise commands.CheckFailure(
+                    f"The `{cmd_name}` command is currently restricted to Administrators on this server."
+                )
         except Exception as e:
             # If DB goes down, default to allowing the command
             print(f"⚠️ Postgres connection failed during toggle check: {e}")
     return True
+
 
 @bot.event
 async def on_ready():
@@ -196,7 +241,9 @@ async def on_ready():
             try:
                 bot.tree.copy_global_to(guild=guild)
                 guild_synced = await bot.tree.sync(guild=guild)
-                print(f"✅ Guild Sync | {guild.name} ({guild.id}) -> {len(guild_synced)} commands")
+                print(
+                    f"✅ Guild Sync | {guild.name} ({guild.id}) -> {len(guild_synced)} commands"
+                )
             except Exception as e:
                 print(f"❌ Guild Sync Failed | {guild.name} ({guild.id}) -> {e}")
         bot._guild_sync_done = True
@@ -210,8 +257,9 @@ async def on_ready():
             await bot.change_presence(status=discord.Status.online)
     except Exception as e:
         print(f"⚠️ Failed to load global presence: {e}")
-        
-    print(f'✅ Logged in as {bot.user}')
+
+    print(f"✅ Logged in as {bot.user}")
+
 
 # Removed obsolete !setname command (Now handled by OnboardingView above)
 

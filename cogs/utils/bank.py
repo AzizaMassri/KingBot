@@ -1,27 +1,32 @@
 import discord
 
+
 class BankErrors:
     class BalanceTooHigh(Exception):
         def __init__(self, max_balance):
             self.max_balance = max_balance
 
+
 errors = BankErrors()
+
 
 def humanize_number(val: int) -> str:
     return f"{val:,}"
 
+
 class BankMock:
     async def get_economy(self, context_obj):
         """Helper to get economy safely from a member or guild."""
-        obj = context_obj.guild if getattr(context_obj, 'guild', None) else context_obj
-        if hasattr(obj, '_state'):
+        obj = context_obj.guild if getattr(context_obj, "guild", None) else context_obj
+        if hasattr(obj, "_state"):
             client = obj._state._get_client()
-            return client.get_cog('Economy')
+            return client.get_cog("Economy")
         return None
 
     async def can_spend(self, member: discord.Member, amount: int) -> bool:
         eco = await self.get_economy(member)
-        if not eco: return False
+        if not eco:
+            return False
         bal = await eco.get_balance(member.id)
         return bal >= amount
 
@@ -49,5 +54,6 @@ class BankMock:
         eco = await self.get_economy(member)
         if eco:
             await eco.db.set(f"ks_bucks:{member.id}", str(amount))
+
 
 bank = BankMock()

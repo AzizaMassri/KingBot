@@ -3,7 +3,9 @@ from typing import Any, Awaitable, Callable, Optional
 
 
 class ReplaceView(discord.ui.View):
-    def __init__(self, cog, callback: Callable[..., Awaitable[Any]], author: discord.Member):
+    def __init__(
+        self, cog, callback: Callable[..., Awaitable[Any]], author: discord.Member
+    ):
         super().__init__()
         self.cog = cog
         self.callback = callback
@@ -14,7 +16,9 @@ class ReplaceView(discord.ui.View):
     async def replace(self, interaction: discord.Interaction, _: discord.ui.Button):
         assert interaction.message
         if interaction.user != self.author:
-            return await interaction.response.send_message("This confirmation message is not directed at you!", ephemeral=True)
+            return await interaction.response.send_message(
+                "This confirmation message is not directed at you!", ephemeral=True
+            )
         self.stop()
         try:
             await interaction.message.delete()
@@ -26,7 +30,9 @@ class ReplaceView(discord.ui.View):
     async def cancel(self, interaction: discord.Interaction, _: discord.ui.Button):
         assert interaction.message
         if interaction.user != self.author:
-            return await interaction.response.send_message("This confirmation message is not directed at you!", ephemeral=True)
+            return await interaction.response.send_message(
+                "This confirmation message is not directed at you!", ephemeral=True
+            )
         await interaction.message.delete()
 
     async def on_timeout(self):

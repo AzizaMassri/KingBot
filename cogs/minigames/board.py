@@ -3,8 +3,8 @@ Original Port Author: hollowstrawberry (crab-cogs)
 https://github.com/hollowstrawberry/crab-cogs/tree/main/minigames
 Ported to discord.py specifically for KingBot & Kingshot (Century Games) Branding.
 """
-from typing import Any, List, Tuple, Optional
 
+from typing import Any, List, Tuple, Optional
 
 Pos = Tuple[int, int]
 
@@ -37,7 +37,9 @@ class Board:
 # These functions were originally handwritten in C# by me, and converted to Python with an LLM
 
 
-def find_lines(board: Board, value: Any, length: int, result: Optional[List[Pos]] = None):
+def find_lines(
+    board: Board, value: Any, length: int, result: Optional[List[Pos]] = None
+):
     win = False
     line: List[Pos] = []
 
@@ -87,7 +89,9 @@ def find_lines(board: Board, value: Any, length: int, result: Optional[List[Pos]
     return win
 
 
-def try_complete_line(board: Board, value: Any, empty: Any, length: int) -> Optional[Pos]:
+def try_complete_line(
+    board: Board, value: Any, empty: Any, length: int
+) -> Optional[Pos]:
     # Horizontals
     for y in range(board.height):
         count, missing = 0, None

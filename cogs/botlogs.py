@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+
 class BotLogs(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -17,7 +18,7 @@ class BotLogs(commands.Cog):
             if not channel:
                 try:
                     channel = await guild.fetch_channel(int(channel_id))
-                except:
+                except Exception:
                     pass
             return channel
         return None
@@ -28,7 +29,7 @@ class BotLogs(commands.Cog):
         """Sets the channel where all bot activity will be logged."""
         if not channel:
             return await ctx.send("❌ Usage: `!setlogchannel #channel`")
-            
+
         await self.db.set(f"botlog_channel:{ctx.guild.id}", channel.id)
         await ctx.send(f"✅ Bot activity logs will now be sent to {channel.mention}.")
 
@@ -39,25 +40,32 @@ class BotLogs(commands.Cog):
 
         if isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
             try:
-                await ctx.send(f"❌ Syntax Error: {str(error)}\n*Hint: Check that you aren't missing any required inputs and haven't put text where a number goes.*")
-            except:
+                await ctx.send(
+                    f"❌ Syntax Error: {str(error)}\n*Hint: Check that you aren't missing any required inputs and haven't put text where a number goes.*"
+                )
+            except Exception:
                 pass
             return
 
-        from cogs.utils.tiers import PremiumRequiredError, AppPremiumRequiredError, build_premium_embed
-        
+        from cogs.utils.tiers import (
+            PremiumRequiredError,
+            AppPremiumRequiredError,
+            build_premium_embed,
+        )
+
         # Check against both unwrapped and wrapped CommandInvokeError instances
         original_error = getattr(error, "original", error)
 
         if isinstance(original_error, (PremiumRequiredError, AppPremiumRequiredError)):
-            req_tier = getattr(original_error, 'required_tier', 3)
+            req_tier = getattr(original_error, "required_tier", 3)
             try:
                 await ctx.send(embed=build_premium_embed(req_tier))
-            except:
+            except Exception:
                 pass
             return
 
         import traceback
+
         traceback.print_exception(type(error), error, error.__traceback__)
 
         channel = await self.get_log_channel(ctx.guild)
@@ -69,7 +77,7 @@ class BotLogs(commands.Cog):
             title="❌ Command Error",
             description=f"**User**: {ctx.author.mention} (`{ctx.author.id}`)\n**Command**: `{cmd_text}`\n**Error**: {str(error)}",
             color=discord.Color.red(),
-            timestamp=discord.utils.utcnow()
+            timestamp=discord.utils.utcnow(),
         )
         await channel.send(embed=embed)
 
@@ -83,7 +91,7 @@ class BotLogs(commands.Cog):
             title="👋 Member Joined",
             description=f"{member.mention} (`{member.id}`)\n**Account Created**: <t:{int(member.created_at.timestamp())}:R>",
             color=discord.Color.green(),
-            timestamp=discord.utils.utcnow()
+            timestamp=discord.utils.utcnow(),
         )
         embed.set_thumbnail(url=member.display_avatar.url)
         await channel.send(embed=embed)
@@ -98,7 +106,7 @@ class BotLogs(commands.Cog):
             title="🚪 Member Left",
             description=f"{member.mention} (`{member.id}`)\n**Joined Server**: <t:{int(member.joined_at.timestamp()) if member.joined_at else 0}:R>",
             color=discord.Color.orange(),
-            timestamp=discord.utils.utcnow()
+            timestamp=discord.utils.utcnow(),
         )
         embed.set_thumbnail(url=member.display_avatar.url)
         await channel.send(embed=embed)
@@ -110,18 +118,25 @@ class BotLogs(commands.Cog):
             channel = await self.get_log_channel(guild)
             if not channel:
                 continue
-                
+
             embed = discord.Embed(
                 title="✅ Bot Restarted",
                 description="The bot has successfully reconnected to Discord and loaded all modules.",
                 color=discord.Color.green(),
-                timestamp=discord.utils.utcnow()
+                timestamp=discord.utils.utcnow(),
             )
-            embed.set_thumbnail(url=self.bot.user.display_avatar.url if self.bot.user.display_avatar else None)
+            embed.set_thumbnail(
+                url=(
+                    self.bot.user.display_avatar.url
+                    if self.bot.user.display_avatar
+                    else None
+                )
+            )
             try:
                 await channel.send(embed=embed)
-            except:
+            except Exception:
                 pass
+
 
 async def setup(bot):
     await bot.add_cog(BotLogs(bot))

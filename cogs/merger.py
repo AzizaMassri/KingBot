@@ -2,50 +2,50 @@ import discord
 from discord.ext import commands
 import io
 import re
-from cogs.utils.tiers import requires_tier, Tier
 
-POWER_REGEX = re.compile(r'^(.*?)[,\s]+([\d,\.]+[mMkKbB]?)$')
+POWER_REGEX = re.compile(r"^(.*?)[,\s]+([\d,\.]+[mMkKbB]?)$")
+
 
 class MergerModal(discord.ui.Modal, title="Alliance Merger Data"):
     alliance1_name = discord.ui.TextInput(
         label="Alliance 1 Name",
         placeholder="e.g. [RUN] Runners",
         max_length=50,
-        required=True
+        required=True,
     )
     alliance1_data = discord.ui.TextInput(
         label="Alliance 1 Members (Name,Power)",
         style=discord.TextStyle.paragraph,
         placeholder="Player1,5.5M\nPlayer2,4.2M\n(Max 100 players)",
-        required=True
+        required=True,
     )
     alliance2_name = discord.ui.TextInput(
         label="Alliance 2 Name",
         placeholder="e.g. [COD] Coders",
         max_length=50,
-        required=True
+        required=True,
     )
     alliance2_data = discord.ui.TextInput(
         label="Alliance 2 Members (Name,Power)",
         style=discord.TextStyle.paragraph,
         placeholder="Player1,5.5M\nPlayer2,4.2M\n(Max 100 players)",
-        required=True
+        required=True,
     )
     include_academy = discord.ui.TextInput(
         label="Include Academy File? (Y/N)",
         placeholder="Y",
         default="Y",
         max_length=5,
-        required=False
+        required=False,
     )
 
     def parse_power(self, power_str):
-        power_str = str(power_str).replace(',', '').strip()
-        if power_str.upper().endswith('M'):
+        power_str = str(power_str).replace(",", "").strip()
+        if power_str.upper().endswith("M"):
             return float(power_str[:-1]) * 1000000
-        elif power_str.upper().endswith('K'):
+        elif power_str.upper().endswith("K"):
             return float(power_str[:-1]) * 1000
-        elif power_str.upper().endswith('B'):
+        elif power_str.upper().endswith("B"):
             return float(power_str[:-1]) * 1000000000
         return float(power_str)
 
@@ -54,14 +54,14 @@ class MergerModal(discord.ui.Modal, title="Alliance Merger Data"):
         lines = data_str.splitlines()
         # Only take up to 100 lines per alliance
         lines = lines[:100]
-        
+
         parsed_data = []
         for line in lines:
             line_stripped = line.strip()
             # Skip empty lines or header if pasted
-            if not line_stripped or line_stripped.lower().startswith('name,power'):
+            if not line_stripped or line_stripped.lower().startswith("name,power"):
                 continue
-            
+
             match = POWER_REGEX.search(line_stripped)
             if match:
                 name = match.group(1).strip()
@@ -70,10 +70,10 @@ class MergerModal(discord.ui.Modal, title="Alliance Merger Data"):
                     name = name[1:-1]
                 if alliance_name:
                     name = f"[{alliance_name}] {name}"
-                parsed_data.append({'Name': name, 'Power': power})
+                parsed_data.append({"Name": name, "Power": power})
             else:
                 # Fallback purely comma separation
-                parts = line_stripped.rsplit(',', 1)
+                parts = line_stripped.rsplit(",", 1)
                 if len(parts) == 2:
                     name = parts[0].strip()
                     power = parts[1].strip()
@@ -82,15 +82,19 @@ class MergerModal(discord.ui.Modal, title="Alliance Merger Data"):
                         name = name[1:-1]
                     if alliance_name:
                         name = f"[{alliance_name}] {name}"
-                    parsed_data.append({'Name': name, 'Power': power})
-        
+                    parsed_data.append({"Name": name, "Power": power})
+
         return parsed_data
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
         generate_academy = True
-        if self.include_academy.value and self.include_academy.value.strip().upper() in ['N', 'NO', 'F', 'FALSE', '0']:
+        if (
+            self.include_academy.value
+            and self.include_academy.value.strip().upper()
+            in ["N", "NO", "F", "FALSE", "0"]
+        ):
             generate_academy = False
 
         # Parse the input data
@@ -99,7 +103,10 @@ class MergerModal(discord.ui.Modal, title="Alliance Merger Data"):
 
         # Check if we have valid data
         if not data1 and not data2:
-            await interaction.followup.send("❌ Error: No valid data could be parsed from your inputs.", ephemeral=True)
+            await interaction.followup.send(
+                "❌ Error: No valid data could be parsed from your inputs.",
+                ephemeral=True,
+            )
             return
 
         # Combine the data
@@ -108,12 +115,15 @@ class MergerModal(discord.ui.Modal, title="Alliance Merger Data"):
         # Apply the conversion and sort
         try:
             for row in combined_data:
-                row['RawPower'] = self.parse_power(row['Power'])
+                row["RawPower"] = self.parse_power(row["Power"])
         except Exception as e:
-            await interaction.followup.send(f"❌ Error parsing power values: {e}. Please ensure format is Name,Power (e.g. User,5.5M)", ephemeral=True)
+            await interaction.followup.send(
+                f"❌ Error parsing power values: {e}. Please ensure format is Name,Power (e.g. User,5.5M)",
+                ephemeral=True,
+            )
             return
-            
-        combined_data.sort(key=lambda x: x['RawPower'], reverse=True)
+
+        combined_data.sort(key=lambda x: x["RawPower"], reverse=True)
 
         # Split the roster at the 100-member limit (or max capacity)
         MAX_CAPACITY = 100
@@ -127,7 +137,7 @@ class MergerModal(discord.ui.Modal, title="Alliance Merger Data"):
                 f"**TOTAL COMBINED MEMBERS:** {len(combined_data)}\n"
                 f"**MAIN ALLIANCE CAPACITY:** {MAX_CAPACITY}\n"
                 f"**MEMBERS ROUTED TO ACADEMY:** {len(academy)}\n"
-            )
+            ),
         )
 
         # Create output strings for clean text file attachments
@@ -152,69 +162,82 @@ class MergerModal(discord.ui.Modal, title="Alliance Merger Data"):
             academy_output += "--- ACADEMY ALLIANCE ROSTER ---\n"
             for i, row in enumerate(academy):
                 academy_output += f"{i+1}. {row['Name']} - {row['Power']}\n"
-            
+
             academy_file_io = io.BytesIO(academy_output.encode("utf-8"))
-            academy_file = discord.File(academy_file_io, filename="Academy_Alliance_Roster.txt")
+            academy_file = discord.File(
+                academy_file_io, filename="Academy_Alliance_Roster.txt"
+            )
             files_to_send.append(academy_file)
 
         # To give it extra shine, let's put the top 10 as an embed field preview!
         top_10 = ""
         for i, row in enumerate(main_alliance[:10]):
             top_10 += f"**{i+1}.** {row['Name']} (`{row['Power']}`)\n"
-        
+
         if top_10:
             embed.add_field(name="🏆 Main Alliance Top 10", value=top_10, inline=False)
-            
+
         # Top 10 Academy
         if academy and generate_academy:
             top_10_academy = ""
             for i, row in enumerate(academy[:10]):
                 top_10_academy += f"**{i+1}.** {row['Name']} (`{row['Power']}`)\n"
             if top_10_academy:
-                embed.add_field(name="🛡️ Academy Top 10 Preview", value=top_10_academy, inline=False)
-            
-        embed.set_footer(text="Download the attached .txt files for the full sorted rosters!")
-        
+                embed.add_field(
+                    name="🛡️ Academy Top 10 Preview", value=top_10_academy, inline=False
+                )
+
+        embed.set_footer(
+            text="Download the attached .txt files for the full sorted rosters!"
+        )
+
         await interaction.followup.send(embed=embed, files=files_to_send)
+
 
 class MergerLaunchView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="Launch Interactive Menu", style=discord.ButtonStyle.primary, emoji="🚀", custom_id="btn_merger_launch")
-    async def launch_tool(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="Launch Interactive Menu",
+        style=discord.ButtonStyle.primary,
+        emoji="🚀",
+        custom_id="btn_merger_launch",
+    )
+    async def launch_tool(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         await interaction.response.send_modal(MergerModal())
+
 
 class AllianceMerger(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-
-
     async def cog_load(self):
         self.bot.add_view(MergerLaunchView())
 
     def parse_power(self, power_str):
-        power_str = str(power_str).replace(',', '').strip()
-        if power_str.upper().endswith('M'):
+        power_str = str(power_str).replace(",", "").strip()
+        if power_str.upper().endswith("M"):
             return float(power_str[:-1]) * 1000000
-        elif power_str.upper().endswith('K'):
+        elif power_str.upper().endswith("K"):
             return float(power_str[:-1]) * 1000
-        elif power_str.upper().endswith('B'):
+        elif power_str.upper().endswith("B"):
             return float(power_str[:-1]) * 1000000000
         return float(power_str)
 
     def parse_data(self, data_str, alliance_name=None):
         # Using splitlines() handles \r\n, \n, and \r generically
         lines = data_str.splitlines()
-        
+
         parsed_data = []
         for line in lines:
             line_stripped = line.strip()
             # Skip empty lines or header if pasted
-            if not line_stripped or line_stripped.lower().startswith('name,power'):
+            if not line_stripped or line_stripped.lower().startswith("name,power"):
                 continue
-            
+
             match = POWER_REGEX.search(line_stripped)
             if match:
                 name = match.group(1).strip()
@@ -223,10 +246,10 @@ class AllianceMerger(commands.Cog):
                     name = name[1:-1]
                 if alliance_name:
                     name = f"[{alliance_name}] {name}"
-                parsed_data.append({'Name': name, 'Power': power})
+                parsed_data.append({"Name": name, "Power": power})
             else:
                 # Fallback purely comma separation
-                parts = line_stripped.rsplit(',', 1)
+                parts = line_stripped.rsplit(",", 1)
                 if len(parts) == 2:
                     name = parts[0].strip()
                     power = parts[1].strip()
@@ -235,66 +258,85 @@ class AllianceMerger(commands.Cog):
                         name = name[1:-1]
                     if alliance_name:
                         name = f"[{alliance_name}] {name}"
-                    parsed_data.append({'Name': name, 'Power': power})
-        
+                    parsed_data.append({"Name": name, "Power": power})
+
         return parsed_data
 
-    @commands.hybrid_command(name="merger", description="Calculates an alliance merger roster.", aliases=["projectmeteor"])
-    @requires_tier(Tier.ELITE)
-    async def merger(self, ctx, file1: discord.Attachment = None, file2: discord.Attachment = None, *, input_text: str = None):
+    @commands.hybrid_command(
+        name="merger",
+        description="Calculates an alliance merger roster.",
+        aliases=["projectmeteor"],
+    )
+    async def merger(
+        self,
+        ctx,
+        file1: discord.Attachment = None,
+        file2: discord.Attachment = None,
+        *,
+        input_text: str = None,
+    ):
         """Calculates an alliance merger roster and provides formatted setup files."""
         alliance1_name = "Alliance 1"
         alliance2_name = "Alliance 2"
         raw_data = ""
         generate_academy = True
-        
-        if input_text:
-            if '--mainonly' in input_text.lower() or '--main-only' in input_text.lower():
-                generate_academy = False
-                input_text = re.sub(r'(?i)--main-?only', '', input_text).strip()
 
-            parts = input_text.split('|', 2)
+        if input_text:
+            if (
+                "--mainonly" in input_text.lower()
+                or "--main-only" in input_text.lower()
+            ):
+                generate_academy = False
+                input_text = re.sub(r"(?i)--main-?only", "", input_text).strip()
+
+            parts = input_text.split("|", 2)
             if len(parts) == 3:
                 alliance1_name = parts[0].strip()
                 alliance2_name = parts[1].strip()
                 raw_data = parts[2].strip()
             elif len(parts) == 2:
-                 alliance1_name = parts[0].strip()
-                 raw_data = parts[1].strip()
+                alliance1_name = parts[0].strip()
+                raw_data = parts[1].strip()
             else:
-                 raw_data = parts[0].strip()
-                 
+                raw_data = parts[0].strip()
+
         parsed_lists = []
         if raw_data:
             parsed_lists.append(self.parse_data(raw_data, "Mixed/Unknown"))
-            
+
         # Check for attachments (.txt or .csv files)
         attachments = []
         if ctx.message and ctx.message.attachments:
             attachments.extend(ctx.message.attachments)
-        if file1: attachments.append(file1)
-        if file2: attachments.append(file2)
-        
+        if file1:
+            attachments.append(file1)
+        if file2:
+            attachments.append(file2)
+
         # Deduplicate to avoid processing the same file twice
         attachments = list({a.id: a for a in attachments}.values())
-        
+
         if attachments:
             for i, attachment in enumerate(attachments):
-                if attachment.filename.endswith(('.txt', '.csv')):
+                if attachment.filename.endswith((".txt", ".csv")):
                     try:
                         file_content = await attachment.read()
-                        f_data = file_content.decode('utf-8')
-                        
+                        f_data = file_content.decode("utf-8")
+
                         # Assign alliance name to files if we have exactly 2 files
                         a_name = None
                         if len(attachments) == 2:
-                            if i == 0: a_name = alliance1_name
-                            elif i == 1: a_name = alliance2_name
-                            
+                            if i == 0:
+                                a_name = alliance1_name
+                            elif i == 1:
+                                a_name = alliance2_name
+
                         parsed_lists.append(self.parse_data(f_data, a_name))
-                    except:
-                        await ctx.send(f"⚠️ Could not read attachment {attachment.filename}.")
-        
+                    except Exception:
+                        await ctx.send(
+                            f"⚠️ Could not read attachment {attachment.filename}."
+                        )
+
         if not parsed_lists:
             embed = discord.Embed(
                 title="🤝 Alliance Merger Tool",
@@ -310,7 +352,7 @@ class AllianceMerger(commands.Cog):
                     "*(Tip: Add `--main-only` anywhere in the command to only generate the Main Alliance file)*\n\n"
                     "**Alternatively, click the button below to use the interactive menu!**"
                 ),
-                color=discord.Color.blue()
+                color=discord.Color.blue(),
             )
             return await ctx.send(embed=embed, view=MergerLaunchView())
 
@@ -321,16 +363,20 @@ class AllianceMerger(commands.Cog):
 
         # Check if we have valid data
         if not combined_data:
-            return await ctx.send("❌ Error: No valid `Name,Power` data could be parsed from your input or files.")
+            return await ctx.send(
+                "❌ Error: No valid `Name,Power` data could be parsed from your input or files."
+            )
 
         # Apply the conversion and sort
         try:
             for row in combined_data:
-                row['RawPower'] = self.parse_power(row['Power'])
+                row["RawPower"] = self.parse_power(row["Power"])
         except Exception as e:
-            return await ctx.send(f"❌ Error parsing power values: {e}. Please ensure format is Name,Power (e.g. User,5.5M)")
-            
-        combined_data.sort(key=lambda x: x['RawPower'], reverse=True)
+            return await ctx.send(
+                f"❌ Error parsing power values: {e}. Please ensure format is Name,Power (e.g. User,5.5M)"
+            )
+
+        combined_data.sort(key=lambda x: x["RawPower"], reverse=True)
 
         # Split the roster at the 100-member limit (or max capacity)
         MAX_CAPACITY = 100
@@ -344,7 +390,7 @@ class AllianceMerger(commands.Cog):
                 f"**TOTAL COMBINED MEMBERS:** {len(combined_data)}\n"
                 f"**MAIN ALLIANCE CAPACITY:** {MAX_CAPACITY}\n"
                 f"**MEMBERS ROUTED TO ACADEMY:** {len(academy)}\n"
-            )
+            ),
         )
 
         # Create output strings for clean text file attachments
@@ -363,36 +409,45 @@ class AllianceMerger(commands.Cog):
 
         if academy and generate_academy:
             academy_output = "=" * 50 + "\n"
-            academy_output += f"🛡️ {alliance1_name} & {alliance2_name} - ACADEMY ALLIANCE 🛡️\n"
+            academy_output += (
+                f"🛡️ {alliance1_name} & {alliance2_name} - ACADEMY ALLIANCE 🛡️\n"
+            )
             academy_output += "=" * 50 + "\n\n"
             academy_output += f"MEMBERS ROUTED TO ACADEMY: {len(academy)}\n\n"
             academy_output += "--- ACADEMY ALLIANCE ROSTER ---\n"
             for i, row in enumerate(academy):
                 academy_output += f"{i+1}. {row['Name']} - {row['Power']}\n"
-            
+
             academy_file_io = io.BytesIO(academy_output.encode("utf-8"))
-            academy_file = discord.File(academy_file_io, filename="Academy_Alliance_Roster.txt")
+            academy_file = discord.File(
+                academy_file_io, filename="Academy_Alliance_Roster.txt"
+            )
             files_to_send.append(academy_file)
 
         # To give it extra shine, let's put the top 10 as an embed field preview!
         top_10 = ""
         for i, row in enumerate(main_alliance[:10]):
             top_10 += f"**{i+1}.** {row['Name']} (`{row['Power']}`)\n"
-        
+
         if top_10:
             embed.add_field(name="🏆 Main Alliance Top 10", value=top_10, inline=False)
-            
+
         # Top 10 Academy
         if academy and generate_academy:
             top_10_academy = ""
             for i, row in enumerate(academy[:10]):
                 top_10_academy += f"**{i+1}.** {row['Name']} (`{row['Power']}`)\n"
             if top_10_academy:
-                embed.add_field(name="🛡️ Academy Top 10 Preview", value=top_10_academy, inline=False)
-            
-        embed.set_footer(text="Download the attached .txt files for the full sorted rosters!")
-        
+                embed.add_field(
+                    name="🛡️ Academy Top 10 Preview", value=top_10_academy, inline=False
+                )
+
+        embed.set_footer(
+            text="Download the attached .txt files for the full sorted rosters!"
+        )
+
         await ctx.send(embed=embed, files=files_to_send)
+
 
 async def setup(bot):
     await bot.add_cog(AllianceMerger(bot))

@@ -7,7 +7,6 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-
 LINE_ORDER = ("inf", "cav", "arc")
 LINE_LABELS = {"inf": "Infantry", "cav": "Cavalry", "arc": "Archers"}
 QUICK_SETTINGS_LEGEND = (
@@ -114,8 +113,17 @@ def parse_turn_events(raw: str) -> Dict[int, Dict[str, float]]:
                 raise ValueError("Event payload must use key=value pairs.")
             key, val = kv.split("=", 1)
             event_key = key.strip().lower()
-            if event_key not in {"a_skill", "d_skill", "a_add", "d_add", "a_special", "d_special"}:
-                raise ValueError("Allowed event keys: a_skill,d_skill,a_add,d_add,a_special,d_special")
+            if event_key not in {
+                "a_skill",
+                "d_skill",
+                "a_add",
+                "d_add",
+                "a_special",
+                "d_special",
+            }:
+                raise ValueError(
+                    "Allowed event keys: a_skill,d_skill,a_add,d_add,a_special,d_special"
+                )
             out[turn][event_key] = float(val.strip())
     return out
 
@@ -205,7 +213,9 @@ def optimize_deployment(alpha: float, beta: float, gamma: float) -> Dict[str, fl
     }
 
 
-def modified_time_seconds(base_seconds: int, additive_bonus_pct: float, chief_office_active: bool) -> int:
+def modified_time_seconds(
+    base_seconds: int, additive_bonus_pct: float, chief_office_active: bool
+) -> int:
     if base_seconds <= 0:
         raise ValueError("Base time must be greater than 0.")
     additive_factor = 1.0 + additive_bonus_pct / 100.0
@@ -308,7 +318,9 @@ class CombatEngine:
     @staticmethod
     def _global_multiplier(additive_pct: float, special_pct: float) -> float:
         # Implemented as requested: special buff participates multiplicatively and then adds again.
-        return ((1.0 + additive_pct / 100.0) * (1.0 + special_pct / 100.0)) + (special_pct / 100.0)
+        return ((1.0 + additive_pct / 100.0) * (1.0 + special_pct / 100.0)) + (
+            special_pct / 100.0
+        )
 
     @classmethod
     def effective_stats(
@@ -322,7 +334,9 @@ class CombatEngine:
     ) -> Dict[str, float]:
         base = cls.base_stats(line, cfg.tier, anchors=anchors)
         tg = cls.tg_flat_bonus(cfg.tg_level)
-        global_mult = cls._global_multiplier(cfg.additive_pct + additive_shift_pct, cfg.special_pct + special_shift_pct)
+        global_mult = cls._global_multiplier(
+            cfg.additive_pct + additive_shift_pct, cfg.special_pct + special_shift_pct
+        )
 
         bonus = line_bonus or {}
         atk_bonus = cfg.attack_bonus_pct + bonus.get("attack", 0.0)
@@ -330,10 +344,20 @@ class CombatEngine:
         hp_bonus = cfg.health_bonus_pct + bonus.get("health", 0.0)
         let_bonus = cfg.lethality_bonus_pct + bonus.get("lethality", 0.0)
 
-        attack = (base["attack"] + tg["attack"]) * global_mult * (1.0 + atk_bonus / 100.0)
-        defense = (base["defense"] + tg["defense"]) * global_mult * (1.0 + def_bonus / 100.0)
-        health = (base["health"] + tg["health"]) * global_mult * (1.0 + hp_bonus / 100.0)
-        lethality = (base["lethality"] + tg["lethality"]) * global_mult * (1.0 + let_bonus / 100.0)
+        attack = (
+            (base["attack"] + tg["attack"]) * global_mult * (1.0 + atk_bonus / 100.0)
+        )
+        defense = (
+            (base["defense"] + tg["defense"]) * global_mult * (1.0 + def_bonus / 100.0)
+        )
+        health = (
+            (base["health"] + tg["health"]) * global_mult * (1.0 + hp_bonus / 100.0)
+        )
+        lethality = (
+            (base["lethality"] + tg["lethality"])
+            * global_mult
+            * (1.0 + let_bonus / 100.0)
+        )
 
         return {
             "attack": max(attack, 0.0),
@@ -343,7 +367,9 @@ class CombatEngine:
         }
 
     @staticmethod
-    def matchup_multipliers(attacker_line: str, defender_line: str) -> Tuple[float, float]:
+    def matchup_multipliers(
+        attacker_line: str, defender_line: str
+    ) -> Tuple[float, float]:
         attack_mult = 1.0
         defense_mult = 1.0
 
@@ -393,7 +419,11 @@ class CombatEngine:
             return 0.0
 
         denom = max(def_stats["defense"] * def_stats["health"], 1e-9)
-        kills = math.sqrt(attackers) * ((offensive_term * atk_stats["lethality"]) / denom) * max(skill_mod, 0.0)
+        kills = (
+            math.sqrt(attackers)
+            * ((offensive_term * atk_stats["lethality"]) / denom)
+            * max(skill_mod, 0.0)
+        )
         return max(kills, 0.0)
 
     @classmethod
@@ -443,7 +473,11 @@ class CombatEngine:
             )
 
             # Cavalry can bypass infantry to archers with expected-value split.
-            if atk_line == "cav" and primary_target == "inf" and def_lines.get("arc", 0) > 0:
+            if (
+                atk_line == "cav"
+                and primary_target == "inf"
+                and def_lines.get("arc", 0) > 0
+            ):
                 base_kills = cls._line_attack_kills(
                     attackers,
                     atk_stats,
@@ -522,20 +556,28 @@ class CombatEngine:
             )
 
             # Simultaneous casualty application with upward rounding.
-            atk_losses = {k: min(atk_state[k], _ceil_int(def_damage.get(k, 0.0))) for k in LINE_ORDER}
-            def_losses = {k: min(def_state[k], _ceil_int(atk_damage.get(k, 0.0))) for k in LINE_ORDER}
+            atk_losses = {
+                k: min(atk_state[k], _ceil_int(def_damage.get(k, 0.0)))
+                for k in LINE_ORDER
+            }
+            def_losses = {
+                k: min(def_state[k], _ceil_int(atk_damage.get(k, 0.0)))
+                for k in LINE_ORDER
+            }
 
             for k in LINE_ORDER:
                 atk_state[k] -= atk_losses[k]
                 def_state[k] -= def_losses[k]
 
-            turn_log.append({
-                "turn": turn,
-                "attacker_losses": atk_losses,
-                "defender_losses": def_losses,
-                "attacker_remaining": dict(atk_state),
-                "defender_remaining": dict(def_state),
-            })
+            turn_log.append(
+                {
+                    "turn": turn,
+                    "attacker_losses": atk_losses,
+                    "defender_losses": def_losses,
+                    "attacker_remaining": dict(atk_state),
+                    "defender_remaining": dict(def_state),
+                }
+            )
 
         atk_total_start = sum(attacker_lines.values())
         def_total_start = sum(defender_lines.values())
@@ -623,8 +665,14 @@ class CombatEngine:
                 def_special_shift_pct=a_special,
             )
 
-            atk_losses = {k: min(atk_state[k], _ceil_int(def_damage.get(k, 0.0))) for k in LINE_ORDER}
-            def_losses = {k: min(def_state[k], _ceil_int(atk_damage.get(k, 0.0))) for k in LINE_ORDER}
+            atk_losses = {
+                k: min(atk_state[k], _ceil_int(def_damage.get(k, 0.0)))
+                for k in LINE_ORDER
+            }
+            def_losses = {
+                k: min(def_state[k], _ceil_int(atk_damage.get(k, 0.0)))
+                for k in LINE_ORDER
+            }
 
             for k in LINE_ORDER:
                 atk_state[k] -= atk_losses[k]
@@ -666,21 +714,111 @@ class CombatEngine:
 
 
 HERO_DATABASE = [
-    {"generation": 6, "name": "Triton", "rarity": "SSR", "archetype": "Infantry", "summary": "Invulnerability window + AoE burst; strong squad defense/skill scaling."},
-    {"generation": 6, "name": "Yang", "rarity": "SSR", "archetype": "Archer", "summary": "Periodic extra strike and archer extra-damage proc."},
-    {"generation": 6, "name": "Sophia", "rarity": "SSR", "archetype": "Cavalry", "summary": "AoE burst + confuse; chance to halve incoming squad damage."},
-    {"generation": 5, "name": "Vivian", "rarity": "SSR", "archetype": "Archer", "summary": "Permanent enemy damage-taken amplification."},
-    {"generation": 5, "name": "Thrud", "rarity": "SSR", "archetype": "Cavalry", "summary": "Cyclic damage up and damage reduction."},
-    {"generation": 4, "name": "Alcar", "rarity": "SSR", "archetype": "Infantry", "summary": "Line damage plus enemy damage-taken debuff with expedition mitigation cycle."},
-    {"generation": 3, "name": "Petra", "rarity": "SSR", "archetype": "Cavalry", "summary": "Enemy damage-taken boost, attack up, and damage taken down package."},
-    {"generation": 2, "name": "Marlin", "rarity": "SSR", "archetype": "Archer", "summary": "Damage proc chance and enemy lethality suppression chance."},
-    {"generation": 1, "name": "Helga", "rarity": "SSR", "archetype": "Infantry", "summary": "Damage-taken reduction proc and squad attack boost."},
-    {"generation": 1, "name": "Amadeus", "rarity": "SSR", "archetype": "Infantry", "summary": "Conditional HP and lethality boosts up to 15%."},
-    {"generation": 1, "name": "Yeonwoo", "rarity": "SR", "archetype": "Archer", "summary": "Expedition lethality boost and research utility passive."},
-    {"generation": 1, "name": "Amane", "rarity": "SR", "archetype": "Archer", "summary": "Expedition attack boost and healing speed utility."},
-    {"generation": 1, "name": "Chenko", "rarity": "SR", "archetype": "Cavalry", "summary": "Expedition lethality boost."},
-    {"generation": 1, "name": "Howard", "rarity": "SR", "archetype": "Infantry", "summary": "Incoming troop damage reduction."},
-    {"generation": 1, "name": "Saul", "rarity": "SR", "archetype": "Archer", "summary": "Construction utility passive."},
+    {
+        "generation": 6,
+        "name": "Triton",
+        "rarity": "SSR",
+        "archetype": "Infantry",
+        "summary": "Invulnerability window + AoE burst; strong squad defense/skill scaling.",
+    },
+    {
+        "generation": 6,
+        "name": "Yang",
+        "rarity": "SSR",
+        "archetype": "Archer",
+        "summary": "Periodic extra strike and archer extra-damage proc.",
+    },
+    {
+        "generation": 6,
+        "name": "Sophia",
+        "rarity": "SSR",
+        "archetype": "Cavalry",
+        "summary": "AoE burst + confuse; chance to halve incoming squad damage.",
+    },
+    {
+        "generation": 5,
+        "name": "Vivian",
+        "rarity": "SSR",
+        "archetype": "Archer",
+        "summary": "Permanent enemy damage-taken amplification.",
+    },
+    {
+        "generation": 5,
+        "name": "Thrud",
+        "rarity": "SSR",
+        "archetype": "Cavalry",
+        "summary": "Cyclic damage up and damage reduction.",
+    },
+    {
+        "generation": 4,
+        "name": "Alcar",
+        "rarity": "SSR",
+        "archetype": "Infantry",
+        "summary": "Line damage plus enemy damage-taken debuff with expedition mitigation cycle.",
+    },
+    {
+        "generation": 3,
+        "name": "Petra",
+        "rarity": "SSR",
+        "archetype": "Cavalry",
+        "summary": "Enemy damage-taken boost, attack up, and damage taken down package.",
+    },
+    {
+        "generation": 2,
+        "name": "Marlin",
+        "rarity": "SSR",
+        "archetype": "Archer",
+        "summary": "Damage proc chance and enemy lethality suppression chance.",
+    },
+    {
+        "generation": 1,
+        "name": "Helga",
+        "rarity": "SSR",
+        "archetype": "Infantry",
+        "summary": "Damage-taken reduction proc and squad attack boost.",
+    },
+    {
+        "generation": 1,
+        "name": "Amadeus",
+        "rarity": "SSR",
+        "archetype": "Infantry",
+        "summary": "Conditional HP and lethality boosts up to 15%.",
+    },
+    {
+        "generation": 1,
+        "name": "Yeonwoo",
+        "rarity": "SR",
+        "archetype": "Archer",
+        "summary": "Expedition lethality boost and research utility passive.",
+    },
+    {
+        "generation": 1,
+        "name": "Amane",
+        "rarity": "SR",
+        "archetype": "Archer",
+        "summary": "Expedition attack boost and healing speed utility.",
+    },
+    {
+        "generation": 1,
+        "name": "Chenko",
+        "rarity": "SR",
+        "archetype": "Cavalry",
+        "summary": "Expedition lethality boost.",
+    },
+    {
+        "generation": 1,
+        "name": "Howard",
+        "rarity": "SR",
+        "archetype": "Infantry",
+        "summary": "Incoming troop damage reduction.",
+    },
+    {
+        "generation": 1,
+        "name": "Saul",
+        "rarity": "SR",
+        "archetype": "Archer",
+        "summary": "Construction utility passive.",
+    },
 ]
 
 VIP_THRESHOLDS = {
@@ -724,7 +862,9 @@ class Simulator(commands.Cog):
         description: str,
         footer: str,
     ) -> discord.Embed:
-        embed = discord.Embed(title=title, color=discord.Color.gold(), description=description)
+        embed = discord.Embed(
+            title=title, color=discord.Color.gold(), description=description
+        )
         embed.add_field(
             name="Outcome",
             value=(
@@ -952,10 +1092,24 @@ class Simulator(commands.Cog):
         if sum(atk.values()) <= 0 or sum(deff.values()) <= 0:
             return await ctx.send("Both sides must have at least one troop.")
 
-        attacker_cfg = self._build_side_config(attacker_tier, attacker_tg, attacker_additive, attacker_special, attacker_skillmod)
-        defender_cfg = self._build_side_config(defender_tier, defender_tg, defender_additive, defender_special, defender_skillmod)
+        attacker_cfg = self._build_side_config(
+            attacker_tier,
+            attacker_tg,
+            attacker_additive,
+            attacker_special,
+            attacker_skillmod,
+        )
+        defender_cfg = self._build_side_config(
+            defender_tier,
+            defender_tg,
+            defender_additive,
+            defender_special,
+            defender_skillmod,
+        )
 
-        result = CombatEngine.simulate(atk, deff, attacker_cfg, defender_cfg, turns=turns)
+        result = CombatEngine.simulate(
+            atk, deff, attacker_cfg, defender_cfg, turns=turns
+        )
         embed = self._combat_result_embed(
             result,
             title="Combat Simulation",
@@ -1044,8 +1198,20 @@ class Simulator(commands.Cog):
         if sum(atk.values()) <= 0 or sum(deff.values()) <= 0:
             return await ctx.send("Both sides must have at least one troop.")
 
-        attacker_cfg = self._build_side_config(attacker_tier, attacker_tg, attacker_additive, attacker_special, attacker_skillmod)
-        defender_cfg = self._build_side_config(defender_tier, defender_tg, defender_additive, defender_special, defender_skillmod)
+        attacker_cfg = self._build_side_config(
+            attacker_tier,
+            attacker_tg,
+            attacker_additive,
+            attacker_special,
+            attacker_skillmod,
+        )
+        defender_cfg = self._build_side_config(
+            defender_tier,
+            defender_tg,
+            defender_additive,
+            defender_special,
+            defender_skillmod,
+        )
 
         result = CombatEngine.simulate_advanced(
             atk,
@@ -1074,7 +1240,9 @@ class Simulator(commands.Cog):
             for turn in sorted(events.keys())[:5]:
                 payload = ", ".join(f"{k}={v:g}" for k, v in events[turn].items())
                 event_preview.append(f"T{turn}: {payload}")
-            embed.add_field(name="Event Preview", value="\n".join(event_preview), inline=False)
+            embed.add_field(
+                name="Event Preview", value="\n".join(event_preview), inline=False
+            )
         await ctx.send(embed=embed)
 
     @sim.command(name="calibrate")
@@ -1122,8 +1290,12 @@ class Simulator(commands.Cog):
         if observed_attacker_remaining < 0 or observed_defender_remaining < 0:
             return await ctx.send("Observed remaining values must be non-negative.")
 
-        attacker_cfg = self._build_side_config(attacker_tier, 0, attacker_additive, attacker_special, attacker_skillmod)
-        defender_cfg = self._build_side_config(defender_tier, 0, defender_additive, defender_special, defender_skillmod)
+        attacker_cfg = self._build_side_config(
+            attacker_tier, 0, attacker_additive, attacker_special, attacker_skillmod
+        )
+        defender_cfg = self._build_side_config(
+            defender_tier, 0, defender_additive, defender_special, defender_skillmod
+        )
 
         await ctx.defer()
 
@@ -1143,9 +1315,15 @@ class Simulator(commands.Cog):
         best_error = float("inf")
 
         for atk_s, def_s, hp_s, let_s in candidates:
-            anchors = scale_anchor_map(CombatEngine.BASE_ANCHOR_T9, atk_s, def_s, hp_s, let_s)
-            sim = CombatEngine.simulate(atk, deff, attacker_cfg, defender_cfg, turns=turns, anchors=anchors)
-            error = abs(sim["attacker_end"] - observed_attacker_remaining) + abs(sim["defender_end"] - observed_defender_remaining)
+            anchors = scale_anchor_map(
+                CombatEngine.BASE_ANCHOR_T9, atk_s, def_s, hp_s, let_s
+            )
+            sim = CombatEngine.simulate(
+                atk, deff, attacker_cfg, defender_cfg, turns=turns, anchors=anchors
+            )
+            error = abs(sim["attacker_end"] - observed_attacker_remaining) + abs(
+                sim["defender_end"] - observed_defender_remaining
+            )
             if error < best_error:
                 best_error = error
                 best = (atk_s, def_s, hp_s, let_s)
@@ -1179,7 +1357,9 @@ class Simulator(commands.Cog):
             ),
             inline=False,
         )
-        embed.set_footer(text="Run calibration across multiple battle reports and average scales for a stable profile.")
+        embed.set_footer(
+            text="Run calibration across multiple battle reports and average scales for a stable profile."
+        )
         await ctx.send(embed=embed)
 
     @sim.command(name="skillmod")
@@ -1198,7 +1378,9 @@ class Simulator(commands.Cog):
         defense_up_pct: float,
     ):
         """Compute the Rule-of-4 SkillMod ratio from percent inputs."""
-        skill_mod = compute_skill_mod(damage_up_pct, opp_def_down_pct, opp_dmg_down_pct, defense_up_pct)
+        skill_mod = compute_skill_mod(
+            damage_up_pct, opp_def_down_pct, opp_dmg_down_pct, defense_up_pct
+        )
         embed = discord.Embed(
             title="Rule-of-4 SkillMod",
             color=discord.Color.blue(),
@@ -1208,7 +1390,9 @@ class Simulator(commands.Cog):
                 "Percent values are converted to multiplicative factors first."
             ),
         )
-        embed.add_field(name="Computed SkillMod", value=f"**{skill_mod:.4f}x**", inline=False)
+        embed.add_field(
+            name="Computed SkillMod", value=f"**{skill_mod:.4f}x**", inline=False
+        )
         embed.add_field(
             name="Plug into Combat",
             value="Use this number as attacker_skillmod or defender_skillmod in /sim combat.",
@@ -1296,8 +1480,14 @@ class Simulator(commands.Cog):
                 "Chief Office exception applies an additional x0.8 afterward when enabled."
             ),
         )
-        embed.add_field(name="Base", value=f"{base_seconds:,}s ({format_duration(base_seconds)})", inline=False)
-        embed.add_field(name="Modified", value=f"{mod:,}s ({format_duration(mod)})", inline=False)
+        embed.add_field(
+            name="Base",
+            value=f"{base_seconds:,}s ({format_duration(base_seconds)})",
+            inline=False,
+        )
+        embed.add_field(
+            name="Modified", value=f"{mod:,}s ({format_duration(mod)})", inline=False
+        )
         embed.add_field(
             name="Effective Reduction",
             value=f"{(1 - (mod / base_seconds)) * 100:.2f}%",
@@ -1308,7 +1498,9 @@ class Simulator(commands.Cog):
     @sim.command(name="vip")
     async def sim_vip(self, ctx: commands.Context):
         """Show known VIP cumulative cost milestones."""
-        lines = [f"VIP {lvl}: ${cost:,}" for lvl, cost in sorted(VIP_THRESHOLDS.items())]
+        lines = [
+            f"VIP {lvl}: ${cost:,}" for lvl, cost in sorted(VIP_THRESHOLDS.items())
+        ]
         embed = discord.Embed(
             title="VIP Milestones",
             color=discord.Color.purple(),
@@ -1340,9 +1532,13 @@ class Simulator(commands.Cog):
     ):
         """Estimate Truegold step costs and projected stat deltas."""
         if target_level <= current_level:
-            return await ctx.send("Target TG level must be greater than current TG level.")
+            return await ctx.send(
+                "Target TG level must be greater than current TG level."
+            )
 
-        tg_needed = sum(TG_STEP_COSTS[level] for level in range(current_level + 1, target_level + 1))
+        tg_needed = sum(
+            TG_STEP_COSTS[level] for level in range(current_level + 1, target_level + 1)
+        )
         projected = CombatEngine.tg_flat_bonus(target_level)
 
         embed = discord.Embed(
@@ -1429,7 +1625,9 @@ class SkillModModal(discord.ui.Modal, title="SkillMod Helper"):
             d_up, od_down, odmg_down, def_up = [float(x) for x in parts]
             skill_mod = compute_skill_mod(d_up, od_down, odmg_down, def_up)
         except ValueError as exc:
-            return await interaction.response.send_message(f"Invalid input: {exc}", ephemeral=True)
+            return await interaction.response.send_message(
+                f"Invalid input: {exc}", ephemeral=True
+            )
 
         embed = discord.Embed(
             title="Rule-of-4 SkillMod",
@@ -1473,7 +1671,10 @@ class BaseSimulatorSetupView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.owner_id:
-            await interaction.response.send_message("This simulator panel belongs to the user who opened it.", ephemeral=True)
+            await interaction.response.send_message(
+                "This simulator panel belongs to the user who opened it.",
+                ephemeral=True,
+            )
             return False
         return True
 
@@ -1499,7 +1700,13 @@ class BaseSimulatorSetupView(discord.ui.View):
 
 
 class CombatLinesModal(discord.ui.Modal):
-    def __init__(self, parent_view: BaseSimulatorSetupView, title: str, attacker_default: str, defender_default: str):
+    def __init__(
+        self,
+        parent_view: BaseSimulatorSetupView,
+        title: str,
+        attacker_default: str,
+        defender_default: str,
+    ):
         super().__init__(title=title)
         self.parent_view = parent_view
         self.attacker_lines = discord.ui.TextInput(
@@ -1520,8 +1727,12 @@ class CombatLinesModal(discord.ui.Modal):
         self.add_item(self.defender_lines)
 
     async def on_submit(self, interaction: discord.Interaction):
-        self.parent_view.state.attacker_lines_raw = str(self.attacker_lines.value).strip()
-        self.parent_view.state.defender_lines_raw = str(self.defender_lines.value).strip()
+        self.parent_view.state.attacker_lines_raw = str(
+            self.attacker_lines.value
+        ).strip()
+        self.parent_view.state.defender_lines_raw = str(
+            self.defender_lines.value
+        ).strip()
         await self.parent_view.refresh_panel(interaction)
 
 
@@ -1530,11 +1741,33 @@ class CombatBaseSettingsModal(discord.ui.Modal):
         super().__init__(title=title)
         state = parent_view.state
         self.parent_view = parent_view
-        self.attacker_tier = discord.ui.TextInput(label="Attacker tier (1-12)", default=str(state.attacker_tier), required=False, max_length=3)
-        self.defender_tier = discord.ui.TextInput(label="Defender tier (1-12)", default=str(state.defender_tier), required=False, max_length=3)
-        self.turns = discord.ui.TextInput(label="Turns (1-60)", default=str(state.turns), required=False, max_length=3)
-        self.attacker_tg = discord.ui.TextInput(label="Attacker TG (0-5)", default=str(state.attacker_tg), required=False, max_length=3)
-        self.defender_tg = discord.ui.TextInput(label="Defender TG (0-5)", default=str(state.defender_tg), required=False, max_length=3)
+        self.attacker_tier = discord.ui.TextInput(
+            label="Attacker tier (1-12)",
+            default=str(state.attacker_tier),
+            required=False,
+            max_length=3,
+        )
+        self.defender_tier = discord.ui.TextInput(
+            label="Defender tier (1-12)",
+            default=str(state.defender_tier),
+            required=False,
+            max_length=3,
+        )
+        self.turns = discord.ui.TextInput(
+            label="Turns (1-60)", default=str(state.turns), required=False, max_length=3
+        )
+        self.attacker_tg = discord.ui.TextInput(
+            label="Attacker TG (0-5)",
+            default=str(state.attacker_tg),
+            required=False,
+            max_length=3,
+        )
+        self.defender_tg = discord.ui.TextInput(
+            label="Defender TG (0-5)",
+            default=str(state.defender_tg),
+            required=False,
+            max_length=3,
+        )
         self.add_item(self.attacker_tier)
         self.add_item(self.defender_tier)
         self.add_item(self.turns)
@@ -1544,11 +1777,29 @@ class CombatBaseSettingsModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             state = self.parent_view.state
-            state.attacker_tier = _parse_int_input(str(self.attacker_tier.value), state.attacker_tier, "Attacker tier", 1, 12)
-            state.defender_tier = _parse_int_input(str(self.defender_tier.value), state.defender_tier, "Defender tier", 1, 12)
-            state.turns = _parse_int_input(str(self.turns.value), state.turns, "Turns", 1, 60)
-            state.attacker_tg = _parse_int_input(str(self.attacker_tg.value), state.attacker_tg, "Attacker TG", 0, 5)
-            state.defender_tg = _parse_int_input(str(self.defender_tg.value), state.defender_tg, "Defender TG", 0, 5)
+            state.attacker_tier = _parse_int_input(
+                str(self.attacker_tier.value),
+                state.attacker_tier,
+                "Attacker tier",
+                1,
+                12,
+            )
+            state.defender_tier = _parse_int_input(
+                str(self.defender_tier.value),
+                state.defender_tier,
+                "Defender tier",
+                1,
+                12,
+            )
+            state.turns = _parse_int_input(
+                str(self.turns.value), state.turns, "Turns", 1, 60
+            )
+            state.attacker_tg = _parse_int_input(
+                str(self.attacker_tg.value), state.attacker_tg, "Attacker TG", 0, 5
+            )
+            state.defender_tg = _parse_int_input(
+                str(self.defender_tg.value), state.defender_tg, "Defender TG", 0, 5
+            )
         except ValueError as exc:
             await interaction.response.send_message(str(exc), ephemeral=True)
             return
@@ -1560,10 +1811,30 @@ class CombatBuffSettingsModal(discord.ui.Modal):
         super().__init__(title=title)
         state = parent_view.state
         self.parent_view = parent_view
-        self.attacker_add = discord.ui.TextInput(label="Attacker add %", default=f"{state.attacker_add:g}", required=False, max_length=12)
-        self.defender_add = discord.ui.TextInput(label="Defender add %", default=f"{state.defender_add:g}", required=False, max_length=12)
-        self.attacker_special = discord.ui.TextInput(label="Attacker special %", default=f"{state.attacker_special:g}", required=False, max_length=12)
-        self.defender_special = discord.ui.TextInput(label="Defender special %", default=f"{state.defender_special:g}", required=False, max_length=12)
+        self.attacker_add = discord.ui.TextInput(
+            label="Attacker add %",
+            default=f"{state.attacker_add:g}",
+            required=False,
+            max_length=12,
+        )
+        self.defender_add = discord.ui.TextInput(
+            label="Defender add %",
+            default=f"{state.defender_add:g}",
+            required=False,
+            max_length=12,
+        )
+        self.attacker_special = discord.ui.TextInput(
+            label="Attacker special %",
+            default=f"{state.attacker_special:g}",
+            required=False,
+            max_length=12,
+        )
+        self.defender_special = discord.ui.TextInput(
+            label="Defender special %",
+            default=f"{state.defender_special:g}",
+            required=False,
+            max_length=12,
+        )
         self.add_item(self.attacker_add)
         self.add_item(self.defender_add)
         self.add_item(self.attacker_special)
@@ -1572,10 +1843,22 @@ class CombatBuffSettingsModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             state = self.parent_view.state
-            state.attacker_add = _parse_float_input(str(self.attacker_add.value), state.attacker_add, "Attacker add")
-            state.defender_add = _parse_float_input(str(self.defender_add.value), state.defender_add, "Defender add")
-            state.attacker_special = _parse_float_input(str(self.attacker_special.value), state.attacker_special, "Attacker special")
-            state.defender_special = _parse_float_input(str(self.defender_special.value), state.defender_special, "Defender special")
+            state.attacker_add = _parse_float_input(
+                str(self.attacker_add.value), state.attacker_add, "Attacker add"
+            )
+            state.defender_add = _parse_float_input(
+                str(self.defender_add.value), state.defender_add, "Defender add"
+            )
+            state.attacker_special = _parse_float_input(
+                str(self.attacker_special.value),
+                state.attacker_special,
+                "Attacker special",
+            )
+            state.defender_special = _parse_float_input(
+                str(self.defender_special.value),
+                state.defender_special,
+                "Defender special",
+            )
         except ValueError as exc:
             await interaction.response.send_message(str(exc), ephemeral=True)
             return
@@ -1587,16 +1870,36 @@ class CombatSkillSettingsModal(discord.ui.Modal):
         super().__init__(title=title)
         state = parent_view.state
         self.parent_view = parent_view
-        self.attacker_skill = discord.ui.TextInput(label="Attacker SkillMod", default=f"{state.attacker_skill:g}", required=False, max_length=12)
-        self.defender_skill = discord.ui.TextInput(label="Defender SkillMod", default=f"{state.defender_skill:g}", required=False, max_length=12)
+        self.attacker_skill = discord.ui.TextInput(
+            label="Attacker SkillMod",
+            default=f"{state.attacker_skill:g}",
+            required=False,
+            max_length=12,
+        )
+        self.defender_skill = discord.ui.TextInput(
+            label="Defender SkillMod",
+            default=f"{state.defender_skill:g}",
+            required=False,
+            max_length=12,
+        )
         self.add_item(self.attacker_skill)
         self.add_item(self.defender_skill)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
             state = self.parent_view.state
-            state.attacker_skill = _parse_float_input(str(self.attacker_skill.value), state.attacker_skill, "Attacker SkillMod", 0.0)
-            state.defender_skill = _parse_float_input(str(self.defender_skill.value), state.defender_skill, "Defender SkillMod", 0.0)
+            state.attacker_skill = _parse_float_input(
+                str(self.attacker_skill.value),
+                state.attacker_skill,
+                "Attacker SkillMod",
+                0.0,
+            )
+            state.defender_skill = _parse_float_input(
+                str(self.defender_skill.value),
+                state.defender_skill,
+                "Defender SkillMod",
+                0.0,
+            )
         except ValueError as exc:
             await interaction.response.send_message(str(exc), ephemeral=True)
             return
@@ -1697,32 +2000,49 @@ class QuickCombatSetupView(BaseSimulatorSetupView):
             inline=False,
         )
         embed.add_field(name="Settings Key", value=QUICK_SETTINGS_LEGEND, inline=False)
-        embed.set_footer(text="Use Troops, Base, Buffs, and Skill buttons below. Troop lines are required before running.")
+        embed.set_footer(
+            text="Use Troops, Base, Buffs, and Skill buttons below. Troop lines are required before running."
+        )
         return embed
 
     @discord.ui.button(label="Troops", style=discord.ButtonStyle.primary, row=0)
     async def edit_troops(self, interaction: discord.Interaction, _: discord.ui.Button):
         await interaction.response.send_modal(
-            CombatLinesModal(self, "Quick Combat Troops", self.state.attacker_lines_raw, self.state.defender_lines_raw)
+            CombatLinesModal(
+                self,
+                "Quick Combat Troops",
+                self.state.attacker_lines_raw,
+                self.state.defender_lines_raw,
+            )
         )
 
     @discord.ui.button(label="Base", style=discord.ButtonStyle.secondary, row=0)
     async def edit_base(self, interaction: discord.Interaction, _: discord.ui.Button):
-        await interaction.response.send_modal(CombatBaseSettingsModal(self, "Quick Combat Base Settings"))
+        await interaction.response.send_modal(
+            CombatBaseSettingsModal(self, "Quick Combat Base Settings")
+        )
 
     @discord.ui.button(label="Buffs", style=discord.ButtonStyle.secondary, row=0)
     async def edit_buffs(self, interaction: discord.Interaction, _: discord.ui.Button):
-        await interaction.response.send_modal(CombatBuffSettingsModal(self, "Quick Combat Buffs"))
+        await interaction.response.send_modal(
+            CombatBuffSettingsModal(self, "Quick Combat Buffs")
+        )
 
     @discord.ui.button(label="Skill", style=discord.ButtonStyle.secondary, row=0)
     async def edit_skill(self, interaction: discord.Interaction, _: discord.ui.Button):
-        await interaction.response.send_modal(CombatSkillSettingsModal(self, "Quick Combat SkillMod"))
+        await interaction.response.send_modal(
+            CombatSkillSettingsModal(self, "Quick Combat SkillMod")
+        )
 
     @discord.ui.button(label="Run Simulation", style=discord.ButtonStyle.success, row=1)
-    async def run_simulation(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def run_simulation(
+        self, interaction: discord.Interaction, _: discord.ui.Button
+    ):
         try:
             if not self.state.attacker_lines_raw or not self.state.defender_lines_raw:
-                raise ValueError("Attacker and defender troop lines are required before running the simulation.")
+                raise ValueError(
+                    "Attacker and defender troop lines are required before running the simulation."
+                )
             atk = parse_line_triplet(self.state.attacker_lines_raw)
             deff = parse_line_triplet(self.state.defender_lines_raw)
             attacker_cfg = self.cog._build_side_config(
@@ -1739,9 +2059,13 @@ class QuickCombatSetupView(BaseSimulatorSetupView):
                 self.state.defender_special,
                 self.state.defender_skill,
             )
-            result = CombatEngine.simulate(atk, deff, attacker_cfg, defender_cfg, turns=self.state.turns)
+            result = CombatEngine.simulate(
+                atk, deff, attacker_cfg, defender_cfg, turns=self.state.turns
+            )
         except Exception as exc:
-            await interaction.response.send_message(f"Could not run simulation: {exc}", ephemeral=True)
+            await interaction.response.send_message(
+                f"Could not run simulation: {exc}", ephemeral=True
+            )
             return
 
         embed = self.cog._combat_result_embed(
@@ -1792,7 +2116,9 @@ class AdvancedCombatSetupView(BaseSimulatorSetupView):
             ),
             inline=True,
         )
-        embed.add_field(name="Battle", value=f"Turns: `{self.state.turns}`", inline=False)
+        embed.add_field(
+            name="Battle", value=f"Turns: `{self.state.turns}`", inline=False
+        )
         embed.add_field(
             name="Line Bonuses",
             value=(
@@ -1807,41 +2133,64 @@ class AdvancedCombatSetupView(BaseSimulatorSetupView):
             inline=False,
         )
         embed.add_field(name="Quick Key", value=QUICK_SETTINGS_LEGEND, inline=False)
-        embed.add_field(name="Advanced Key", value=ADVANCED_SETTINGS_LEGEND, inline=False)
-        embed.set_footer(text="Use the section buttons below. Troop lines are required; bonuses and events are optional.")
+        embed.add_field(
+            name="Advanced Key", value=ADVANCED_SETTINGS_LEGEND, inline=False
+        )
+        embed.set_footer(
+            text="Use the section buttons below. Troop lines are required; bonuses and events are optional."
+        )
         return embed
 
     @discord.ui.button(label="Troops", style=discord.ButtonStyle.primary, row=0)
     async def edit_troops(self, interaction: discord.Interaction, _: discord.ui.Button):
         await interaction.response.send_modal(
-            CombatLinesModal(self, "Advanced Combat Troops", self.state.attacker_lines_raw, self.state.defender_lines_raw)
+            CombatLinesModal(
+                self,
+                "Advanced Combat Troops",
+                self.state.attacker_lines_raw,
+                self.state.defender_lines_raw,
+            )
         )
 
     @discord.ui.button(label="Base", style=discord.ButtonStyle.secondary, row=0)
     async def edit_base(self, interaction: discord.Interaction, _: discord.ui.Button):
-        await interaction.response.send_modal(CombatBaseSettingsModal(self, "Advanced Combat Base Settings"))
+        await interaction.response.send_modal(
+            CombatBaseSettingsModal(self, "Advanced Combat Base Settings")
+        )
 
     @discord.ui.button(label="Buffs", style=discord.ButtonStyle.secondary, row=0)
     async def edit_buffs(self, interaction: discord.Interaction, _: discord.ui.Button):
-        await interaction.response.send_modal(CombatBuffSettingsModal(self, "Advanced Combat Buffs"))
+        await interaction.response.send_modal(
+            CombatBuffSettingsModal(self, "Advanced Combat Buffs")
+        )
 
     @discord.ui.button(label="Skill", style=discord.ButtonStyle.secondary, row=0)
     async def edit_skill(self, interaction: discord.Interaction, _: discord.ui.Button):
-        await interaction.response.send_modal(CombatSkillSettingsModal(self, "Advanced Combat SkillMod"))
+        await interaction.response.send_modal(
+            CombatSkillSettingsModal(self, "Advanced Combat SkillMod")
+        )
 
     @discord.ui.button(label="Line Bonuses", style=discord.ButtonStyle.secondary, row=1)
-    async def edit_line_bonuses(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def edit_line_bonuses(
+        self, interaction: discord.Interaction, _: discord.ui.Button
+    ):
         await interaction.response.send_modal(AdvancedLineBonusesModal(self))
 
     @discord.ui.button(label="Turn Events", style=discord.ButtonStyle.secondary, row=1)
-    async def edit_turn_events(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def edit_turn_events(
+        self, interaction: discord.Interaction, _: discord.ui.Button
+    ):
         await interaction.response.send_modal(AdvancedTurnEventsModal(self))
 
     @discord.ui.button(label="Run Simulation", style=discord.ButtonStyle.success, row=1)
-    async def run_simulation(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def run_simulation(
+        self, interaction: discord.Interaction, _: discord.ui.Button
+    ):
         try:
             if not self.state.attacker_lines_raw or not self.state.defender_lines_raw:
-                raise ValueError("Attacker and defender troop lines are required before running the simulation.")
+                raise ValueError(
+                    "Attacker and defender troop lines are required before running the simulation."
+                )
             atk = parse_line_triplet(self.state.attacker_lines_raw)
             deff = parse_line_triplet(self.state.defender_lines_raw)
             atk_bonuses = parse_line_bonus_map(self.state.attacker_line_bonuses_raw)
@@ -1872,7 +2221,9 @@ class AdvancedCombatSetupView(BaseSimulatorSetupView):
                 turn_events=events,
             )
         except Exception as exc:
-            await interaction.response.send_message(f"Could not run advanced simulation: {exc}", ephemeral=True)
+            await interaction.response.send_message(
+                f"Could not run advanced simulation: {exc}", ephemeral=True
+            )
             return
 
         embed = self.cog._combat_result_embed(
@@ -1894,39 +2245,65 @@ class SimulatorPanelView(discord.ui.View):
         super().__init__(timeout=900)
         self.cog = cog
 
-    @discord.ui.button(label="Quick Combat", style=discord.ButtonStyle.primary, emoji="⚔️")
-    async def quick_combat(self, interaction: discord.Interaction, _: discord.ui.Button):
+    @discord.ui.button(
+        label="Quick Combat", style=discord.ButtonStyle.primary, emoji="⚔️"
+    )
+    async def quick_combat(
+        self, interaction: discord.Interaction, _: discord.ui.Button
+    ):
         try:
             view = QuickCombatSetupView(self.cog, interaction.user.id)
-            await interaction.response.send_message(embed=view.build_embed(), view=view, ephemeral=True)
+            await interaction.response.send_message(
+                embed=view.build_embed(), view=view, ephemeral=True
+            )
             view.message = await interaction.original_response()
         except Exception as e:
             if interaction.response.is_done():
-                await interaction.followup.send(f"Could not open Quick Combat builder: {e}", ephemeral=True)
+                await interaction.followup.send(
+                    f"Could not open Quick Combat builder: {e}", ephemeral=True
+                )
             else:
-                await interaction.response.send_message(f"Could not open Quick Combat builder: {e}", ephemeral=True)
+                await interaction.response.send_message(
+                    f"Could not open Quick Combat builder: {e}", ephemeral=True
+                )
 
-    @discord.ui.button(label="Advanced Combat", style=discord.ButtonStyle.danger, emoji="🧠")
-    async def advanced_combat(self, interaction: discord.Interaction, _: discord.ui.Button):
+    @discord.ui.button(
+        label="Advanced Combat", style=discord.ButtonStyle.danger, emoji="🧠"
+    )
+    async def advanced_combat(
+        self, interaction: discord.Interaction, _: discord.ui.Button
+    ):
         try:
             view = AdvancedCombatSetupView(self.cog, interaction.user.id)
-            await interaction.response.send_message(embed=view.build_embed(), view=view, ephemeral=True)
+            await interaction.response.send_message(
+                embed=view.build_embed(), view=view, ephemeral=True
+            )
             view.message = await interaction.original_response()
         except Exception as e:
             if interaction.response.is_done():
-                await interaction.followup.send(f"Could not open Advanced Combat builder: {e}", ephemeral=True)
+                await interaction.followup.send(
+                    f"Could not open Advanced Combat builder: {e}", ephemeral=True
+                )
             else:
-                await interaction.response.send_message(f"Could not open Advanced Combat builder: {e}", ephemeral=True)
+                await interaction.response.send_message(
+                    f"Could not open Advanced Combat builder: {e}", ephemeral=True
+                )
 
-    @discord.ui.button(label="SkillMod Helper", style=discord.ButtonStyle.secondary, emoji="📐")
+    @discord.ui.button(
+        label="SkillMod Helper", style=discord.ButtonStyle.secondary, emoji="📐"
+    )
     async def skillmod(self, interaction: discord.Interaction, _: discord.ui.Button):
         try:
             await interaction.response.send_modal(SkillModModal())
         except Exception as e:
             if interaction.response.is_done():
-                await interaction.followup.send(f"Could not open SkillMod modal: {e}", ephemeral=True)
+                await interaction.followup.send(
+                    f"Could not open SkillMod modal: {e}", ephemeral=True
+                )
             else:
-                await interaction.response.send_message(f"Could not open SkillMod modal: {e}", ephemeral=True)
+                await interaction.response.send_message(
+                    f"Could not open SkillMod modal: {e}", ephemeral=True
+                )
 
 
 async def setup(bot: commands.Bot):

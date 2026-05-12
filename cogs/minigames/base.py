@@ -1,4 +1,5 @@
 from cogs.utils.bank import bank, errors
+
 """
 Original Port Author: hollowstrawberry (crab-cogs)
 https://github.com/hollowstrawberry/crab-cogs/tree/main/minigames
@@ -17,18 +18,25 @@ class BaseMinigameCog(commands.Cog):
         pass
 
     @abstractmethod
-    async def base_minigame_cmd(self,
-                                game_cls: Type["Minigame"],
-                                ctx: Union[commands.Context, discord.Interaction],
-                                players: List[discord.Member],
-                                against_bot: bool,
-                                bet: Optional[int]
-                                ) -> None:
+    async def base_minigame_cmd(
+        self,
+        game_cls: Type["Minigame"],
+        ctx: Union[commands.Context, discord.Interaction],
+        players: List[discord.Member],
+        against_bot: bool,
+        bet: Optional[int],
+    ) -> None:
         pass
-        
+
 
 class Minigame(ABC):
-    def __init__(self, cog: BaseMinigameCog, players: List[discord.Member], channel: Union[discord.abc.GuildChannel, discord.Thread], bet: int):
+    def __init__(
+        self,
+        cog: BaseMinigameCog,
+        players: List[discord.Member],
+        channel: Union[discord.abc.GuildChannel, discord.Thread],
+        bet: int,
+    ):
         self.cog = cog
         self.bet = bet
         self.players = players
@@ -88,7 +96,7 @@ class Minigame(ABC):
         against_bot = any(player.bot for player in self.players)
         if winner is None and against_bot:
             return
-        await self.init() # failsafe
+        await self.init()  # failsafe
         if winner is None:
             for player in self.players:
                 try:

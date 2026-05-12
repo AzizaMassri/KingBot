@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+
 class TranslationKeywords(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -10,7 +11,9 @@ class TranslationKeywords(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def keyword(self, ctx):
         """Manage global keywords that should NOT be translated by the AI."""
-        await ctx.send("❌ Usage: `!keyword add <word>`, `!keyword remove <word>`, or `!keyword list`")
+        await ctx.send(
+            "❌ Usage: `!keyword add <word>`, `!keyword remove <word>`, or `!keyword list`"
+        )
 
     @keyword.command(name="add")
     @commands.has_permissions(administrator=True)
@@ -18,7 +21,9 @@ class TranslationKeywords(commands.Cog):
         """Adds a keyword to the global translation exclusion list."""
         try:
             await self.bot.db.sadd(self.db_key, word)
-            await ctx.send(f"✅ Added `{word}` to the translation exclusion list. The bot will no longer translate this word.")
+            await ctx.send(
+                f"✅ Added `{word}` to the translation exclusion list. The bot will no longer translate this word."
+            )
         except Exception as e:
             await ctx.send(f"❌ Error saving keyword: {e}")
 
@@ -29,7 +34,9 @@ class TranslationKeywords(commands.Cog):
         try:
             removed = await self.bot.db.srem(self.db_key, word)
             if removed:
-                await ctx.send(f"✅ Removed `{word}` from the translation exclusion list.")
+                await ctx.send(
+                    f"✅ Removed `{word}` from the translation exclusion list."
+                )
             else:
                 await ctx.send(f"⚠️ `{word}` was not found in the exclusion list.")
         except Exception as e:
@@ -46,14 +53,16 @@ class TranslationKeywords(commands.Cog):
                 formatted_list = "\n".join([f"• `{w}`" for w in sorted_keywords])
                 embed = discord.Embed(
                     title="🛡️ Translation Exclusion Keywords",
-                    description="The AI is strictly instructed NOT to translate or alter these words:\n" + formatted_list,
-                    color=discord.Color.blue()
+                    description="The AI is strictly instructed NOT to translate or alter these words:\n"
+                    + formatted_list,
+                    color=discord.Color.blue(),
                 )
                 await ctx.send(embed=embed)
             else:
                 await ctx.send("ℹ️ The translation exclusion list is currently empty.")
         except Exception as e:
             await ctx.send(f"❌ Error fetching keywords: {e}")
+
 
 async def setup(bot):
     await bot.add_cog(TranslationKeywords(bot))

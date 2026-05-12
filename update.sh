@@ -10,7 +10,7 @@ echo "🛑 Stopping the KingBot container to release OS network/volume locks..."
 docker compose stop kingbot-app 2>/dev/null || true
 
 echo "⬇️ Pulling latest approved changes from GitHub..."
-git pull origin master
+git pull https://ROCKETexecdevs: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@github.com/ROCKETexecdevs/KingBot.git master
 
 echo "🏗️ Rebuilding and starting the stack (app + dependencies)..."
 if docker compose up -d --build kingbot-app; then

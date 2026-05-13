@@ -46,6 +46,14 @@ class UniversalContext(commands.Context):
             else discord.Locale.american_english
         )
 
+        # Defer interaction if we need to translate to prevent timeouts!
+        if self.interaction and not self.interaction.response.is_done():
+            if target_locale not in [discord.Locale.american_english, discord.Locale.british_english]:
+                try:
+                    await self.interaction.response.defer(ephemeral=kwargs.get("ephemeral", False))
+                except discord.HTTPException:
+                    pass
+
         tasks = []
 
         guild_id = self.guild.id if hasattr(self, "guild") and self.guild else None

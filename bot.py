@@ -224,16 +224,20 @@ RABBITMQ_URL = f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}/"
 async def global_admin_toggle_check(ctx):
     if not ctx.guild:
         return True
-    if ctx.author.guild_permissions.administrator:
-        return True
 
     cmd_name = ctx.command.name if ctx.command else None
+    
+    # Core admin commands must always remain accessible to prevent lockouts
+    core_admin_commands = ["toggle_command", "toggle_cog", "control_panel", "restart", "reload", "sync", "toggle_invisible"]
+    if cmd_name in core_admin_commands:
+        return True
+
     if cmd_name:
         try:
             is_disabled = await bot.db.get(f"cmd_disabled:{ctx.guild.id}:{cmd_name}")
             if is_disabled:
                 raise commands.CheckFailure(
-                    f"The `{cmd_name}` command is currently restricted to Administrators on this server."
+                    f"❌ The `{cmd_name}` command has been **disabled** on this server by an Administrator."
                 )
         except Exception as e:
             # If DB goes down, default to allowing the command

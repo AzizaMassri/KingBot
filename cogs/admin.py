@@ -448,10 +448,10 @@ class Admin(commands.Cog):
         is_disabled = await self.bot.db.get(key)
         if is_disabled:
             await self.bot.db.delete(key)
-            await ctx.send(f"✅ Enabled `{cmd.name}`")
+            await ctx.send(f"✅ **ENABLED**: The `{cmd.name}` command is now available to all users.")
         else:
             await self.bot.db.set(key, "1")
-            await ctx.send(f"🚫 Disabled `{cmd.name}`")
+            await ctx.send(f"🔒 **RESTRICTED**: The `{cmd.name}` command is now restricted to Administrators only.")
 
     @commands.hybrid_command(name="toggle_cog", aliases=["togglecog"])
     @commands.has_permissions(administrator=True)
@@ -477,14 +477,14 @@ class Admin(commands.Cog):
             await self.bot.db.delete(
                 f"cog_disabled:{ctx.guild.id}:{target_cog.qualified_name}"
             )
-            await ctx.send(f"✅ ENABLED `{target_cog.qualified_name}`.")
+            await ctx.send(f"✅ **ENABLED**: The `{target_cog.qualified_name}` module is now available to all users.")
         else:
             for cmd in cmds:
                 await self.bot.db.set(f"cmd_disabled:{ctx.guild.id}:{cmd.name}", "1")
             await self.bot.db.set(
                 f"cog_disabled:{ctx.guild.id}:{target_cog.qualified_name}", "1"
             )
-            await ctx.send(f"🚫 REQUIRED ADMIN FOR `{target_cog.qualified_name}`.")
+            await ctx.send(f"🔒 **RESTRICTED**: The `{target_cog.qualified_name}` module is now restricted to Administrators only.")
 
     @commands.hybrid_command(
         name="toggle_invisible", aliases=["invisible"], hidden=True

@@ -217,8 +217,11 @@ class TransConfigView(discord.ui.View):
 class QuickTranslator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.ctx_menu = app_commands.ContextMenu(
+            name="Translate to...",
+            callback=self.translate_context_menu,
+        )
 
-    @app_commands.context_menu(name="Translate to...")
     async def translate_context_menu(
         self, interaction: discord.Interaction, message: discord.Message
     ):
@@ -348,9 +351,10 @@ class QuickTranslator(commands.Cog):
         from cogs.utils.ui import PersistentLanguageView
 
         self.bot.add_view(PersistentLanguageView(self.bot))
+        self.bot.tree.add_command(self.ctx_menu)
 
     async def cog_unload(self):
-        pass
+        self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
 
     @commands.hybrid_command(
         aliases=["qt"],

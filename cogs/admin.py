@@ -387,6 +387,23 @@ class Admin(commands.Cog):
             f"Are you sure you want to reload `cogs.{extension}`?", view=view
         )
 
+    @commands.hybrid_command(name="load", hidden=True)
+    @commands.has_permissions(administrator=True)
+    async def load_cog(self, ctx, extension: str):
+        async def do_load():
+            try:
+                await self.bot.load_extension(f"cogs.{extension}")
+                await ctx.send(f"✅ Successfully loaded `cogs.{extension}`")
+            except Exception as e:
+                import traceback
+                error_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+                await ctx.send(f"❌ Failed to load `cogs.{extension}`: {e}\n```py\n{error_trace[:1900]}\n```")
+
+        view = AdminConfirmView(ctx, f"load of cogs.{extension}", do_load)
+        await ctx.send(
+            f"Are you sure you want to load `cogs.{extension}`?", view=view
+        )
+
     @commands.hybrid_command(name="sync", hidden=True)
     @commands.has_permissions(administrator=True)
     async def sync(self, ctx, spec: str = "*"):

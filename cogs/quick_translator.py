@@ -29,7 +29,9 @@ class TranslateModal(discord.ui.Modal, title="Translate Message"):
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         target = self.language.value.strip()
+        import re
         text = self.message_to_translate.content.strip()
+        text = re.sub(r"^🌍\s*(?:\*\*)?[A-Za-z]+(?:\*\*)?:\s*", "", text).strip()
 
         # Input validation
         if not text:
@@ -246,7 +248,9 @@ class QuickTranslator(commands.Cog):
         if preferred_lang and preferred_lang.strip():  # Ensure not empty
             await interaction.response.defer(ephemeral=True)
             target = preferred_lang.strip()  # Clean whitespace
-            text = message.content
+            import re
+            text = message.content.strip()
+            text = re.sub(r"^🌍\s*(?:\*\*)?[A-Za-z]+(?:\*\*)?:\s*", "", text).strip()
             logger.info(
                 f"Using preferred language '{target}' for user {interaction.user.id}"
             )

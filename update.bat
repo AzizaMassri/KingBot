@@ -10,6 +10,10 @@ echo Pulling latest approved changes from GitHub...
 git pull origin master
 
 echo.
-echo Update complete! The bot folder is synced with GitHub.
+echo Restarting the bot container to apply changes...
+docker compose restart kingbot-app
+
+echo.
+echo Update complete! The bot has been updated and restarted.
 echo.
 pause

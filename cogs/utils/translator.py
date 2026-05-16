@@ -67,7 +67,7 @@ async def translate_content(
             words = ", ".join([f"'{w}'" for w in exclusion_list])
             exclusion_str = f" CRITICAL INSTRUCTION: Do NOT translate or alter these specific keywords under any circumstances: {words}."
 
-        prompt = f'Translate the following to {target_language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard. Keep exact formatting/emojis, and output ONLY the raw translation with no preamble.{exclusion_str}\n\n"{text}"'
+        prompt = f'Translate the text enclosed in <text_to_translate> tags to {target_language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard. Keep exact formatting/emojis, and output ONLY the raw translation with no preamble.{exclusion_str}\n\n<text_to_translate>\n{text}\n</text_to_translate>'
 
         # Quota check
         if guild_id:

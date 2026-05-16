@@ -59,7 +59,7 @@ class TranslateModal(discord.ui.Modal, title="Translate Message"):
             words = ", ".join([f"'{w}'" for w in exclusion_list])
             exclusion_str = f" CRITICAL INSTRUCTION: Do NOT translate or alter these specific keywords under any circumstances: {words}."
 
-        prompt = f"Translate the following text to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
+        prompt = f"Translate the text enclosed in <text_to_translate> tags to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble.{exclusion_str}\n\n<text_to_translate>\n{text}\n</text_to_translate>"
 
         current_usage = 0
 
@@ -262,7 +262,7 @@ class QuickTranslator(commands.Cog):
                 words = ", ".join([f"'{w}'" for w in exclusion_list])
                 exclusion_str = f" CRITICAL INSTRUCTION: Do NOT translate or alter these specific keywords under any circumstances: {words}."
 
-            prompt = f"Translate the following text to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text}\"{exclusion_str}"
+            prompt = f"Translate the text enclosed in <text_to_translate> tags to {target}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble.{exclusion_str}\n\n<text_to_translate>\n{text}\n</text_to_translate>"
 
             current_usage = 0
 
@@ -403,7 +403,7 @@ class QuickTranslator(commands.Cog):
                     words = ", ".join([f"'{w}'" for w in exclusion_list])
                     exclusion_str = f" CRITICAL INSTRUCTION: Do NOT translate or alter these specific keywords under any circumstances: {words}."
 
-                prompt = f"Translate the following text to {target_language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble: \"{text_to_translate}\"{exclusion_str}"
+                prompt = f"Translate the text enclosed in <text_to_translate> tags to {target_language}. Be strict about literal and accurate translations. Do not use overly conversational slang if the original text is standard (e.g., translate 'hello' as 'hello', not 'sup'). Maintain gamer slang ONLY if originally present, use minimal AI flourish, and output ONLY the raw translation without preamble.{exclusion_str}\n\n<text_to_translate>\n{text_to_translate}\n</text_to_translate>"
 
                 current_usage = 0
 

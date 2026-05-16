@@ -454,15 +454,6 @@ class QuickTranslator(commands.Cog):
                     traceback.print_exc()
                     raise api_err
 
-                try:
-                    await self.bot.db.hset(
-                        f"translator_subs:{ctx.guild.id}",
-                        str(ctx.author.id),
-                        target_language,
-                    )
-                except Exception:
-                    pass
-
                 await ctx.send(f"🌍 **{target_language.capitalize()}:** {translation}")
 
             except Exception as e:
